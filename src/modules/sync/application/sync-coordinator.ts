@@ -35,6 +35,11 @@ export interface CoordinatorOptions {
   run(mode: { pushOnly: boolean; keepalive: boolean }): Promise<void>;
   classify(error: unknown): SyncFailure;
   onState?(state: SyncState): void;
+  /** When the next automatic backup will run (null: none scheduled), so the app can say so. */
+  onNextRun?(at: Date | null): void;
+  /** A backup finished with nothing left to send. */
+  onBackedUp?(at: Date): void;
+  now?(): number;
   timers?: Timers;
   debounceMs?: number;
   periodicMs?: number;
@@ -58,6 +63,7 @@ export function syncCoordinator(opts: CoordinatorOptions) {
   const periodicMs = opts.periodicMs ?? DEFAULTS.periodicMs;
   const baseBackoffMs = opts.baseBackoffMs ?? DEFAULTS.baseBackoffMs;
   const maxBackoffMs = opts.maxBackoffMs ?? DEFAULTS.maxBackoffMs;
+  const now = opts.now ?? (() => Date.now());
 
   let state: SyncState = "idle";
   let timer: unknown;
@@ -80,8 +86,10 @@ export function syncCoordinator(opts: CoordinatorOptions) {
     if (timer !== undefined) timers.clearTimeout(timer);
     timer = timers.setTimeout(() => {
       timer = undefined;
+      opts.onNextRun?.(null);
       void runNow(false);
     }, ms);
+    opts.onNextRun?.(new Date(now() + ms));
   }
 
   async function runNow(pushOnly: boolean, keepalive = false): Promise<void> {
@@ -93,12 +101,14 @@ export function syncCoordinator(opts: CoordinatorOptions) {
     if (timer !== undefined) {
       timers.clearTimeout(timer);
       timer = undefined;
+      opts.onNextRun?.(null);
     }
     setState("syncing");
     running = (async () => {
       try {
         await opts.run({ pushOnly, keepalive });
         failures = 0;
+        opts.onBackedUp?.(new Date(now()));
         setState("idle");
         schedule(periodicMs);
       } catch (e) {
@@ -137,6 +147,7 @@ export function syncCoordinator(opts: CoordinatorOptions) {
     stop() {
       stopped = true;
       if (timer !== undefined) timers.clearTimeout(timer);
+      opts.onNextRun?.(null);
     },
   };
 }

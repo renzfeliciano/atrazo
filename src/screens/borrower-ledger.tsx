@@ -405,7 +405,7 @@ export function BorrowerLedgerScreen() {
                                   <span className="tag tag-outline">Note edited</span>
                                 )}
                                 {r.pending && r.type === "entry" && (
-                                  <span className="tag tag-warn">Not backed up yet</span>
+                                  <span className="tag tag-warn">Backs up soon</span>
                                 )}
                               </span>
                             </td>
@@ -670,7 +670,7 @@ function EntryRowsPhone({
                       <span className="le-flag is-edited">Note edited</span>
                     )}
                     {r.pending && !voided && (
-                      <span className="le-flag is-pending">Not backed up</span>
+                      <span className="le-flag is-pending">Backs up soon</span>
                     )}
                   </span>
                   <span className="le-bal mono">

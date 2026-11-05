@@ -23,6 +23,27 @@ describe("sync coordinator", () => {
     return { c, run, states };
   }
 
+  it("says when the next automatic backup is due and when the last one finished", async () => {
+    vi.setSystemTime(new Date("2026-11-06T06:00:00Z"));
+    const next: (Date | null)[] = [];
+    const done: Date[] = [];
+    const c = syncCoordinator({
+      run: vi.fn(async () => {}),
+      classify,
+      onNextRun: (at) => next.push(at),
+      onBackedUp: (at) => done.push(at),
+      debounceMs: 120_000,
+      periodicMs: 900_000,
+    });
+    c.notifyWrite();
+    expect(next.at(-1)).toEqual(new Date("2026-11-06T06:02:00Z"));
+    await vi.advanceTimersByTimeAsync(120_000);
+    expect(done).toEqual([new Date("2026-11-06T06:02:00Z")]);
+    expect(next.at(-1)).toEqual(new Date("2026-11-06T06:17:00Z")); // the periodic check
+    c.stop();
+    expect(next.at(-1)).toBeNull();
+  });
+
   it("batches many writes into one backup after things go quiet", async () => {
     const { c, run } = setup();
     for (let i = 0; i < 25; i++) {

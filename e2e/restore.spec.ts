@@ -7,8 +7,10 @@ test("a backup restores on a new phone with the recovery code", async ({ browser
   const p1 = await one.newPage();
   await p1.goto("/settings");
   await afterSplash(p1);
+  // Backup is automatic; the button only skips the wait.
+  await expect(p1.getByText("Auto", { exact: true })).toBeVisible();
   await p1.getByRole("button", { name: "Back up now" }).click();
-  await expect(p1.getByText(/Backed up just now/)).toBeVisible({ timeout: 15_000 });
+  await expect(p1.getByText(/Last backup just now/)).toBeVisible({ timeout: 15_000 });
   await one.close();
 
   // Phone 2: a fresh browser with nothing on it.

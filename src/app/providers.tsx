@@ -19,6 +19,7 @@ import { VisitTracker } from "@/ui/in-app-history";
 import { ServiceWorker } from "@/ui/service-worker";
 import { ToastViewport, type ToastInput, type ToastItem } from "@/ui/toast";
 import { PageLoader } from "@/ui/page-loader";
+import { backupStatus, type BackupStatus } from "@/ui/backup-status";
 import { keepDataOnThisPhone } from "@/ui/persistent-storage";
 
 /**
@@ -37,6 +38,8 @@ interface AppContextValue {
   readonly sync: {
     state: SyncState;
     pending: number;
+    /** What to say about backup right now (it runs automatically; see backup-status.ts). */
+    status: BackupStatus;
     notifyWrite(): void;
     syncNow(): Promise<void>;
   };
@@ -52,6 +55,10 @@ export function useApp(): AppContextValue {
 }
 
 const SESSION_KEY = "vault.session";
+/** When this phone last finished a backup. Device-only; erased with everything else on sign-out. */
+const LAST_BACKUP_KEY = "sync.lastBackupAt";
+/** How often the backup wording ("auto backup in about 2 min") refreshes. */
+const STATUS_TICK_MS = 20_000;
 
 /** One phone (local database + use cases) per browser tab, created on first use. */
 let browserPhone: Phone | null = null;
@@ -115,6 +122,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   // ── Sync: batched backups while a ledger is open.
   const [syncState, setSyncState] = useState<SyncState>("idle");
+  const [nextBackupAt, setNextBackupAt] = useState<Date | null>(null);
+  const lastBackupAt = useLiveQuery(
+    async () => ((await phone?.db.device.get(LAST_BACKUP_KEY))?.value as Date | undefined) ?? null,
+    [phone],
+    null,
+  );
+  // The clock is read in an effect, never during render (prerendering needs stable output).
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => {
+    const tick = () => setNow(new Date());
+    tick();
+    const t = setInterval(tick, STATUS_TICK_MS);
+    return () => clearInterval(t);
+  }, [syncState, nextBackupAt, lastBackupAt]);
   const coordinator = useMemo(() => {
     if (!phone || !session) return null;
     return syncCoordinator({
@@ -128,6 +149,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
           ? { status: e.status, code: e.code, retryAfterSeconds: e.retryAfterSeconds }
           : { status: 0, code: "INTERNAL", retryAfterSeconds: null },
       onState: setSyncState,
+      onNextRun: setNextBackupAt,
+      onBackedUp: (at) => void phone.db.device.put({ key: LAST_BACKUP_KEY, value: at }),
     });
   }, [phone, session]);
 
@@ -155,6 +178,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
     }
   }, [syncState, phone, router]);
 
+  // Kept stable while the wording is unchanged, so the clock tick only re-renders on a real change.
+  const statusKey = JSON.stringify(
+    backupStatus({ state: syncState, pending, lastBackupAt, nextBackupAt, now }),
+  );
+  const status = useMemo(() => JSON.parse(statusKey) as BackupStatus, [statusKey]);
+
   const value = useMemo<AppContextValue>(
     () => ({
       phone,
@@ -163,11 +192,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
       sync: {
         state: syncState,
         pending,
+        status,
         notifyWrite: () => coordinator?.notifyWrite(),
         syncNow: async () => void (await coordinator?.syncNow()),
       },
     }),
-    [phone, session, toast, syncState, pending, coordinator],
+    [phone, session, toast, syncState, pending, status, coordinator],
   );
 
   return (

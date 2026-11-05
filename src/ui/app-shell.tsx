@@ -13,14 +13,6 @@ const ITEMS: { key: Exclude<NavKey, "none">; href: string; label: string; icon: 
   { key: "settings", href: "/settings", label: "Settings", icon: "settings" },
 ];
 
-export function syncLabel(state: string, pending: number): string {
-  if (state === "offline") return `Offline · ${pending} saved on this device`;
-  if (state === "syncing") return "Backing up…";
-  if (state === "error") return "Backup will retry";
-  if (pending > 0) return `${pending} waiting to back up`;
-  return "All entries backed up";
-}
-
 /**
  * Wraps signed-in screens. Phones get the bottom tab bar from the design; tablets a graphite rail;
  * desktops a full sidebar. Screens supply their own app bar and content.
@@ -53,16 +45,8 @@ export function AppShell({ active, children }: { active: NavKey; children: React
           </Link>
         ))}
         <div className="side-foot" role="status">
-          <span
-            className="live"
-            aria-hidden="true"
-            style={
-              sync.state === "offline" || sync.state === "error"
-                ? { background: "#FFC72C", boxShadow: "none" }
-                : undefined
-            }
-          />
-          <span className="side-foot-text">{syncLabel(sync.state, sync.pending)}</span>
+          <BackupDot />
+          <span className="side-foot-text">{sync.status.line}</span>
         </div>
       </aside>
 
@@ -98,4 +82,10 @@ export function AppShell({ active, children }: { active: NavKey; children: React
       </div>
     </div>
   );
+}
+
+/** The dot beside the backup line: green and pulsing when all is well, amber otherwise. */
+export function BackupDot() {
+  const { sync } = useApp();
+  return <span className={`live is-${sync.status.tone}`} aria-hidden="true" />;
 }

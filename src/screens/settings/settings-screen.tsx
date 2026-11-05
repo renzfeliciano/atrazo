@@ -11,7 +11,8 @@ import { type CustomerId } from "@/modules/ledger/domain/ids";
 import { SyncHttpError } from "@/modules/sync/infrastructure/http-sync-api";
 import { type PhoneInfo } from "@/modules/vault/application/ledger-access";
 import { useApp } from "@/app/providers";
-import { AppShell, syncLabel } from "@/ui/app-shell";
+import { DEFAULTS as SYNC_TIMING } from "@/modules/sync/application/sync-coordinator";
+import { AppShell } from "@/ui/app-shell";
 import { Icon } from "@/ui/icons";
 import { ThemeToggle, type ThemePreference, useThemePreference } from "@/ui/theme";
 import { ProgressStrip, SAVE_FEEDBACK_MS, useJustSaved } from "@/ui/save-feedback";
@@ -633,35 +634,39 @@ function PhonesSection() {
 const MIN_BACKUP_FEEDBACK_MS = 1200;
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-type BackupRun = "idle" | "working" | "done" | "failed";
+/**
+ * Backup runs on its own (src/modules/sync/application/sync-coordinator.ts). This card says so and
+ * shows when it last ran and when it runs next; "Back up now" is only a shortcut past the wait.
+ */
+const AUTO_BACKUP = {
+  afterWritingMin: SYNC_TIMING.debounceMs / 60_000,
+  everyMin: SYNC_TIMING.periodicMs / 60_000,
+};
 
 function BackupSection() {
   const { phone, sync, toast } = useApp();
-  const [run, setRun] = useState<BackupRun>("idle");
-  const [finishedAt, setFinishedAt] = useState<Date | null>(null);
-  const working = run === "working" || sync.state === "syncing";
-  const allDone = sync.pending === 0 && sync.state !== "error" && sync.state !== "offline";
+  const [manual, setManual] = useState(false);
+  const status = sync.status;
+  const working = manual || status.tone === "working";
 
   async function backUp() {
-    if (!phone) return;
-    setRun("working");
+    if (!phone || working) return;
+    setManual(true);
     const waiting = sync.pending;
     // The real backup and a minimum display time run together; whichever is slower decides.
     await Promise.all([sync.syncNow().catch(() => undefined), wait(MIN_BACKUP_FEEDBACK_MS)]);
     const left = await phone.db.outbox.count();
+    setManual(false);
     if (left > 0) {
-      setRun("failed");
       toast({
-        title: "Backup didn’t finish",
-        detail: `${left} waiting · it retries on its own when you’re online`,
+        title: "Couldn’t back up right now",
+        detail: `${left} saved on this phone · it retries automatically`,
         tone: "error",
       });
       return;
     }
-    setFinishedAt(new Date());
-    setRun("done");
     toast({
-      title: "Backup complete",
+      title: "Backed up",
       detail:
         waiting > 0
           ? `${waiting} ${waiting === 1 ? "change" : "changes"} encrypted and saved`
@@ -669,46 +674,47 @@ function BackupSection() {
     });
   }
 
-  const title = working
-    ? "Backing up…"
-    : run === "done" && finishedAt
-      ? `Backed up just now · ${timeFmt.format(finishedAt)}`
-      : syncLabel(sync.state, sync.pending);
-  const ok = !working && (run === "done" || (run !== "failed" && allDone));
+  const icon =
+    status.tone === "ok"
+      ? { bg: "var(--success-tint)", fg: "var(--on-success-tint)", name: "check" as const }
+      : status.tone === "attention"
+        ? { bg: "var(--brand-tint)", fg: "var(--on-brand-tint)", name: "alert" as const }
+        : { bg: "var(--info-tint)", fg: "var(--on-info-tint)", name: "cloud" as const };
 
   return (
     <Section title="Backup">
-      <div className="card" style={{ overflow: "hidden" }}>
+      <div className="card set-backup" style={{ overflow: "hidden" }}>
         <div className="row" style={{ cursor: "default" }} aria-live="polite">
-          <span
-            className="set-icon"
-            style={
-              ok
-                ? { background: "var(--success-tint)", color: "var(--on-success-tint)" }
-                : { background: "var(--brand-tint)", color: "var(--on-brand-tint)" }
-            }
-          >
+          <span className="set-icon" style={{ background: icon.bg, color: icon.fg }}>
             {working ? (
               <span className="spin" aria-hidden="true" />
             ) : (
-              <Icon name={ok ? "check" : "cloud"} size={17} />
+              <Icon name={icon.name} size={17} />
             )}
           </span>
           <span className="row-main">
-            <span className="row-title">{title}</span>
+            <span className="row-title">{manual ? "Backing up…" : status.title}</span>
             <span className="row-sub">
-              {working
-                ? "Encrypting on this phone and uploading"
-                : "Encrypted on this phone, then backed up automatically"}
+              {manual ? "Encrypting on this phone and uploading" : status.detail}
             </span>
+          </span>
+          <span className={`set-auto is-${status.tone === "attention" ? "warn" : "on"}`}>
+            <span className="pip" aria-hidden="true" />
+            Auto
+          </span>
+        </div>
+        <div className="set-backup-foot">
+          <span>
+            Backs up on its own: about {AUTO_BACKUP.afterWritingMin} minutes after you stop writing,
+            when you open or leave Atrazo, and every {AUTO_BACKUP.everyMin} minutes while it’s open.
           </span>
           <button
             type="button"
-            className="btn btn-secondary btn-sm"
+            className="btn btn-ghost btn-sm"
             onClick={() => void backUp()}
             disabled={working}
           >
-            {working ? "Backing up" : "Back up now"}
+            Back up now
           </button>
         </div>
         {working && <ProgressStrip label="Backing up" />}

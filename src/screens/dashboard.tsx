@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { formatPeso } from "@/core/money";
 import { type CustomerOverview } from "@/modules/ledger/application/queries";
 import { useApp } from "@/app/providers";
-import { AppShell, syncLabel } from "@/ui/app-shell";
+import { AppShell, BackupDot } from "@/ui/app-shell";
 import { Lapis, LogoTile } from "@/ui/brand";
 import { EmptyState } from "@/ui/empty-state";
 import { Icon } from "@/ui/icons";
@@ -95,8 +95,8 @@ export function DashboardScreen() {
         <div className="bar-title">
           <h1>{ledgerName}</h1>
           <span className="bar-sub" role="status">
-            <span className="live" aria-hidden="true" />
-            {syncLabel(sync.state, sync.pending)}
+            <BackupDot />
+            <span className="bar-sub-text">{sync.status.line}</span>
           </span>
         </div>
         <NotificationBell />

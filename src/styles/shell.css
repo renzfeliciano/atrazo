@@ -2567,9 +2567,9 @@ th.ct-last {
 /* Header subtitle: clip with an ellipsis instead of running under the header buttons. */
 .bar-sub {
   max-width: 100%;
-  overflow: hidden;
 }
 .bar-sub-text {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -2665,4 +2665,68 @@ th.ct-last {
 }
 .le-flag.is-edited::before {
   background: var(--line-strong);
+}
+
+/* ── Backup dot (src/ui/app-shell.tsx BackupDot): backup runs on its own; the dot shows how it's going ── */
+.live.is-waiting,
+.live.is-attention {
+  background: #ffc72c;
+  box-shadow: 0 0 0 3px rgba(255, 199, 44, 0.2);
+}
+.live.is-working {
+  background: #7cc3e6;
+  box-shadow: 0 0 0 3px rgba(124, 195, 230, 0.22);
+  animation: live-pulse 1.1s ease-in-out infinite;
+}
+@keyframes live-pulse {
+  50% {
+    box-shadow: 0 0 0 5px rgba(124, 195, 230, 0.08);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live.is-working {
+    animation: none;
+  }
+}
+
+/* ── Settings › Backup: "Auto" badge and the how-it-works footer ── */
+.set-auto {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--success-tint);
+  color: var(--on-success-tint);
+  font-size: 12px;
+  font-weight: 700;
+}
+.set-auto .pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.set-auto.is-warn {
+  background: var(--brand-tint);
+  color: var(--on-brand-tint);
+}
+.set-backup-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px 12px;
+  border-top: 1px solid var(--line-soft);
+  background: var(--surface-2);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.set-backup-foot .btn {
+  flex: none;
+}
+.live {
+  flex: none; /* never squeezed by a long status line */
 }
