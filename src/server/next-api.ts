@@ -23,3 +23,5 @@ const handlers = apiHandlers(serverContainer);
 export const api = Object.fromEntries(
   Object.entries(handlers).map(([name, handler]) => [name, requestTime(handler)]),
 ) as typeof handlers;
+
+export { deprecatedAlias } from "./http/deprecated-alias";

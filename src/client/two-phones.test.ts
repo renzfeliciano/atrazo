@@ -54,12 +54,12 @@ function network(ip: string) {
     if (cookie) headers.set("cookie", cookie);
     const req = new Request(u, { method, headers, body: init.body ?? null });
     const route: Record<string, (r: Request) => Promise<Response>> = {
-      "POST /api/v1/stores": api.createStore,
+      "POST /api/v1/ledgers": api.createStore,
       "POST /api/v1/session": api.openSession,
       "POST /api/v1/sync": api.push,
       "GET /api/v1/sync": api.pull,
-      "PUT /api/v1/stores/code": api.rotateCode,
-      "DELETE /api/v1/stores": api.deleteStore,
+      "PUT /api/v1/ledgers/code": api.rotateCode,
+      "DELETE /api/v1/ledgers": api.deleteStore,
       "DELETE /api/v1/session": api.closeSession,
       "GET /api/v1/devices": api.listDevices,
     };

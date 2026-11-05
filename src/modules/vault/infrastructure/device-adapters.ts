@@ -35,12 +35,12 @@ export function httpIdentityApi(
   const session = async (path: string, body: unknown) =>
     SessionResponse.parse(await (await call("POST", path, body)).json());
   return {
-    createStore: (body) => session("/stores", body),
+    createStore: (body) => session("/ledgers", body),
     openStore: (body) => session("/session", body),
-    rotateCode: async (body) => void (await call("PUT", "/stores/code", body)),
+    rotateCode: async (body) => void (await call("PUT", "/ledgers/code", body)),
     listDevices: async () => DeviceListResponse.parse(await (await call("GET", "/devices")).json()),
     revokeDevice: async (id) => void (await call("DELETE", `/devices/${encodeURIComponent(id)}`)),
     closeSession: async () => void (await call("DELETE", "/session")),
-    deleteStore: async () => void (await call("DELETE", "/stores")),
+    deleteStore: async () => void (await call("DELETE", "/ledgers")),
   };
 }

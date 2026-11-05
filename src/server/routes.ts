@@ -32,10 +32,10 @@ export function apiHandlers(getContainer: () => Container | Promise<Container>) 
   };
 
   return {
-    /** POST /api/v1/stores: "Start my store". */
+    /** POST /api/v1/ledgers: "Start my listahan". */
     createStore: apiRoute(
       deps,
-      { name: "stores.create", auth: "none", body: CreateStoreRequest },
+      { name: "ledgers.create", auth: "none", body: CreateStoreRequest },
       async ({ body, clientKey }) => {
         const s = unwrap(await (await get()).identity.createStore(body, { clientKey }));
         return {
@@ -46,16 +46,16 @@ export function apiHandlers(getContainer: () => Container | Promise<Container>) 
       },
     ),
 
-    /** DELETE /api/v1/stores: "Delete store" removes every backup and phone. */
-    deleteStore: apiRoute(deps, { name: "stores.delete", auth: "device" }, async ({ session }) => {
+    /** DELETE /api/v1/ledgers: "Delete listahan" removes every backup and phone. */
+    deleteStore: apiRoute(deps, { name: "ledgers.delete", auth: "device" }, async ({ session }) => {
       await (await get()).identity.deleteStore(session!);
       return { status: 204, setCookie: clearedSessionCookie() };
     }),
 
-    /** PUT /api/v1/stores/code: "Make a new recovery code". */
+    /** PUT /api/v1/ledgers/code: "Make a new recovery code". */
     rotateCode: apiRoute(
       deps,
-      { name: "stores.rotate_code", auth: "device", body: RotateCodeRequest },
+      { name: "ledgers.rotate_code", auth: "device", body: RotateCodeRequest },
       async ({ body, session }) => {
         unwrap(await (await get()).identity.rotateCode(session!, body));
         return { status: 204 };

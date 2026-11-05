@@ -4,7 +4,7 @@ import { extraDevOrigins } from "./dev-origins";
 
 const APP = "http://localhost:6060";
 const post = (origin: string, site = "same-origin") =>
-  new Request(`${origin}/api/v1/stores`, {
+  new Request(`${origin}/api/v1/ledgers`, {
     method: "POST",
     headers: { origin, "sec-fetch-site": site },
   });
