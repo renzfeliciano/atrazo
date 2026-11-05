@@ -13,7 +13,7 @@ import { Icon } from "@/ui/icons";
 import { ThemeToggle } from "@/ui/theme";
 import { useMinimumDelay } from "@/ui/use-minimum-delay";
 import { NotificationBell } from "./notifications/notifications-screen";
-import { ClientTable } from "./client-table";
+import { ClientRowsPhone, ClientTable } from "./client-table";
 
 type Filter = "all" | "overdue" | "over" | "ahead";
 const SORTS = [
@@ -44,17 +44,6 @@ const SORTS = [
 
 const peso = (c: number, sign: "auto" | "always" = "auto") => formatPeso(c as never, { sign });
 const whole = (c: number) => formatPeso(c as never, { whole: true });
-
-function lastEntryText(o: CustomerOverview, now: Date): string {
-  const at = o.account.lastEntryAt;
-  if (!at) return "No entries yet";
-  const days = Math.max(0, Math.round((now.getTime() - at.getTime()) / 86_400_000));
-  return days === 0
-    ? "Last entry today"
-    : days === 1
-      ? "Last entry yesterday"
-      : `Last entry ${days} days ago`;
-}
 
 function reminderHref(o: CustomerOverview, store: string): string {
   const body = `Magandang araw po, ${o.customer.name}. Ang balanse ninyo sa ${store} ay ${peso(o.account.balance)}. Salamat po!`;
@@ -121,22 +110,30 @@ export function DashboardScreen() {
             <div
               style={{
                 display: "flex",
+                flexWrap: "wrap",
                 alignItems: "flex-end",
                 justifyContent: "space-between",
-                gap: 12,
+                gap: "8px 12px",
               }}
             >
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
                 <span id="total-l" style={{ fontSize: 13, color: "#9AA3AD" }}>
                   Total owed to you
                 </span>
-                <span className="disp mono" style={{ fontSize: 38, lineHeight: 1 }}>
+                <span
+                  className="disp mono"
+                  style={{ fontSize: "clamp(30px, 10vw, 38px)", lineHeight: 1 }}
+                >
                   {data ? peso(data.totalOwed) : "₱—"}
                 </span>
               </div>
               <span
                 className="tag mono"
-                style={{ background: "rgba(255,255,255,.1)", color: "#E6E9ED" }}
+                style={{
+                  background: "rgba(255,255,255,.1)",
+                  color: "#E6E9ED",
+                  whiteSpace: "nowrap",
+                }}
               >
                 {data?.owingCount ?? 0} {data?.owingCount === 1 ? "borrower" : "borrowers"}
               </span>
@@ -385,11 +382,7 @@ export function DashboardScreen() {
                 </div>
 
                 {/* Phones and tablets: rows with a limit meter. */}
-                <ul className="client-rows">
-                  {list.map((o) => (
-                    <ClientRow key={o.customer.id} o={o} now={now} />
-                  ))}
-                </ul>
+                <ClientRowsPhone list={list} now={now} />
 
                 {/* Desktop: a proper data table. */}
                 <ClientTable
@@ -474,6 +467,7 @@ function Stat({
       style={{
         display: "flex",
         flexDirection: "column",
+        justifyContent: "space-between",
         gap: 2,
         padding: divider ? "10px 10px 0 12px" : "10px 10px 0 0",
         borderLeft: divider ? "1px solid rgba(255,255,255,.12)" : undefined,
@@ -484,90 +478,6 @@ function Stat({
         {value}
       </span>
     </div>
-  );
-}
-
-function StatusTags({ o }: { o: CustomerOverview }) {
-  return (
-    <span style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-      {o.account.isOverdue && (
-        <span className="tag tag-danger">{o.account.daysUnpaid}d unpaid</span>
-      )}
-      {o.account.isOverLimit && (
-        <span className="tag tag-danger">
-          <span className="pip" />
-          Over limit
-        </span>
-      )}
-      {o.account.isPaidAhead && <span className="tag tag-info">Paid ahead</span>}
-      {!o.account.isOverdue &&
-        !o.account.isOverLimit &&
-        !o.account.isPaidAhead &&
-        o.account.balance === 0 && <span className="tag tag-success">Fully paid</span>}
-    </span>
-  );
-}
-
-function ClientRow({ o, now }: { o: CustomerOverview; now: Date }) {
-  const plain = !o.account.isOverdue && !o.account.isOverLimit && !o.account.isPaidAhead;
-  return (
-    <li style={{ borderTop: "1px solid var(--line-soft)" }}>
-      <Link
-        href={`/client?id=${o.customer.id}`}
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 8,
-          padding: "12px 14px",
-          color: "var(--text)",
-          textDecoration: "none",
-        }}
-      >
-        <span style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
-          <span className="row-main">
-            <span className="row-title">{o.customer.name}</span>
-            <span style={{ display: "flex", alignItems: "center", gap: 6, minHeight: 21 }}>
-              {plain ? (
-                <span className="row-sub">{lastEntryText(o, now)}</span>
-              ) : (
-                <StatusTags o={o} />
-              )}
-            </span>
-          </span>
-          <span
-            style={{
-              flex: "none",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-end",
-              gap: 3,
-            }}
-          >
-            <span
-              className="mono"
-              style={{
-                fontSize: 15.5,
-                fontWeight: 700,
-                color: o.account.isPaidAhead ? "var(--info)" : "var(--text)",
-              }}
-            >
-              {o.account.isPaidAhead
-                ? `(${formatPeso(o.account.balance, { sign: "never" })})`
-                : peso(o.account.balance)}
-            </span>
-            <span className="mono" style={{ fontSize: 11.5, color: "var(--muted)" }}>
-              {o.account.isPaidAhead ? "paid ahead" : `of ${whole(o.account.limit)}`}
-            </span>
-          </span>
-        </span>
-        <span
-          className={`meter ${o.account.limitUsedPercent >= 90 ? "is-danger" : ""}`}
-          aria-hidden="true"
-        >
-          <span style={{ width: `${o.account.limitUsedPercent}%` }} />
-        </span>
-      </Link>
-    </li>
   );
 }
 

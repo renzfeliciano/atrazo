@@ -303,7 +303,7 @@ export function StoreSetupScreen() {
             <div className="banner banner-warn" role="note">
               <Icon name="alert" size={16} />
               <span>
-                This code is the only way to open your store on another phone.{" "}
+                This code is the only way to open your listahan on another phone.{" "}
                 <strong>Atrazo can’t see it or recover it.</strong> Write it down and keep it
                 somewhere safe.
               </span>

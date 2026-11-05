@@ -44,10 +44,10 @@ test("a borrower's utang and bayad add up, with undo and void", async ({ page })
   await expect(balanceOf(page)).toContainText("₱450.00");
 
   // Void the 150: it stays on the page, crossed out, and the balance is corrected.
-  await page.getByRole("row", { name: /Bigas, mantika/ }).click();
+  await page.getByRole("button", { name: /Bigas, mantika/ }).click();
   await page.getByRole("dialog", { name: "Void this entry?" }).getByRole("button").first().click();
   await expect(balanceOf(page)).toContainText("₱300.00");
-  await expect(page.getByText(/Voided/)).toBeVisible();
+  await expect(page.getByText(/Voided/).filter({ visible: true })).toBeVisible();
 
   // The statement agrees with the ledger.
   await page.getByRole("link", { name: "Statement" }).click();

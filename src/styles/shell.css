@@ -2129,7 +2129,7 @@ td.ct-balance strong {
   border-radius: 3px;
 }
 .ct-meter.tone-ok > span {
-  background: var(--ink);
+  background: var(--text-2);
 }
 .ct-meter.tone-warn > span {
   background: var(--brand-press);
@@ -2322,4 +2322,254 @@ th.ct-last {
 }
 .ct-status {
   width: 124px;
+}
+
+/* ── Client list on phones: a fixed grid per row (src/screens/client-table.tsx) ── */
+.cr > li + li {
+  border-top: 1px solid var(--line-soft);
+}
+.app .cr-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "avatar name   amount"
+    "avatar meta   limit"
+    ".      meter  meter";
+  column-gap: 12px;
+  row-gap: 4px;
+  align-items: center;
+  padding: 12px 14px 13px;
+  color: var(--text);
+  text-decoration: none;
+}
+.app .cr-row:active {
+  background: var(--surface-2);
+}
+.cr-avatar {
+  grid-area: avatar;
+  align-self: start;
+  width: 36px;
+  height: 36px;
+}
+.cr-name {
+  grid-area: name;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cr-amount {
+  grid-area: amount;
+  justify-self: end;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.cr-amount.is-ahead {
+  color: var(--info);
+}
+.cr-meta {
+  grid-area: meta;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.cr-meta .ct-chip {
+  flex: none;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  font-size: 11.5px;
+}
+.cr-when {
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cr-limit {
+  grid-area: limit;
+  justify-self: end;
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.cr-meter {
+  grid-area: meter;
+  height: 4px;
+  margin-top: 4px;
+}
+
+/* ── Borrower entries on phones: a fixed grid per entry (src/screens/client-ledger.tsx) ── */
+.le-table {
+  display: none;
+}
+.le-rows ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.le-rows li + li {
+  border-top: 1px solid var(--line-soft);
+}
+.le-group {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.le-group .mono {
+  font-variant-numeric: tabular-nums;
+}
+.app .le-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  grid-template-areas:
+    "icon note amount"
+    "icon meta bal";
+  column-gap: 12px;
+  row-gap: 3px;
+  align-items: baseline;
+  width: 100%;
+  padding: 11px 14px 12px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+.app button.le-row {
+  cursor: pointer;
+}
+.app button.le-row:active {
+  background: var(--surface-2);
+}
+.le-icon {
+  grid-area: icon;
+  align-self: start;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--brand-tint);
+  color: var(--on-brand-tint);
+}
+.le-icon.is-bayad {
+  background: var(--info-tint);
+  color: var(--on-info-tint);
+}
+.le-note {
+  grid-area: note;
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.le-amount {
+  grid-area: amount;
+  justify-self: end;
+  font-size: 14.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.le-amount.is-bayad {
+  color: var(--info);
+}
+.le-meta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.le-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.le-flag::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.le-flag.is-pending {
+  color: var(--on-brand-tint);
+}
+.le-flag.is-pending::before {
+  background: var(--brand-press);
+}
+.le-flag.is-void {
+  color: var(--faint);
+}
+.le-bal {
+  grid-area: bal;
+  justify-self: end;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.le-rows li.is-void .le-note,
+.le-rows li.is-void .le-amount {
+  color: var(--faint);
+}
+.le-rows li.is-void .le-amount {
+  text-decoration: line-through;
+}
+.le-rows li.is-void .le-icon {
+  background: var(--surface-3);
+  color: var(--faint);
+}
+.le-settled {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--success-tint);
+  color: var(--on-success-tint);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+@media (min-width: 768px) {
+  .le-rows {
+    display: none;
+  }
+  .le-table {
+    display: table;
+  }
+}
+
+/* Header subtitle: clip with an ellipsis instead of running under the header buttons. */
+.bar-sub {
+  max-width: 100%;
+  overflow: hidden;
+}
+.bar-sub-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

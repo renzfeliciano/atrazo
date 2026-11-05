@@ -17,8 +17,7 @@ import { Icon } from "@/ui/icons";
 import { useMinimumDelay } from "@/ui/use-minimum-delay";
 
 type Tab = "all" | "utang" | "bayad";
-const monthFmt = new Intl.DateTimeFormat("en-PH", {
-  month: "long",
+const yearFmt = new Intl.DateTimeFormat("en-PH", {
   year: "numeric",
   timeZone: STORE_TIME_ZONE,
 });
@@ -48,12 +47,12 @@ interface Group {
   readonly rows: LedgerRow[];
 }
 
-function groupByMonth(rows: readonly LedgerRow[], tab: Tab): Group[] {
+function groupByYear(rows: readonly LedgerRow[], tab: Tab): Group[] {
   const groups: Group[] = [];
   for (const r of rows) {
     if (tab !== "all" && (r.type !== "entry" || r.entry.kind !== tab)) continue;
     const at = r.type === "settled" ? r.at : r.entry.occurredAt;
-    const label = monthFmt.format(at);
+    const label = yearFmt.format(at);
     let g = groups.at(-1);
     if (!g || g.label !== label) {
       g = { label, net: ZERO, rows: [] };
@@ -78,7 +77,7 @@ export function ClientLedgerScreen() {
   const [voiding, setVoiding] = useState<Entry | null>(null);
   // Next keeps this page mounted when you leave it; close the dialog so it never reopens on return.
   useLayoutEffect(() => () => setVoiding(null), []);
-  const groups = useMemo(() => (ledger ? groupByMonth(ledger.rows, tab) : []), [ledger, tab]);
+  const groups = useMemo(() => (ledger ? groupByYear(ledger.rows, tab) : []), [ledger, tab]);
 
   if (ledger === undefined || !shown) return <LedgerSkeleton />;
   if (ledger === null) {
@@ -136,12 +135,14 @@ export function ClientLedgerScreen() {
         <div className="bar-title">
           <h1>{customer.name}</h1>
           <span className="bar-sub">
-            {customer.phone ? (
-              <span className="mono">{formatPhilippineMobile(customer.phone)}</span>
-            ) : (
-              "No mobile number"
-            )}{" "}
-            · client since {sinceFmt.format(customer.createdAt)}
+            <span className="bar-sub-text">
+              {customer.phone ? (
+                <span className="mono">{formatPhilippineMobile(customer.phone)}</span>
+              ) : (
+                "No mobile number"
+              )}{" "}
+              · borrower since {sinceFmt.format(customer.createdAt)}
+            </span>
           </span>
         </div>
         <Link
@@ -329,113 +330,118 @@ export function ClientLedgerScreen() {
                 }
               />
             ) : (
-              <table className="tbl">
-                <thead>
-                  <tr>
-                    <th scope="col" style={{ width: 66 }}>
-                      Date
-                    </th>
-                    <th scope="col">Details</th>
-                    <th scope="col" className="num" style={{ width: 92 }}>
-                      Amount
-                    </th>
-                    <th scope="col" className="num" style={{ width: 92 }}>
-                      Balance
-                    </th>
-                  </tr>
-                </thead>
-                {groups.map((g) => (
-                  <tbody key={g.label}>
-                    <tr className="grp">
-                      <td colSpan={2}>{g.label}</td>
-                      <td colSpan={2} className="num mono">
-                        net {plain(g.net)}
-                      </td>
+              <>
+                <EntryRowsPhone groups={groups} onVoid={setVoiding} />
+                <table className="tbl le-table">
+                  <thead>
+                    <tr>
+                      <th scope="col" style={{ width: 66 }}>
+                        Date
+                      </th>
+                      <th scope="col">Details</th>
+                      <th scope="col" className="num" style={{ width: 92 }}>
+                        Amount
+                      </th>
+                      <th scope="col" className="num" style={{ width: 92 }}>
+                        Balance
+                      </th>
                     </tr>
-                    {g.rows.map((r) =>
-                      r.type === "settled" ? (
-                        <tr key={`settled-${r.at.getTime()}`}>
-                          <td
-                            colSpan={4}
-                            style={{
-                              padding: "8px 14px",
-                              background: "var(--success-tint)",
-                              color: "var(--on-success-tint)",
-                              fontSize: 12.5,
-                              fontWeight: 700,
-                            }}
-                          >
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                              <Icon name="check" size={14} strokeWidth={2.8} />
-                              Fully paid · {formatStoreDay(r.at, new Date())} · balance ₱0.00
-                            </span>
-                          </td>
-                        </tr>
-                      ) : (
-                        <tr
-                          key={r.entry.id}
-                          className={r.type === "voided" ? "void" : undefined}
-                          onClick={r.type === "entry" ? () => setVoiding(r.entry) : undefined}
-                          style={{ cursor: r.type === "entry" ? "pointer" : undefined }}
-                          title={r.type === "entry" ? "Tap to void this entry" : undefined}
-                        >
-                          <td>
-                            <span style={{ display: "flex", flexDirection: "column" }}>
-                              <span style={{ fontWeight: 600, whiteSpace: "nowrap" }}>
-                                {dayFmt.format(r.entry.occurredAt)}
-                              </span>
-                              <span style={{ fontSize: 11.5, color: "var(--muted)" }}>
-                                {weekdayFmt.format(r.entry.occurredAt)}
-                              </span>
-                            </span>
-                          </td>
-                          <td>
-                            <span
+                  </thead>
+                  {groups.map((g) => (
+                    <tbody key={g.label}>
+                      <tr className="grp">
+                        <td colSpan={2}>{g.label}</td>
+                        <td colSpan={2} className="num mono">
+                          net {plain(g.net)}
+                        </td>
+                      </tr>
+                      {g.rows.map((r) =>
+                        r.type === "settled" ? (
+                          <tr key={`settled-${r.at.getTime()}`}>
+                            <td
+                              colSpan={4}
                               style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 3,
-                                alignItems: "flex-start",
-                              }}
-                            >
-                              <span>
-                                {r.entry.note ?? (r.entry.kind === "bayad" ? "Bayad" : "Utang")}
-                              </span>
-                              {r.type === "voided" && (
-                                <span className="tag tag-outline">
-                                  Voided{r.reason ? ` · ${r.reason}` : ""}
-                                </span>
-                              )}
-                              {r.pending && r.type === "entry" && (
-                                <span className="tag tag-warn">Not backed up yet</span>
-                              )}
-                            </span>
-                          </td>
-                          <td className="num">
-                            <span
-                              className="amt mono"
-                              style={{
+                                padding: "8px 14px",
+                                background: "var(--success-tint)",
+                                color: "var(--on-success-tint)",
+                                fontSize: 12.5,
                                 fontWeight: 700,
-                                color:
-                                  r.entry.kind === "bayad"
-                                    ? "var(--info)"
-                                    : r.type === "voided"
-                                      ? "var(--faint)"
-                                      : "var(--text)",
                               }}
                             >
-                              {plain(r.entry.amount)}
-                            </span>
-                          </td>
-                          <td className="num mono muted">
-                            {r.type === "entry" ? plain(r.balanceAfter, "auto") : "—"}
-                          </td>
-                        </tr>
-                      ),
-                    )}
-                  </tbody>
-                ))}
-              </table>
+                              <span
+                                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                              >
+                                <Icon name="check" size={14} strokeWidth={2.8} />
+                                Fully paid · {formatStoreDay(r.at, new Date())} · balance ₱0.00
+                              </span>
+                            </td>
+                          </tr>
+                        ) : (
+                          <tr
+                            key={r.entry.id}
+                            className={r.type === "voided" ? "void" : undefined}
+                            onClick={r.type === "entry" ? () => setVoiding(r.entry) : undefined}
+                            style={{ cursor: r.type === "entry" ? "pointer" : undefined }}
+                            title={r.type === "entry" ? "Tap to void this entry" : undefined}
+                          >
+                            <td>
+                              <span style={{ display: "flex", flexDirection: "column" }}>
+                                <span style={{ fontWeight: 600, whiteSpace: "nowrap" }}>
+                                  {dayFmt.format(r.entry.occurredAt)}
+                                </span>
+                                <span style={{ fontSize: 11.5, color: "var(--muted)" }}>
+                                  {weekdayFmt.format(r.entry.occurredAt)}
+                                </span>
+                              </span>
+                            </td>
+                            <td>
+                              <span
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  gap: 3,
+                                  alignItems: "flex-start",
+                                }}
+                              >
+                                <span>
+                                  {r.entry.note ?? (r.entry.kind === "bayad" ? "Bayad" : "Utang")}
+                                </span>
+                                {r.type === "voided" && (
+                                  <span className="tag tag-outline">
+                                    Voided{r.reason ? ` · ${r.reason}` : ""}
+                                  </span>
+                                )}
+                                {r.pending && r.type === "entry" && (
+                                  <span className="tag tag-warn">Not backed up yet</span>
+                                )}
+                              </span>
+                            </td>
+                            <td className="num">
+                              <span
+                                className="amt mono"
+                                style={{
+                                  fontWeight: 700,
+                                  color:
+                                    r.entry.kind === "bayad"
+                                      ? "var(--info)"
+                                      : r.type === "voided"
+                                        ? "var(--faint)"
+                                        : "var(--text)",
+                                }}
+                              >
+                                {plain(r.entry.amount)}
+                              </span>
+                            </td>
+                            <td className="num mono muted">
+                              {r.type === "entry" ? plain(r.balanceAfter, "auto") : "—"}
+                            </td>
+                          </tr>
+                        ),
+                      )}
+                    </tbody>
+                  ))}
+                </table>
+              </>
             )}
           </section>
           <p className="muted" style={{ fontSize: 12, padding: "0 4px" }}>
@@ -506,6 +512,89 @@ export function ClientLedgerScreen() {
         </div>
       )}
     </AppShell>
+  );
+}
+
+/**
+ * Entries on phones: one fixed grid per entry instead of a four-column table, so long notes
+ * get the full width and amounts and running balances line up on the right.
+ */
+function EntryRowsPhone({
+  groups,
+  onVoid,
+}: {
+  groups: readonly Group[];
+  onVoid: (e: Entry) => void;
+}) {
+  return (
+    <div className="le-rows">
+      {groups.map((g) => (
+        <section key={g.label} aria-label={g.label}>
+          <div className="le-group">
+            <span>{g.label}</span>
+            <span className="mono">net {plain(g.net)}</span>
+          </div>
+          <ul>
+            {g.rows.map((r) => {
+              if (r.type === "settled") {
+                return (
+                  <li key={`settled-${r.at.getTime()}`} className="le-settled">
+                    <Icon name="check" size={14} strokeWidth={2.8} />
+                    Fully paid · {formatStoreDay(r.at, new Date())} · balance ₱0.00
+                  </li>
+                );
+              }
+              const e = r.entry;
+              const voided = r.type === "voided";
+              const kind = e.kind === "bayad" ? "bayad" : "utang";
+              const body = (
+                <>
+                  <span className={`le-icon is-${kind}`} aria-hidden="true">
+                    <Icon name={kind === "bayad" ? "minus" : "plus"} size={14} strokeWidth={2.8} />
+                  </span>
+                  <span className="le-note">
+                    {e.note ?? (kind === "bayad" ? "Bayad" : "Utang")}
+                  </span>
+                  <span className={`le-amount mono is-${kind}`}>{plain(e.amount)}</span>
+                  <span className="le-meta">
+                    <span>
+                      {dayFmt.format(e.occurredAt)} · {weekdayFmt.format(e.occurredAt)}
+                    </span>
+                    {voided && (
+                      <span className="le-flag is-void">
+                        Voided{r.reason ? ` · ${r.reason}` : ""}
+                      </span>
+                    )}
+                    {r.pending && !voided && (
+                      <span className="le-flag is-pending">Not backed up</span>
+                    )}
+                  </span>
+                  <span className="le-bal mono">
+                    {voided ? "—" : `bal ${plain(r.balanceAfter, "auto")}`}
+                  </span>
+                </>
+              );
+              return (
+                <li key={e.id} className={voided ? "is-void" : undefined}>
+                  {voided ? (
+                    <div className="le-row">{body}</div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="le-row"
+                      onClick={() => onVoid(e)}
+                      title="Tap to void this entry"
+                    >
+                      {body}
+                    </button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
+    </div>
   );
 }
 

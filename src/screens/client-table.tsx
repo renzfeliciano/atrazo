@@ -27,7 +27,7 @@ const COLUMNS: { label: string; sort?: SortLabel; className?: string }[] = [
 ];
 
 type Tone = "danger" | "warn" | "info" | "ok" | "neutral";
-function statusOf(o: CustomerOverview): { label: string; tone: Tone } {
+export function statusOf(o: CustomerOverview): { label: string; tone: Tone } {
   const a = o.account;
   if (a.isOverdue) return { label: "Overdue", tone: "danger" };
   if (a.isOverLimit) return { label: "Over limit", tone: "danger" };
@@ -37,7 +37,7 @@ function statusOf(o: CustomerOverview): { label: string; tone: Tone } {
   return { label: "Good standing", tone: "neutral" };
 }
 
-const initials = (name: string) =>
+export const initials = (name: string) =>
   name
     .split(/\s+/)
     .filter((w) => /^[\p{L}]/u.test(w))
@@ -45,7 +45,7 @@ const initials = (name: string) =>
     .map((w) => w[0]!.toUpperCase())
     .join("") || "?";
 
-function relative(at: Date | null, now: Date): string {
+export function relative(at: Date | null, now: Date): string {
   if (!at) return "No entries yet";
   const d = calendarDaysBetween(at, now);
   return d === 0 ? "Today" : d === 1 ? "Yesterday" : `${d} days ago`;
@@ -211,5 +211,47 @@ export function ClientTable({
         </tfoot>
       )}
     </table>
+  );
+}
+
+/**
+ * The same list on phones: one fixed grid per row (avatar · name and status · amount), so names,
+ * chips and amounts line up down the list. Same statuses and colours as the table.
+ */
+export function ClientRowsPhone({ list, now }: { list: readonly CustomerOverview[]; now: Date }) {
+  return (
+    <ul className="client-rows cr">
+      {list.map((o) => {
+        const a = o.account;
+        const status = statusOf(o);
+        const pct = a.balance > 0 ? Math.min(100, Math.round(a.limitUsedPercent)) : 0;
+        const meterTone =
+          a.limitUsedPercent >= 100 ? "danger" : a.limitUsedPercent >= 80 ? "warn" : "ok";
+        return (
+          <li key={o.customer.id}>
+            <Link href={`/client?id=${o.customer.id}`} className="cr-row">
+              <span className={`ct-avatar tone-${status.tone} cr-avatar`} aria-hidden="true">
+                {initials(o.customer.name)}
+              </span>
+              <span className="cr-name">{o.customer.name}</span>
+              <span className={`cr-amount mono ${a.isPaidAhead ? "is-ahead" : ""}`}>
+                {a.isPaidAhead ? `${formatPeso(-a.balance as Cents)} ahead` : formatPeso(a.balance)}
+              </span>
+              <span className="cr-meta">
+                <span className={`ct-chip tone-${status.tone}`}>
+                  <span className="ct-dot" aria-hidden="true" />
+                  {a.isOverdue ? `${a.daysUnpaid} days unpaid` : status.label}
+                </span>
+                <span className="cr-when">{relative(a.lastEntryAt, now)}</span>
+              </span>
+              <span className="cr-limit mono">of {formatPeso(a.limit, { whole: true })}</span>
+              <span className={`ct-meter tone-${meterTone} cr-meter`} aria-hidden="true">
+                <span style={{ width: `${pct}%` }} />
+              </span>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
