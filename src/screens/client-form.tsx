@@ -53,13 +53,13 @@ export function ClientFormScreen({ mode }: { mode: "new" | "edit" }) {
       focusPhone={params.get("focus") === "phone"}
       onDone={(id, name, created) => {
         sync.notifyWrite();
-        toast({ title: created ? "Client added" : "Client saved", detail: name });
+        toast({ title: created ? "Borrower added" : "Borrower saved", detail: name });
         if (params.get("next") === "entry") router.replace(`/entry?c=${id}`);
         else router.replace(`/client?id=${id}`);
       }}
       onHidden={(name) => {
         sync.notifyWrite();
-        toast({ title: "Client hidden", detail: `${name} · restore from Settings` });
+        toast({ title: "Borrower hidden", detail: `${name} · restore from Settings` });
         router.replace("/");
       }}
       phoneReady={!!phone}
@@ -160,7 +160,7 @@ function ClientForm(props: {
           <Icon name="back" size={22} />
         </Link>
         <div className="bar-title">
-          <h1>{mode === "new" ? "New client" : "Edit client"}</h1>
+          <h1>{mode === "new" ? "New borrower" : "Edit borrower"}</h1>
           <span className="bar-sub">
             {mode === "new" ? "Only a name is needed" : existing?.name}
           </span>
@@ -316,7 +316,7 @@ function ClientForm(props: {
               borderColor: "var(--danger-line)",
             }}
           >
-            <h2 style={{ fontSize: 15, fontWeight: 700 }}>Hide client</h2>
+            <h2 style={{ fontSize: 15, fontWeight: 700 }}>Hide borrower</h2>
             <p className="muted" style={{ fontSize: 13, lineHeight: 1.5 }}>
               Removes them from your lists and totals. Their entries are kept, and you can restore
               them from Settings.
@@ -347,7 +347,7 @@ function ClientForm(props: {
                 style={{ alignSelf: "flex-start" }}
                 onClick={() => setConfirmHide(true)}
               >
-                Hide client
+                Hide borrower
               </button>
             )}
           </section>
@@ -366,7 +366,7 @@ function ClientForm(props: {
           style={{ flex: 2 }}
         >
           {saving && <span className="spin" aria-hidden="true" />}
-          {saving ? "Saving…" : mode === "new" ? "Save client" : "Save changes"}
+          {saving ? "Saving…" : mode === "new" ? "Save borrower" : "Save changes"}
         </button>
       </footer>
     </div>

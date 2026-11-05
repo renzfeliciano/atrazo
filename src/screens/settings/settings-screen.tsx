@@ -38,7 +38,7 @@ const ACTIONS = {
   phones: { doing: "Loading your phones", verb: "load your phones" },
   signOutPhone: { doing: "Signing out a phone", verb: "sign out that phone" },
   signOut: { doing: "Signing out", verb: "sign you out" },
-  deleteStore: { doing: "Deleting the store", verb: "delete the store" },
+  deleteStore: { doing: "Deleting the listahan", verb: "delete the listahan" },
 } satisfies Record<string, Action>;
 
 function problemText(e: unknown, action: Action): string {
@@ -50,7 +50,7 @@ function problemText(e: unknown, action: Action): string {
     // The phone still has the store, but the server no longer knows this phone (for example,
     // the browser's cookies were cleared). Retrying can't fix that; opening the store again can.
     if (e.code === "UNAUTHENTICATED")
-      return `Couldn’t ${action.verb}: this phone’s connection to your backup has ended. Your entries here are safe. Back them up from another phone, or sign out and open the store again with your recovery code.`;
+      return `Couldn’t ${action.verb}: this phone’s connection to your backup has ended. Your entries here are safe. Back them up from another phone, or sign out and open the listahan again with your recovery code.`;
   }
   return `Couldn’t ${action.verb}. Please try again.`;
 }
@@ -80,7 +80,7 @@ export function SettingsScreen() {
         </Link>
         <div className="bar-title">
           <h1>Settings</h1>
-          <span className="bar-sub">Store, phones, backup and rules</span>
+          <span className="bar-sub">Listahan, phones, backup and rules</span>
         </div>
         <ThemeToggle className="bar-theme" />
       </header>
@@ -222,18 +222,18 @@ function StoreSection({ name }: { name: string }) {
     const r = await run(() => phone.commands.saveSettings({ name: draft }), SAVE_FEEDBACK_MS);
     if (!r.ok) return setError(r.error.issues[0]?.message ?? r.error.message);
     sync.notifyWrite();
-    toast({ title: "Store name saved", detail: r.value.name });
+    toast({ title: "Listahan name saved", detail: r.value.name });
     markSaved();
     setEditing(false);
   }
 
   return (
-    <Section title="Store">
+    <Section title="Listahan">
       <div className="card set-store" style={{ overflow: "hidden" }} aria-live="polite">
         {editing ? (
           <form onSubmit={save} className="set-store-form" noValidate>
             <label className="label" htmlFor="set-store-name">
-              Store name
+              Listahan name
             </label>
             <input
               id="set-store-name"
@@ -321,7 +321,7 @@ function StoreSection({ name }: { name: string }) {
             </button>
           </div>
         )}
-        {pending && <ProgressStrip label="Saving the store name" />}
+        {pending && <ProgressStrip label="Saving the listahan name" />}
       </div>
     </Section>
   );
@@ -363,7 +363,7 @@ function RecoverySection() {
   return (
     <Section
       title="Recovery code"
-      note="Your code is the only way to open this store on a new phone. Atrazo can’t see it or send it to you."
+      note="Your code is the only way to open this listahan on a new phone. Atrazo can’t see it or send it to you."
     >
       <ul className="card">
         <li>
@@ -421,7 +421,9 @@ function RecoverySection() {
 
       {pendingCode && (
         <Dialog title="Your new recovery code" onClose={() => undefined}>
-          <p className="set-dialog-p">Write it on paper now and keep it away from the store.</p>
+          <p className="set-dialog-p">
+            Write it on paper now and keep it somewhere other than where you keep your phone.
+          </p>
           <div className="set-code mono" aria-label="New recovery code">
             {pendingCode.split("-").map((g, i) => (
               <span key={i}>
@@ -523,7 +525,7 @@ function PhonesSection() {
 
   return (
     <Section
-      title="Phones with your store"
+      title="Phones with your listahan"
       note="Lost or replaced a phone? Sign it out here, then make a new recovery code. Its copy of your records is erased the next time it connects."
     >
       <ul className="card" aria-busy={state.status === "loading"}>
@@ -798,7 +800,7 @@ function CreditRulesSection(props: {
               {errors.defaultLimit}
             </span>
           ) : (
-            <span className="help">For new clients. Each client can have their own limit.</span>
+            <span className="help">For new borrowers. Each borrower can have their own limit.</span>
           )}
         </div>
         <div className="field">
@@ -915,7 +917,7 @@ function DataSection({ storeName }: { storeName: string }) {
     );
     if (r.ok) {
       sync.notifyWrite();
-      toast({ title: "Client restored", detail: name });
+      toast({ title: "Borrower restored", detail: name });
     }
   }
 
@@ -952,9 +954,11 @@ function DataSection({ storeName }: { storeName: string }) {
               <Icon name="userPlus" size={17} />
             </span>
             <span className="row-main">
-              <span className="row-title">Hidden clients</span>
+              <span className="row-title">Hidden borrowers</span>
               <span className="row-sub">
-                {hidden?.length ? "Their history is kept and can be restored" : "No hidden clients"}
+                {hidden?.length
+                  ? "Their history is kept and can be restored"
+                  : "No hidden borrowers"}
               </span>
             </span>
             {!!hidden?.length && <span className="tag">{hidden.length}</span>}
@@ -1079,7 +1083,7 @@ function AccountSection({ storeName }: { storeName: string }) {
         await phone.access.deleteStore();
         await phone.db.wipe();
         router.replace("/welcome");
-        toast({ title: "Store deleted", detail: "Its backups were removed from our servers." });
+        toast({ title: "Listahan deleted", detail: "Its backups were removed from our servers." });
       } catch (e) {
         setProblem(problemText(e, ACTIONS.deleteStore));
       }
@@ -1096,11 +1100,11 @@ function AccountSection({ storeName }: { storeName: string }) {
         Sign out of this phone
       </button>
       <p className="set-note">
-        Erases this phone’s copy of your store. Your backup stays safe; to open the store here again
-        you’ll need your recovery code.
+        Erases this phone’s copy of your listahan. Your backup stays safe; to open the listahan here
+        again you’ll need your recovery code.
       </p>
       <button type="button" className="set-delete" onClick={() => setDialog("delete")}>
-        Delete store
+        Delete listahan
       </button>
 
       {dialog === "signout" && (
@@ -1151,7 +1155,7 @@ function AccountSection({ storeName }: { storeName: string }) {
             <h3>What gets deleted</h3>
             <ul>
               <li>
-                <span>Clients</span>
+                <span>Borrowers</span>
                 <strong className="mono">
                   {impact ? impact.clients.toLocaleString("en-PH") : "…"}
                 </strong>
@@ -1218,7 +1222,7 @@ function AccountSection({ storeName }: { storeName: string }) {
           )}
           <div className="dlg-actions">
             <button type="button" className="btn btn-secondary" onClick={close} disabled={busy}>
-              Keep my store
+              Keep my listahan
             </button>
             <button
               type="button"
@@ -1231,7 +1235,7 @@ function AccountSection({ storeName }: { storeName: string }) {
               ) : (
                 <Icon name="trash" size={16} />
               )}
-              {busy ? "Deleting…" : "Delete store forever"}
+              {busy ? "Deleting…" : "Delete listahan forever"}
             </button>
           </div>
         </Dialog>

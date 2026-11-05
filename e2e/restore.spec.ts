@@ -21,8 +21,8 @@ test("a backup restores on a new phone with the recovery code", async ({ browser
 
   // A wrong code is refused with a clear message.
   await p2.getByLabel("Recovery code").fill("ZZZZZ-ZZZZZ-ZZZZZ-ZZZZZ-ZZZZZ");
-  await p2.getByRole("button", { name: "Open my store" }).click();
-  await expect(p2.getByRole("alert").filter({ hasText: "didn’t match a store" })).toBeVisible();
+  await p2.getByRole("button", { name: "Open my listahan" }).click();
+  await expect(p2.getByRole("alert").filter({ hasText: "didn’t match a listahan" })).toBeVisible();
 
   // The real code, typed in lowercase without dashes, works.
   await p2.getByLabel("Recovery code").fill("");
@@ -30,7 +30,7 @@ test("a backup restores on a new phone with the recovery code", async ({ browser
     .getByLabel("Recovery code")
     .pressSequentially(recoveryCode().replace(/-/g, "").toLowerCase());
   await p2.getByLabel("Name this device").fill("E2E phone 2");
-  await p2.getByRole("button", { name: "Open my store" }).click();
+  await p2.getByRole("button", { name: "Open my listahan" }).click();
   await expect(p2.getByText("Andito pa lahat.")).toBeVisible({ timeout: 30_000 });
   await expect(p2.getByText("E2E Sari-sari is open on this device.")).toBeVisible();
   await p2.getByRole("link", { name: "Open my listahan" }).click();

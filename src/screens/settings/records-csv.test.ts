@@ -49,7 +49,7 @@ describe("recordsToCsv", () => {
   it("starts with a BOM and a header, one row per entry, oldest first", () => {
     expect(csv.startsWith("﻿")).toBe(true);
     expect(lines[0]).toBe(
-      "Client,Mobile,Date,Type,Amount (PHP),Note,Voids entry,Entry ID,Recorded at (UTC)",
+      "Borrower,Mobile,Date,Type,Amount (PHP),Note,Voids entry,Entry ID,Recorded at (UTC)",
     );
     expect(lines).toHaveLength(5);
     expect(lines.slice(1).map((l) => l.split(",").at(-2))).toEqual(["e1", "e2", "e3", "e4"]);

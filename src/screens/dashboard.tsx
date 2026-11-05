@@ -92,7 +92,7 @@ export function DashboardScreen() {
       .sort(SORTS[sortIdx]!.fn);
   }, [customers, q, filter, sortIdx]);
 
-  const storeName = settings?.name ?? "My store";
+  const storeName = settings?.name ?? "My listahan";
   const overdueDays = settings?.overdueAfterDays ?? 30;
 
   if (!data || !settings || !shown) return <DashboardSkeleton />;
@@ -138,7 +138,7 @@ export function DashboardScreen() {
                 className="tag mono"
                 style={{ background: "rgba(255,255,255,.1)", color: "#E6E9ED" }}
               >
-                {data?.owingCount ?? 0} {data?.owingCount === 1 ? "client" : "clients"}
+                {data?.owingCount ?? 0} {data?.owingCount === 1 ? "borrower" : "borrowers"}
               </span>
             </div>
             <div
@@ -188,8 +188,8 @@ export function DashboardScreen() {
                   Wala pang nakalista
                 </h2>
                 <p style={{ fontSize: 14, lineHeight: 1.5, color: "var(--text-2)" }}>
-                  Write the first utang: a name and an amount. Lapis keeps every balance and your
-                  store total added up.
+                  Write the first utang: a name and an amount. Lapis keeps every balance and the
+                  total owed to you added up.
                 </p>
                 <Link
                   href="/entry"
@@ -201,7 +201,7 @@ export function DashboardScreen() {
                 </Link>
                 <Link href="/clients/new" className="btn btn-secondary btn-block">
                   <Icon name="userPlus" size={18} />
-                  Add a client
+                  Add a borrower
                 </Link>
               </section>
             )}
@@ -223,8 +223,8 @@ export function DashboardScreen() {
                   Walang sisingilin today
                 </h2>
                 <p style={{ fontSize: 13.5, lineHeight: 1.5, color: "var(--text-2)" }}>
-                  Nobody is overdue. Clients show up here, longest unpaid first, once a balance goes
-                  unpaid too long.
+                  Nobody is overdue. Borrowers show up here, longest unpaid first, once a balance
+                  goes unpaid too long.
                 </p>
               </section>
             )}
@@ -305,7 +305,7 @@ export function DashboardScreen() {
               >
                 <div style={{ display: "flex", gap: 8 }}>
                   <label htmlFor="client-search" className="sr">
-                    Search clients
+                    Search borrowers
                   </label>
                   <div className="input-wrap" style={{ flex: 1 }}>
                     <span
@@ -322,7 +322,7 @@ export function DashboardScreen() {
                       id="client-search"
                       className="input"
                       type="search"
-                      placeholder={`Search ${customers.length} ${customers.length === 1 ? "client" : "clients"}`}
+                      placeholder={`Search ${customers.length} ${customers.length === 1 ? "borrower" : "borrowers"}`}
                       value={q}
                       onChange={(e) => setQ(e.target.value)}
                       style={{ height: 44, paddingLeft: 38 }}
@@ -331,7 +331,7 @@ export function DashboardScreen() {
                   <Link
                     href="/clients/new"
                     className="btn btn-secondary"
-                    aria-label="Add a client"
+                    aria-label="Add a borrower"
                     style={{ width: 44, padding: 0 }}
                   >
                     <Icon name="userPlus" size={20} />
@@ -339,7 +339,7 @@ export function DashboardScreen() {
                 </div>
                 <div
                   role="group"
-                  aria-label="Filter clients"
+                  aria-label="Filter borrowers"
                   className="hscroll"
                   style={{ display: "flex", gap: 6 }}
                 >
@@ -367,12 +367,12 @@ export function DashboardScreen() {
 
               <section
                 className="card scroll-card"
-                aria-label="Clients"
+                aria-label="Borrowers"
                 style={{ margin: "0 12px 12px", ["--head-h" as string]: "38px" }}
               >
                 <div className="list-head">
                   <span role="status">
-                    {list.length} {list.length === 1 ? "client" : "clients"}
+                    {list.length} {list.length === 1 ? "borrower" : "borrowers"}
                   </span>
                   <button
                     type="button"
@@ -411,10 +411,10 @@ export function DashboardScreen() {
                     bare
                     compact
                     art={<Icon name="search" size={24} />}
-                    title={q ? `No client matches “${q}”` : "No clients in this filter"}
+                    title={q ? `No borrower matches “${q}”` : "No borrowers in this filter"}
                     body={
                       q
-                        ? "Check the spelling, or add them as a new client."
+                        ? "Check the spelling, or add them as a new borrower."
                         : "Everyone is in good standing here. Try another filter."
                     }
                     action={
@@ -432,7 +432,7 @@ export function DashboardScreen() {
                           className="btn btn-secondary btn-sm"
                           onClick={() => setFilter("all")}
                         >
-                          Show all clients
+                          Show all borrowers
                         </button>
                       )
                     }
@@ -581,7 +581,7 @@ export function DashboardSkeleton() {
           <span className="skeleton skel-ink" style={{ height: 11, width: 120 }} />
         </div>
       </header>
-      <main className="vscroll" aria-busy="true" aria-label="Loading your clients">
+      <main className="vscroll" aria-busy="true" aria-label="Loading your borrowers">
         <section className="hero" style={{ padding: "6px 16px 66px" }}>
           <div
             className="page page-wide"

@@ -8,7 +8,7 @@ import { type Entry } from "@/modules/ledger/domain/entry";
  * file adds up to the same balances as the app.
  */
 const HEADER = [
-  "Client",
+  "Borrower",
   "Mobile",
   "Date",
   "Type",
@@ -48,7 +48,7 @@ export function recordsToCsv(customers: readonly Customer[], entries: readonly E
     .map((e) => {
       const c = byId.get(e.customerId);
       return [
-        text(c?.name ?? "(unknown client)"),
+        text(c?.name ?? "(unknown borrower)"),
         c?.phone ? formatPhilippineMobile(c.phone) : "",
         storeDay(e.occurredAt),
         TYPE[e.kind],

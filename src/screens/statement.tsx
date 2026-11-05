@@ -51,7 +51,7 @@ function statementText(s: Statement, store: string, now: Date): string {
   const lines = [
     `${store}`,
     `Statement of account ${s.number}`,
-    `Client: ${s.customer.name}`,
+    `Borrower: ${s.customer.name}`,
     `Period: ${periodText(s, now)}`,
     "",
     `Opening balance: ${peso(s.opening)}`,
@@ -92,7 +92,7 @@ export function StatementScreen() {
     <Link
       href={id ? `/client?id=${id}` : "/"}
       className="icon-btn"
-      aria-label="Back to the client"
+      aria-label="Back to the borrower"
       style={{ color: "#fff" }}
     >
       <Icon name="back" size={22} />
@@ -140,11 +140,11 @@ export function StatementScreen() {
           <EmptyState
             art={<Icon name="file" size={26} />}
             compact
-            title="Client not found"
-            body="This client may have been removed from this phone."
+            title="Borrower not found"
+            body="This borrower may have been removed from this phone."
             action={
               <Link href="/" className="btn btn-secondary">
-                Back to clients
+                Back to borrowers
               </Link>
             }
           />
@@ -213,7 +213,7 @@ export function StatementScreen() {
 
           <dl className="stmt-meta">
             <div>
-              <dt>Client</dt>
+              <dt>Borrower</dt>
               <dd>{s.customer.name}</dd>
             </div>
             {s.customer.phone && (

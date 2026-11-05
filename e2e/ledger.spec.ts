@@ -3,18 +3,18 @@ import { afterSplash, balanceOf, STATE, typeAmount } from "./helpers";
 
 test.use({ storageState: STATE });
 
-test("a client's utang and bayad add up, with undo and void", async ({ page }) => {
+test("a borrower's utang and bayad add up, with undo and void", async ({ page }) => {
   await page.goto("/");
   await afterSplash(page);
-  await page.getByRole("link", { name: "Add a client" }).first().click();
+  await page.getByRole("link", { name: "Add a borrower" }).first().click();
 
   // A name is required.
-  await page.getByRole("button", { name: "Save client" }).click();
-  await expect(page.getByText("Enter the client's name")).toBeVisible();
+  await page.getByRole("button", { name: "Save borrower" }).click();
+  await expect(page.getByText("Enter the borrower's name")).toBeVisible();
 
   await page.getByLabel("Name").fill("Aling Nena");
   await page.getByLabel(/Starting balance/).fill("500");
-  await page.getByRole("button", { name: "Save client" }).click();
+  await page.getByRole("button", { name: "Save borrower" }).click();
   await expect(page).toHaveURL(/\/client\?id=/);
   await expect(balanceOf(page)).toContainText("₱500.00");
   // An empty store limit means the ₱1,000 default.

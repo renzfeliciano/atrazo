@@ -60,7 +60,7 @@ export interface ValidCustomerFields {
 export function validateCustomerDraft(draft: CustomerDraft): Result<ValidCustomerFields, AppError> {
   const issues: FieldIssue[] = [];
   const name = cleanText(draft.name);
-  if (!name) issues.push({ field: "name", message: "Enter the client's name" });
+  if (!name) issues.push({ field: "name", message: "Enter the borrower's name" });
   else if (name.length > NAME_MAX)
     issues.push({ field: "name", message: `Use ${NAME_MAX} characters or fewer` });
 

@@ -54,7 +54,7 @@ export function WelcomeScreen() {
               <p className="welcome-quote">“Isulat mo lang, ako na sa kwenta.”</p>
               <h1 className="disp welcome-title">Write the utang. Atrazo adds it up.</h1>
               <p className="welcome-sub">
-                Every line updates the client’s balance and your store total.
+                Every line updates the borrower’s balance and the total owed to you.
               </p>
             </div>
           </div>
@@ -66,7 +66,7 @@ export function WelcomeScreen() {
         <main className="welcome-sheet">
           <div className="welcome-cta">
             <Link href="/start" className="btn btn-primary btn-lg btn-block">
-              Start my store
+              Start my listahan
               <Icon name="chevron" size={18} strokeWidth={2.6} />
             </Link>
             <Link href="/restore" className="btn btn-secondary btn-lg btn-block">
@@ -78,7 +78,7 @@ export function WelcomeScreen() {
             </p>
           </div>
 
-          <figure className="card welcome-sample" aria-label="Example client ledger (demo data)">
+          <figure className="card welcome-sample" aria-label="Example borrower ledger (demo data)">
             <div className="welcome-sample-head">
               <strong style={{ fontSize: 14 }}>Kuya Travis Renz</strong>
               <span className="tag tag-outline">Demo data</span>

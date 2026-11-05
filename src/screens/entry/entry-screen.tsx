@@ -92,7 +92,7 @@ export function EntryScreen() {
   const canSave = !!selected && amount > 0 && !saving;
 
   // Close goes to a fixed place and replaces this page in history, so it can never bounce back
-  // and forth with the client form ("Add a new client" → Cancel → New entry → Close → …).
+  // and forth with the client form ("Add a new borrower" → Cancel → New entry → Close → …).
   const from = params.get("c");
   const close = () => router.replace(from ? `/client?id=${from}` : "/");
 
@@ -224,14 +224,14 @@ export function EntryScreen() {
               <Icon name="search" size={18} />
             </span>
             <label htmlFor="pick-search" className="sr">
-              Search clients
+              Search borrowers
             </label>
             <input
               id="pick-search"
               className="input"
               type="search"
               autoFocus
-              placeholder="Search clients"
+              placeholder="Search borrowers"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{ paddingLeft: 38 }}
@@ -279,7 +279,7 @@ export function EntryScreen() {
             ))}
             {shown.length === 0 && (
               <li style={{ padding: "16px 14px", fontSize: 14 }}>
-                {customers.length ? `No client matches “${search}”.` : "No clients yet."}
+                {customers.length ? `No borrower matches “${search}”.` : "No borrowers yet."}
               </li>
             )}
           </ul>
@@ -288,7 +288,7 @@ export function EntryScreen() {
             className="btn btn-secondary btn-block"
           >
             <Icon name="userPlus" size={18} />
-            {search ? `Add “${search}” as a new client` : "Add a new client"}
+            {search ? `Add “${search}” as a new borrower` : "Add a new borrower"}
           </Link>
         </main>
       ) : (
@@ -321,7 +321,7 @@ export function EntryScreen() {
             type="button"
             className="card"
             onClick={() => setPicking(true)}
-            aria-label={`Client: ${selected?.customer.name ?? "none"}. Tap to change`}
+            aria-label={`Borrower: ${selected?.customer.name ?? "none"}. Tap to change`}
             style={{
               display: "flex",
               alignItems: "center",
@@ -337,7 +337,7 @@ export function EntryScreen() {
             <span
               style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 1 }}
             >
-              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)" }}>Client</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)" }}>Borrower</span>
               <span
                 style={{
                   fontSize: 16,
@@ -347,7 +347,7 @@ export function EntryScreen() {
                   textOverflow: "ellipsis",
                 }}
               >
-                {selected?.customer.name ?? "Choose a client"}
+                {selected?.customer.name ?? "Choose a borrower"}
               </span>
             </span>
             {selected && (
@@ -523,7 +523,7 @@ export function EntryScreen() {
                 ? `Save ${kind} · ${peso(amount)}`
                 : "Enter an amount"}
           </button>
-          {!selected && <p className="action-hint">Choose a client to save this entry.</p>}
+          {!selected && <p className="action-hint">Choose a borrower to save this entry.</p>}
         </footer>
       )}
     </div>

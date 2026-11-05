@@ -15,7 +15,7 @@ export const UNCONFIRMED_CODE_KEY = "setup.unconfirmedCode";
 
 type Step = "name" | "code" | "confirm";
 const STEPS: { key: Step; label: string }[] = [
-  { key: "name", label: "Store" },
+  { key: "name", label: "Listahan" },
   { key: "code", label: "Recovery code" },
   { key: "confirm", label: "Confirm" },
 ];
@@ -31,11 +31,11 @@ const normalizeGroup = (s: string) =>
 function explain(e: unknown): string {
   if (e instanceof SyncHttpError) {
     if (e.code === "NETWORK")
-      return "Starting a store needs the internet once. Check your connection and try again.";
+      return "Starting a listahan needs the internet once. Check your connection and try again.";
     if (e.code === "RATE_LIMITED")
       return "Too many attempts from this network. Please try again later.";
   }
-  return "We couldn't start your store. Please try again.";
+  return "We couldn't start your listahan. Please try again.";
 }
 
 export function StoreSetupScreen() {
@@ -68,7 +68,7 @@ export function StoreSetupScreen() {
   async function createStore(e: React.FormEvent) {
     e.preventDefault();
     if (!phone) return;
-    if (!name.trim()) return setNameError("Enter your store's name");
+    if (!name.trim()) return setNameError("Enter your listahan's name");
     // An empty limit means the default (₱1,000), not ₱0, which would put every client over limit.
     const typed = limit.replace(/[^0-9.]/g, "");
     const pesos = typed ? Number(typed) : 1000;
@@ -126,7 +126,7 @@ export function StoreSetupScreen() {
             <span style={{ width: 12 }} />
           )}
           <div className="bar-title">
-            <h1>Set up your store</h1>
+            <h1>Set up your listahan</h1>
             <span className="bar-sub">
               Step {stepIndex + 1} of {STEPS.length}
             </span>
@@ -179,7 +179,7 @@ export function StoreSetupScreen() {
           >
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <h2 className="disp" style={{ fontSize: 22 }}>
-                Name your store
+                Name your listahan
               </h2>
               <p className="muted" style={{ fontSize: 14 }}>
                 It appears on statements and reminders. You can change it later.
@@ -187,7 +187,7 @@ export function StoreSetupScreen() {
             </div>
             <div className="field">
               <label className="label" htmlFor="store-name">
-                Store name
+                Listahan name
               </label>
               <input
                 id="store-name"
@@ -195,7 +195,7 @@ export function StoreSetupScreen() {
                 value={name}
                 autoFocus
                 maxLength={60}
-                placeholder="e.g. Tindahan ni Aling Rosa"
+                placeholder="e.g. Tindahan ni Aling Rosa, or Listahan ni Renzo"
                 aria-invalid={!!nameError}
                 aria-describedby={nameError ? "store-name-err" : undefined}
                 onChange={(e) => {
@@ -226,8 +226,8 @@ export function StoreSetupScreen() {
                 />
               </div>
               <span className="help">
-                New clients start with this limit (₱1,000 if left empty). You can set each client’s
-                own limit.
+                New borrowers start with this limit (₱1,000 if left empty). You can set each
+                borrower’s own limit.
               </span>
             </div>
             {problem && (
@@ -246,7 +246,7 @@ export function StoreSetupScreen() {
                 Your recovery code
               </h2>
               <p style={{ fontSize: 14, lineHeight: 1.5, color: "var(--text-2)" }}>
-                Use it to open your store on a new phone. It also unlocks your encrypted backups.
+                Use it to open your listahan on a new phone. It also unlocks your encrypted backups.
               </p>
             </div>
             <section
@@ -400,7 +400,7 @@ export function StoreSetupScreen() {
             {busy ? (
               <>
                 <span className="spin" aria-hidden="true" />
-                Creating your store…
+                Creating your listahan…
               </>
             ) : (
               "Continue"
@@ -428,7 +428,7 @@ export function StoreSetupScreen() {
               disabled={!matches}
               onClick={() => void finish()}
             >
-              Open my store
+              Open my listahan
             </button>
             {!matches && (
               <p className="action-hint">Type the 5 characters of group 5 to continue.</p>

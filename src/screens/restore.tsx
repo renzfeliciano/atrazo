@@ -32,15 +32,15 @@ function formatTyping(raw: string): string {
 function explain(e: unknown): string {
   if (e instanceof SyncHttpError) {
     if (e.code === "UNAUTHENTICATED")
-      return "That code didn’t match a store. Check each group. O and 0, I and 1 count as the same.";
+      return "That code didn’t match a listahan. Check each group. O and 0, I and 1 count as the same.";
     if (e.code === "RATE_LIMITED")
       return "Too many tries from this network. Please wait a few minutes and try again.";
     if (e.code === "NETWORK")
-      return "Opening a store needs the internet. Check your connection and try again.";
+      return "Opening a listahan needs the internet. Check your connection and try again.";
   }
   if (e instanceof VaultError)
     return "The code was accepted, but the backup could not be unlocked. Check the code and try again.";
-  return "We couldn’t open the store. Please try again.";
+  return "We couldn’t open the listahan. Please try again.";
 }
 
 export function RestoreScreen() {
@@ -104,7 +104,7 @@ export function RestoreScreen() {
           <span style={{ width: 12 }} />
         )}
         <div className="bar-title">
-          <h1>Open your store</h1>
+          <h1>Open your listahan</h1>
           <span className="bar-sub">With the recovery code you wrote down</span>
         </div>
       </header>
@@ -195,7 +195,7 @@ export function RestoreScreen() {
               className="btn btn-primary btn-lg btn-block"
               disabled={!phone}
             >
-              Open my store
+              Open my listahan
             </button>
             {typedLength < 25 && (
               <p className="action-hint">{25 - typedLength} more characters to go.</p>
@@ -259,8 +259,8 @@ export function RestoreScreen() {
             </section>
             <ul className="card" style={{ overflow: "hidden" }}>
               {[
-                ["Store unlocked", ""],
-                ["Clients", String(restored.clients)],
+                ["Listahan unlocked", ""],
+                ["Borrowers", String(restored.clients)],
                 ["Entries downloaded", restored.entries.toLocaleString("en-PH")],
                 ["Total owed to you", restored.total],
               ].map(([label, value], i) => (

@@ -55,8 +55,8 @@ function view(n: AppNotification, now: Date) {
     case "new-phone":
       return {
         icon: "phone" as IconName,
-        title: "A new phone opened your store",
-        body: `${n.phone.name} opened your store with your recovery code on ${formatStoreDay(new Date(n.phone.createdAt), now)}. Not you? Sign it out and make a new code.`,
+        title: "A new phone opened your listahan",
+        body: `${n.phone.name} opened your listahan with your recovery code on ${formatStoreDay(new Date(n.phone.createdAt), now)}. Not you? Sign it out and make a new code.`,
         action: { label: "Review phones", href: "/settings" },
       };
     case "backup":
@@ -178,7 +178,7 @@ export function NotificationsScreen() {
                   }
                   action={
                     <Link href="/" className="btn btn-secondary">
-                      Back to clients
+                      Back to borrowers
                     </Link>
                   }
                 />
@@ -231,7 +231,7 @@ export function NotificationsScreen() {
               <p className="ntf-foot">
                 <Icon name="lock" size={13} />
                 Only you see these, and they’re worked out on this phone. Atrazo never texts your
-                clients by itself.
+                borrowers by itself.
               </p>
             </>
           )}

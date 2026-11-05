@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { afterSplash, STATE } from "./helpers";
 
-test.describe("without a store", () => {
+test.describe("without a listahan", () => {
   test("Terms and Privacy open from Welcome, and Back returns there", async ({ page }) => {
     await page.goto("/welcome");
     await afterSplash(page);
@@ -27,7 +27,7 @@ test.describe("without a store", () => {
   });
 });
 
-test.describe("with a store", () => {
+test.describe("with a listahan", () => {
   test.use({ storageState: STATE });
 
   test("Settings: theme, and records download as CSV", async ({ page }) => {

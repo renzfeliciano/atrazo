@@ -40,7 +40,7 @@ const sinceFmt = new Intl.DateTimeFormat("en-PH", {
 const plain = (c: number, sign: "auto" | "always" = "always") =>
   formatPeso(c as Cents, { symbol: false, sign });
 const peso = (c: number) => formatPeso(c as Cents);
-const VOID_REASONS = ["Entered twice", "Wrong amount", "Wrong client"];
+const VOID_REASONS = ["Entered twice", "Wrong amount", "Wrong borrower"];
 
 interface Group {
   readonly label: string;
@@ -86,12 +86,12 @@ export function ClientLedgerScreen() {
       <AppShell active="home">
         <header className="bar">
           <div className="bar-title">
-            <h1>Client not found</h1>
+            <h1>Borrower not found</h1>
           </div>
         </header>
         <main className="vscroll" style={{ padding: 16 }}>
           <Link href="/" className="btn btn-secondary">
-            Back to clients
+            Back to borrowers
           </Link>
         </main>
       </AppShell>
@@ -125,7 +125,12 @@ export function ClientLedgerScreen() {
   return (
     <AppShell active="home">
       <header className="bar" style={{ paddingLeft: 4 }}>
-        <Link href="/" className="icon-btn" aria-label="Back to clients" style={{ color: "#fff" }}>
+        <Link
+          href="/"
+          className="icon-btn"
+          aria-label="Back to borrowers"
+          style={{ color: "#fff" }}
+        >
           <Icon name="back" size={22} />
         </Link>
         <div className="bar-title">
@@ -151,7 +156,7 @@ export function ClientLedgerScreen() {
         <Link
           href={`/clients/edit?id=${customer.id}`}
           className="icon-btn"
-          aria-label="Edit client"
+          aria-label="Edit borrower"
           style={{ color: "#fff" }}
         >
           <Icon name="edit" size={20} />
@@ -546,7 +551,12 @@ function LedgerSkeleton() {
   return (
     <AppShell active="home">
       <header className="bar" style={{ paddingLeft: 4 }}>
-        <Link href="/" className="icon-btn" aria-label="Back to clients" style={{ color: "#fff" }}>
+        <Link
+          href="/"
+          className="icon-btn"
+          aria-label="Back to borrowers"
+          style={{ color: "#fff" }}
+        >
           <Icon name="back" size={22} />
         </Link>
         <div className="bar-title" style={{ gap: 6 }}>

@@ -219,7 +219,7 @@ function ContactCard({ kind }: { kind: LegalDocument["kind"] }) {
 
       {privacy && (
         <p className="legal-contact-note">
-          Include your store ID from Settings so we can find your store. We never ask for your
+          Include your listahan ID from Settings so we can find your listahan. We never ask for your
           recovery code: anyone who does is not us.
         </p>
       )}

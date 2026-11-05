@@ -3,12 +3,12 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { afterSplash, CODE, STATE } from "./helpers";
 
 /** Starts the one store the other tests share, and saves its recovery code and browser state. */
-setup("start a store and confirm the recovery code", async ({ page }) => {
+setup("start a listahan and confirm the recovery code", async ({ page }) => {
   await page.goto("/welcome");
   await afterSplash(page);
-  await page.getByRole("link", { name: "Start my store" }).click();
+  await page.getByRole("link", { name: "Start my listahan" }).click();
 
-  await page.getByLabel("Store name").fill("E2E Sari-sari");
+  await page.getByLabel("Listahan name").fill("E2E Sari-sari");
   await page.getByLabel(/Default credit limit/).fill("");
   await page.getByRole("button", { name: "Continue" }).click();
 
@@ -23,9 +23,9 @@ setup("start a store and confirm the recovery code", async ({ page }) => {
   await next.click();
 
   await page.getByLabel("Group 5 of your code").fill("ZZZZZ");
-  await expect(page.getByRole("button", { name: "Open my store" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Open my listahan" })).toBeDisabled();
   await page.getByLabel("Group 5 of your code").fill(groups[4]!.toLowerCase());
-  await page.getByRole("button", { name: "Open my store" }).click();
+  await page.getByRole("button", { name: "Open my listahan" }).click();
 
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("heading", { name: "E2E Sari-sari" })).toBeVisible();

@@ -6,7 +6,8 @@ export default function manifest(): MetadataRoute.Manifest {
     id: "/",
     name: "Atrazo — utang ledger",
     short_name: "Atrazo",
-    description: "The utang ledger for sari-sari stores. Write the utang; Atrazo adds it up.",
+    description:
+      "The utang ledger for sari-sari stores and anyone who lends. Write the utang; Atrazo adds it up.",
     start_url: "/",
     scope: "/",
     display: "standalone",

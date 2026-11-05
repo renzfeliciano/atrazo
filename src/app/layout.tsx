@@ -6,7 +6,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "Atrazo", template: "%s · Atrazo" },
-  description: "The utang ledger for sari-sari stores. Write the utang; Atrazo adds it up.",
+  description:
+    "The utang ledger for sari-sari stores and anyone who lends. Write the utang; Atrazo adds it up.",
   applicationName: "Atrazo",
   robots: { index: false, follow: false },
   // Installed on an iPhone home screen: full-screen, titled Atrazo.

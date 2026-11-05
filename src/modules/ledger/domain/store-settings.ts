@@ -13,7 +13,7 @@ export interface StoreSettings extends CreditPolicy {
 export const STORE_NAME_MAX = 60;
 
 export const DEFAULT_SETTINGS: StoreSettings = {
-  name: "My store",
+  name: "My listahan",
   ...DEFAULT_POLICY,
   updatedAt: new Date(0),
 };
@@ -31,7 +31,7 @@ export function validateStoreSettings(
 ): Result<StoreSettings, AppError> {
   const issues: FieldIssue[] = [];
   const name = cleanText(draft.name);
-  if (!name) issues.push({ field: "name", message: "Enter your store's name" });
+  if (!name) issues.push({ field: "name", message: "Enter your listahan's name" });
   else if (name.length > STORE_NAME_MAX)
     issues.push({ field: "name", message: `Use ${STORE_NAME_MAX} characters or fewer` });
 
@@ -44,6 +44,6 @@ export function validateStoreSettings(
     issues.push({ field: "overdueAfterDays", message: "Use 1 to 365 days" });
   }
   if (issues.length || !name)
-    return err(new AppError(ErrorCode.Validation, "Store settings are invalid", issues));
+    return err(new AppError(ErrorCode.Validation, "Listahan settings are invalid", issues));
   return ok({ name, defaultLimit, overdueAfterDays, updatedAt: now });
 }

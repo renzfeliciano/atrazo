@@ -27,5 +27,5 @@ export async function typeAmount(page: Page, keys: string) {
   }
 }
 
-/** The balance card's big number on a client's page. */
+/** The balance card's big number on a borrower's page. */
 export const balanceOf = (page: Page) => page.getByRole("region", { name: "Balance" });

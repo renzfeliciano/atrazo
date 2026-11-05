@@ -17,7 +17,7 @@ export type SortLabel =
   "Highest balance" | "Longest unpaid" | "Most recent" | "Name A–Z" | "Most limit used";
 
 const COLUMNS: { label: string; sort?: SortLabel; className?: string }[] = [
-  { label: "Client", sort: "Name A–Z", className: "ct-client" },
+  { label: "Borrower", sort: "Name A–Z", className: "ct-client" },
   { label: "Balance", sort: "Highest balance", className: "num ct-balance" },
   { label: "Limit used", sort: "Most limit used", className: "ct-limit" },
   { label: "Days unpaid", sort: "Longest unpaid", className: "num ct-days" },
@@ -198,7 +198,7 @@ export function ClientTable({
         <tfoot>
           <tr>
             <td className="ct-client">
-              {list.length} {list.length === 1 ? "client" : "clients"}
+              {list.length} {list.length === 1 ? "borrower" : "borrowers"}
               {late > 0 && <span className="ct-foot-late"> · {late} overdue</span>}
             </td>
             <td className="num ct-balance">
