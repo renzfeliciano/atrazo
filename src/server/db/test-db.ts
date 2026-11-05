@@ -19,7 +19,7 @@ export async function createTestDatabase(): Promise<{
   return {
     db: db as unknown as Database,
     reset: async () =>
-      void (await db.execute(sql`truncate stores, devices, changes, rate_limits cascade`)),
+      void (await db.execute(sql`truncate ledgers, devices, changes, rate_limits cascade`)),
     close: () => client.close(),
   };
 }

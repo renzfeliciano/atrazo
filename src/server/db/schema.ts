@@ -17,8 +17,8 @@ import {
  * recovery code; everything the owner writes arrives already encrypted on the phone.
  * Schema changes go through drizzle-kit migrations (pnpm db:generate), never manual edits.
  */
-export const stores = pgTable(
-  "stores",
+export const ledgers = pgTable(
+  "ledgers",
   {
     id: uuid("id").primaryKey(),
     /** HKDF(recovery code, "lookup"), base64url. Finds the store; cannot decrypt anything. */
@@ -31,16 +31,16 @@ export const stores = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("stores_code_lookup_uq").on(t.codeLookup)],
+  (t) => [uniqueIndex("ledgers_code_lookup_uq").on(t.codeLookup)],
 );
 
 export const devices = pgTable(
   "devices",
   {
     id: uuid("id").primaryKey(),
-    storeId: uuid("store_id")
+    storeId: uuid("ledger_id")
       .notNull()
-      .references(() => stores.id, { onDelete: "cascade" }),
+      .references(() => ledgers.id, { onDelete: "cascade" }),
     /** Owner-chosen label such as "Samsung Galaxy A15". */
     name: text("name").notNull(),
     /** SHA-256 of the session token held in the phone's HttpOnly cookie. */
@@ -51,7 +51,7 @@ export const devices = pgTable(
   },
   (t) => [
     uniqueIndex("devices_token_hash_uq").on(t.tokenHash),
-    index("devices_store_idx").on(t.storeId),
+    index("devices_ledger_idx").on(t.storeId),
     check("devices_name_len", sql`char_length(${t.name}) between 1 and 60`),
   ],
 );
@@ -60,9 +60,9 @@ export const devices = pgTable(
 export const changes = pgTable(
   "changes",
   {
-    storeId: uuid("store_id")
+    storeId: uuid("ledger_id")
       .notNull()
-      .references(() => stores.id, { onDelete: "cascade" }),
+      .references(() => ledgers.id, { onDelete: "cascade" }),
     /** Client-generated UUIDv7; makes pushes idempotent. */
     id: uuid("id").notNull(),
     seq: bigserial("seq", { mode: "bigint" }).notNull(),
@@ -74,7 +74,7 @@ export const changes = pgTable(
   (t) => [
     primaryKey({ columns: [t.storeId, t.id] }),
     uniqueIndex("changes_seq_uq").on(t.seq),
-    index("changes_store_seq_idx").on(t.storeId, t.seq),
+    index("changes_ledger_seq_idx").on(t.storeId, t.seq),
     check("changes_iv_len", sql`char_length(${t.iv}) = 16`),
     check("changes_ct_len", sql`char_length(${t.ciphertext}) between 24 and 16384`),
   ],

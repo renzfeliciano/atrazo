@@ -11,10 +11,10 @@ export function postgresChangeLog(db: Database): ChangeLogRepository {
       // commit in sequence order, so a pull can never skip a lower seq that commits later.
       const result = await db.execute(sql`
         with lock as (select pg_advisory_xact_lock(hashtextextended(${session.storeId}::text, 0)))
-        insert into ${changes} (store_id, id, device_id, iv, ciphertext)
+        insert into ${changes} (ledger_id, id, device_id, iv, ciphertext)
         select ${session.storeId}::uuid, v.id::uuid, ${session.deviceId}::uuid, v.iv, v.ct
         from lock, jsonb_to_recordset(${payload}::jsonb) as v(id text, iv text, ct text)
-        on conflict (store_id, id) do nothing
+        on conflict (ledger_id, id) do nothing
         returning seq`);
       return rowsOf(result).length;
     },

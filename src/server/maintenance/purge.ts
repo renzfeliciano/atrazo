@@ -26,11 +26,11 @@ export async function purgeExpired(
 
   const stores = rowsOf<{ id: string }>(
     await db.execute(sql`
-      delete from stores s
+      delete from ledgers s
       where s.created_at < ${storeCutoff}::timestamptz
         and not exists (
           select 1 from devices d
-          where d.store_id = s.id and d.last_seen_at >= ${storeCutoff}::timestamptz
+          where d.ledger_id = s.id and d.last_seen_at >= ${storeCutoff}::timestamptz
         )
       returning s.id`),
   );

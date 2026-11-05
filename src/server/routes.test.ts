@@ -223,7 +223,7 @@ describe("HTTP API", () => {
       (await api.pull(request({ method: "GET", cookie: a.cookie, path: "/api/sync" }))).status,
     ).toBe(401);
     const counts = await tdb.db.execute(
-      `select (select count(*) from stores) s, (select count(*) from changes) c, (select count(*) from devices) d`,
+      `select (select count(*) from ledgers) s, (select count(*) from changes) c, (select count(*) from devices) d`,
     );
     expect((counts as unknown as { rows: Record<string, unknown>[] }).rows[0]).toEqual({
       s: 0,

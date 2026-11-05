@@ -80,7 +80,7 @@ describe("identity service (Postgres)", () => {
   it("stores no secret the server could use: only hashes and the wrapped key", async () => {
     const { session, code } = await startStore();
     const keys = await deriveStoreKeys(code);
-    const dump = JSON.stringify(rowsOf(await db.execute(`select * from stores, devices`)));
+    const dump = JSON.stringify(rowsOf(await db.execute(`select * from ledgers, devices`)));
     expect(dump).not.toContain(session.token);
     expect(dump).not.toContain(keys.authSecret);
     expect(dump).not.toContain(code);

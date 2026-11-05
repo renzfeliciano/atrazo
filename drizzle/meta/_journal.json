@@ -8,6 +8,13 @@
       "when": 1793873460200,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793902063479,
+      "tag": "0001_rename_stores_to_ledgers",
+      "breakpoints": true
     }
   ]
 }

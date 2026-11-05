@@ -1,6 +1,6 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import { type Database, isUniqueViolation, rowsOf } from "@/server/db/database";
-import { devices, stores } from "@/server/db/schema";
+import { devices, ledgers } from "@/server/db/schema";
 import { type Device, type DeviceId, type StoreId } from "../domain/identity";
 import { type IdentityRepository } from "../application/ports";
 
@@ -10,12 +10,12 @@ export function postgresIdentityRepository(db: Database): IdentityRepository {
       // One statement: the device row exists only if the store row was inserted.
       const result = await db.execute(sql`
         with s as (
-          insert into ${stores} (id, code_lookup, auth_verifier, wrapped_key)
+          insert into ${ledgers} (id, code_lookup, auth_verifier, wrapped_key)
           values (${storeId}, ${c.codeLookup}, ${c.authVerifier}, ${c.wrappedKey})
           on conflict (code_lookup) do nothing
           returning id
         )
-        insert into ${devices} (id, store_id, name, token_hash)
+        insert into ${devices} (id, ledger_id, name, token_hash)
         select ${device.id}, s.id, ${device.name}, ${device.tokenHash} from s
         returning id`);
       return rowsOf(result).length === 1 ? "created" : "lookup_taken";
@@ -23,18 +23,22 @@ export function postgresIdentityRepository(db: Database): IdentityRepository {
 
     async findStoreByLookup(codeLookup) {
       const [row] = await db
-        .select({ id: stores.id, authVerifier: stores.authVerifier, wrappedKey: stores.wrappedKey })
-        .from(stores)
-        .where(eq(stores.codeLookup, codeLookup))
+        .select({
+          id: ledgers.id,
+          authVerifier: ledgers.authVerifier,
+          wrappedKey: ledgers.wrappedKey,
+        })
+        .from(ledgers)
+        .where(eq(ledgers.codeLookup, codeLookup))
         .limit(1);
       return row ? { ...row, id: row.id as StoreId } : undefined;
     },
 
     async addDevice(storeId, device) {
       const result = await db.execute(sql`
-        insert into ${devices} (id, store_id, name, token_hash)
+        insert into ${devices} (id, ledger_id, name, token_hash)
         select ${device.id}, ${storeId}, ${device.name}, ${device.tokenHash}
-        where exists (select 1 from ${stores} where id = ${storeId})
+        where exists (select 1 from ${ledgers} where id = ${storeId})
         returning id`);
       return rowsOf(result).length === 1;
     },
@@ -86,15 +90,15 @@ export function postgresIdentityRepository(db: Database): IdentityRepository {
     async updateCredentials(storeId, c) {
       try {
         await db
-          .update(stores)
+          .update(ledgers)
           .set({
             codeLookup: c.codeLookup,
             authVerifier: c.authVerifier,
             wrappedKey: c.wrappedKey,
-            keyVersion: sql`${stores.keyVersion} + 1`,
+            keyVersion: sql`${ledgers.keyVersion} + 1`,
             updatedAt: sql`now()`,
           })
-          .where(eq(stores.id, storeId));
+          .where(eq(ledgers.id, storeId));
         return "updated";
       } catch (e) {
         if (isUniqueViolation(e)) return "lookup_taken";
@@ -104,7 +108,7 @@ export function postgresIdentityRepository(db: Database): IdentityRepository {
 
     async deleteStore(storeId) {
       // Devices and encrypted changes go with it (on delete cascade).
-      await db.delete(stores).where(eq(stores.id, storeId));
+      await db.delete(ledgers).where(eq(ledgers.id, storeId));
     },
   };
 }

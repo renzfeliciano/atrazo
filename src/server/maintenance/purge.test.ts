@@ -19,23 +19,23 @@ async function store(createdDaysAgo: number, phonesSeenDaysAgo: number[]) {
   const id = crypto.randomUUID();
   n += 1;
   await tdb.db.execute(sql`
-    insert into stores (id, code_lookup, auth_verifier, wrapped_key, created_at)
+    insert into ledgers (id, code_lookup, auth_verifier, wrapped_key, created_at)
     values (${id}, ${`lookup-${n}`}, 'v', 'w', ${daysAgo(createdDaysAgo)}::timestamptz)`);
   for (const seen of phonesSeenDaysAgo) {
     await tdb.db.execute(sql`
-      insert into devices (id, store_id, name, token_hash, last_seen_at)
+      insert into devices (id, ledger_id, name, token_hash, last_seen_at)
       values (${crypto.randomUUID()}, ${id}, 'Phone', ${`hash-${crypto.randomUUID()}`}, ${daysAgo(seen)}::timestamptz)`);
   }
   await tdb.db.execute(sql`
-    insert into changes (store_id, id, device_id, iv, ciphertext)
+    insert into changes (ledger_id, id, device_id, iv, ciphertext)
     values (${id}, ${crypto.randomUUID()}, ${crypto.randomUUID()}, 'aaaaaaaaaaaaaaaa', ${"x".repeat(32)})`);
   return id;
 }
 
-const ids = async (table: "stores" | "devices" | "changes") =>
+const ids = async (table: "ledgers" | "devices" | "changes") =>
   rowsOf<{ id: string }>(
     await tdb.db.execute(
-      sql.raw(`select ${table === "stores" ? "id" : "store_id as id"} from ${table}`),
+      sql.raw(`select ${table === "ledgers" ? "id" : "ledger_id as id"} from ${table}`),
     ),
   ).map((r) => r.id);
 
@@ -48,8 +48,8 @@ describe("purgeExpired", () => {
     const r = await purgeExpired(tdb.db, NOW);
 
     expect(r.storesDeleted).toBe(1);
-    expect(await ids("stores")).toEqual(expect.arrayContaining([active, young]));
-    expect(await ids("stores")).not.toContain(abandoned);
+    expect(await ids("ledgers")).toEqual(expect.arrayContaining([active, young]));
+    expect(await ids("ledgers")).not.toContain(abandoned);
     expect(await ids("devices")).not.toContain(abandoned);
     expect(await ids("changes")).not.toContain(abandoned);
   });
