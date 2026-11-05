@@ -62,7 +62,7 @@ function minutesToRead(doc: LegalDocument): number {
   return Math.max(1, Math.round(words / 200));
 }
 
-/** Terms of Use and Privacy Policy. Readable without a store, and from Welcome or Settings. */
+/** Terms of Use and Privacy Policy. Readable without a ledger, and from Welcome or Settings. */
 export function LegalDocumentScreen({ doc }: { doc: LegalDocument }) {
   const other =
     doc.kind === "terms"

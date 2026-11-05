@@ -13,7 +13,7 @@ import { Icon } from "@/ui/icons";
 import { ThemeToggle } from "@/ui/theme";
 import { useMinimumDelay } from "@/ui/use-minimum-delay";
 import { NotificationBell } from "./notifications/notifications-screen";
-import { ClientRowsPhone, ClientTable } from "./client-table";
+import { BorrowerRowsPhone, BorrowerTable } from "./borrower-table";
 
 type Filter = "all" | "overdue" | "over" | "ahead";
 const SORTS = [
@@ -45,8 +45,8 @@ const SORTS = [
 const peso = (c: number, sign: "auto" | "always" = "auto") => formatPeso(c as never, { sign });
 const whole = (c: number) => formatPeso(c as never, { whole: true });
 
-function reminderHref(o: CustomerOverview, store: string): string {
-  const body = `Magandang araw po, ${o.customer.name}. Ang balanse ninyo sa ${store} ay ${peso(o.account.balance)}. Salamat po!`;
+function reminderHref(o: CustomerOverview, ledger: string): string {
+  const body = `Magandang araw po, ${o.customer.name}. Ang balanse ninyo sa ${ledger} ay ${peso(o.account.balance)}. Salamat po!`;
   return `sms:${o.customer.phone ?? ""}?body=${encodeURIComponent(body)}`;
 }
 
@@ -81,7 +81,7 @@ export function DashboardScreen() {
       .sort(SORTS[sortIdx]!.fn);
   }, [customers, q, filter, sortIdx]);
 
-  const storeName = settings?.name ?? "My listahan";
+  const ledgerName = settings?.name ?? "My listahan";
   const overdueDays = settings?.overdueAfterDays ?? 30;
 
   if (!data || !settings || !shown) return <DashboardSkeleton />;
@@ -93,7 +93,7 @@ export function DashboardScreen() {
           <LogoTile />
         </span>
         <div className="bar-title">
-          <h1>{storeName}</h1>
+          <h1>{ledgerName}</h1>
           <span className="bar-sub" role="status">
             <span className="live" aria-hidden="true" />
             {syncLabel(sync.state, sync.pending)}
@@ -103,7 +103,7 @@ export function DashboardScreen() {
         <ThemeToggle className="bar-theme" />
       </header>
 
-      {/* With clients, only the client table scrolls; the totals, search and filters stay put. */}
+      {/* With borrowers, only the borrower table scrolls; the totals, search and filters stay put. */}
       <main className={`vscroll ${customers.length > 0 ? "fit-main" : ""}`}>
         <section className="hero" aria-labelledby="total-l" style={{ padding: "6px 16px 66px" }}>
           <div className="page page-wide" style={{ padding: "0 0" }}>
@@ -196,7 +196,7 @@ export function DashboardScreen() {
                   <Icon name="plus" size={18} strokeWidth={2.6} />
                   Write the first utang
                 </Link>
-                <Link href="/clients/new" className="btn btn-secondary btn-block">
+                <Link href="/borrowers/new" className="btn btn-secondary btn-block">
                   <Icon name="userPlus" size={18} />
                   Add a borrower
                 </Link>
@@ -248,7 +248,7 @@ export function DashboardScreen() {
                   {data.toCollect.slice(0, 3).map((o) => (
                     <li key={o.customer.id} className="row">
                       <Link
-                        href={`/client?id=${o.customer.id}`}
+                        href={`/borrower?id=${o.customer.id}`}
                         className="row-main"
                         style={{ textDecoration: "none", color: "var(--text)" }}
                       >
@@ -264,7 +264,7 @@ export function DashboardScreen() {
                         {peso(o.account.balance)}
                       </span>
                       <a
-                        href={reminderHref(o, storeName)}
+                        href={reminderHref(o, ledgerName)}
                         className="btn btn-secondary btn-sm"
                         aria-label={`Send ${o.customer.name} a reminder`}
                       >
@@ -301,7 +301,7 @@ export function DashboardScreen() {
                 style={{ display: "flex", flexDirection: "column", gap: 10, padding: "6px 12px 0" }}
               >
                 <div style={{ display: "flex", gap: 8 }}>
-                  <label htmlFor="client-search" className="sr">
+                  <label htmlFor="borrower-search" className="sr">
                     Search borrowers
                   </label>
                   <div className="input-wrap" style={{ flex: 1 }}>
@@ -316,7 +316,7 @@ export function DashboardScreen() {
                       <Icon name="search" size={18} />
                     </span>
                     <input
-                      id="client-search"
+                      id="borrower-search"
                       className="input"
                       type="search"
                       placeholder={`Search ${customers.length} ${customers.length === 1 ? "borrower" : "borrowers"}`}
@@ -326,7 +326,7 @@ export function DashboardScreen() {
                     />
                   </div>
                   <Link
-                    href="/clients/new"
+                    href="/borrowers/new"
                     className="btn btn-secondary"
                     aria-label="Add a borrower"
                     style={{ width: 44, padding: 0 }}
@@ -382,10 +382,10 @@ export function DashboardScreen() {
                 </div>
 
                 {/* Phones and tablets: rows with a limit meter. */}
-                <ClientRowsPhone list={list} now={now} />
+                <BorrowerRowsPhone list={list} now={now} />
 
                 {/* Desktop: a proper data table. */}
-                <ClientTable
+                <BorrowerTable
                   list={list}
                   now={now}
                   sort={SORTS[sortIdx]!.label}
@@ -413,7 +413,7 @@ export function DashboardScreen() {
                     action={
                       q ? (
                         <Link
-                          href={`/clients/new?name=${encodeURIComponent(q)}`}
+                          href={`/borrowers/new?name=${encodeURIComponent(q)}`}
                           className="btn btn-primary btn-sm"
                         >
                           <Icon name="userPlus" size={15} />

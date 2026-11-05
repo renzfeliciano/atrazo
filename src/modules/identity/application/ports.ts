@@ -1,6 +1,6 @@
-import { type Device, type DeviceId, type StoreId } from "../domain/identity";
+import { type Device, type DeviceId, type LedgerId } from "../domain/identity";
 
-export interface StoreCredentials {
+export interface LedgerCredentials {
   readonly codeLookup: string;
   readonly authVerifier: string;
   readonly wrappedKey: string;
@@ -14,33 +14,33 @@ export interface NewDevice {
 
 export interface DeviceAuthRecord {
   readonly deviceId: DeviceId;
-  readonly storeId: StoreId;
+  readonly ledgerId: LedgerId;
   readonly lastSeenAt: Date;
   readonly revokedAt: Date | null;
 }
 
 /** Every operation is a single atomic statement, so it is safe on a transaction-less HTTP driver. */
 export interface IdentityRepository {
-  createStore(
-    storeId: StoreId,
-    credentials: StoreCredentials,
+  createLedger(
+    ledgerId: LedgerId,
+    credentials: LedgerCredentials,
     device: NewDevice,
   ): Promise<"created" | "lookup_taken">;
-  findStoreByLookup(
+  findLedgerByLookup(
     codeLookup: string,
-  ): Promise<{ id: StoreId; authVerifier: string; wrappedKey: string } | undefined>;
-  /** Fails (returns false) if the store no longer exists. */
-  addDevice(storeId: StoreId, device: NewDevice): Promise<boolean>;
+  ): Promise<{ id: LedgerId; authVerifier: string; wrappedKey: string } | undefined>;
+  /** Fails (returns false) if the ledger no longer exists. */
+  addDevice(ledgerId: LedgerId, device: NewDevice): Promise<boolean>;
   findDeviceByTokenHash(tokenHash: string): Promise<DeviceAuthRecord | undefined>;
   touchDevice(deviceId: DeviceId, at: Date): Promise<void>;
-  listDevices(storeId: StoreId): Promise<Device[]>;
-  /** Scoped by store: a phone can never revoke another store's phone. */
-  revokeDevice(storeId: StoreId, deviceId: DeviceId, at: Date): Promise<boolean>;
+  listDevices(ledgerId: LedgerId): Promise<Device[]>;
+  /** Scoped by ledger: a phone can never revoke another ledger's phone. */
+  revokeDevice(ledgerId: LedgerId, deviceId: DeviceId, at: Date): Promise<boolean>;
   updateCredentials(
-    storeId: StoreId,
-    credentials: StoreCredentials,
+    ledgerId: LedgerId,
+    credentials: LedgerCredentials,
   ): Promise<"updated" | "lookup_taken">;
-  deleteStore(storeId: StoreId): Promise<void>;
+  deleteLedger(ledgerId: LedgerId): Promise<void>;
 }
 
 export interface SecretTools {

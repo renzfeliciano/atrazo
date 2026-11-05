@@ -5,7 +5,7 @@ import {
   type SealedBundle,
   type SyncApi,
   type SyncOutbox,
-} from "./client-ports";
+} from "./phone-ports";
 
 /** At most this many changes per bundle; bundles are halved further if they would not fit. */
 export const BUNDLE_MAX_RECORDS = 200;

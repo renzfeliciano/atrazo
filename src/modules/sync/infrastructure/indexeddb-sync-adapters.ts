@@ -1,6 +1,6 @@
 import { type LocalDb } from "@/infrastructure/local-db/local-db";
 import { type CodecRegistry, type WireRecord } from "../domain/bundle";
-import { type Inbox, type SealedBundle, type SyncOutbox } from "../application/client-ports";
+import { type Inbox, type SealedBundle, type SyncOutbox } from "../application/phone-ports";
 
 const BUNDLE_KEY = "sync.lockedBundle";
 const CURSOR_KEY = "sync.cursor";

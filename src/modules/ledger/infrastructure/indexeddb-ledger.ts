@@ -2,7 +2,7 @@ import { v7 as uuidv7 } from "uuid";
 import { type Clock, systemClock } from "@/core/time";
 import { type LocalDb } from "@/infrastructure/local-db/local-db";
 import { type CreditPolicy } from "../domain/account";
-import { DEFAULT_SETTINGS, type StoreSettings } from "../domain/store-settings";
+import { DEFAULT_SETTINGS, type LedgerSettings } from "../domain/ledger-settings";
 import { type CustomerId, type EntryId } from "../domain/ids";
 import {
   changeEntityId,
@@ -11,16 +11,16 @@ import {
   type LedgerDeps,
 } from "../application/ports";
 
-export const SETTINGS_KEY = "store";
+export const SETTINGS_KEY = "ledger";
 
 /** Ledger ports backed by the phone's IndexedDB. */
 export function indexedDbLedger(
   db: LocalDb,
   clock: Clock = systemClock,
 ): LedgerDeps & { outbox: ChangeOutbox & { markSent(seqs: number[]): Promise<void> } } {
-  async function readSettings(): Promise<StoreSettings> {
+  async function readSettings(): Promise<LedgerSettings> {
     return (
-      ((await db.settings.get(SETTINGS_KEY))?.value as StoreSettings | undefined) ??
+      ((await db.settings.get(SETTINGS_KEY))?.value as LedgerSettings | undefined) ??
       DEFAULT_SETTINGS
     );
   }

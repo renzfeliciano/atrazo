@@ -10,7 +10,7 @@ import {
   type RecoveryCode,
 } from "@/modules/vault/domain/recovery-code";
 import {
-  deriveStoreKeys,
+  deriveLedgerKeys,
   generateDataKey,
   open,
   seal,
@@ -42,14 +42,14 @@ beforeEach(async () => {
   now = new Date("2026-11-05T01:00:00Z");
 });
 
-const meta = (clientKey = "client-a") => ({ clientKey });
+const meta = (requesterKey = "net-a") => ({ requesterKey });
 const newCode = () => generateRecoveryCode((a) => crypto.getRandomValues(a));
 
-/** What the phone does on "Start my store": real keys, real wrapping. */
-async function startStore(code: RecoveryCode = newCode(), deviceName = "Samsung Galaxy A15") {
-  const keys = await deriveStoreKeys(code);
+/** What the phone does on "Start my listahan": real keys, real wrapping. */
+async function startLedger(code: RecoveryCode = newCode(), deviceName = "Samsung Galaxy A15") {
+  const keys = await deriveLedgerKeys(code);
   const dataKey = await generateDataKey();
-  const r = await service().createStore(
+  const r = await service().createLedger(
     {
       lookup: keys.lookup,
       authSecret: keys.authSecret,
@@ -62,60 +62,63 @@ async function startStore(code: RecoveryCode = newCode(), deviceName = "Samsung 
   return { code, dataKey, session: r.value };
 }
 
-async function openWith(code: RecoveryCode, deviceName = "Redmi 13C", client = "client-b") {
-  const keys = await deriveStoreKeys(code);
-  return service().openStore(
+async function openWith(code: RecoveryCode, deviceName = "Redmi 13C", requester = "net-b") {
+  const keys = await deriveLedgerKeys(code);
+  return service().openLedger(
     { lookup: keys.lookup, authSecret: keys.authSecret, deviceName },
-    meta(client),
+    meta(requester),
   );
 }
 
 describe("identity service (Postgres)", () => {
-  it("starts a store and authenticates its first phone", async () => {
-    const { session } = await startStore();
+  it("starts a ledger and authenticates its first phone", async () => {
+    const { session } = await startLedger();
     const auth = await service().authenticate(session.token);
-    expect(auth.ok && auth.value).toEqual({ storeId: session.storeId, deviceId: session.deviceId });
+    expect(auth.ok && auth.value).toEqual({
+      ledgerId: session.ledgerId,
+      deviceId: session.deviceId,
+    });
   });
 
   it("stores no secret the server could use: only hashes and the wrapped key", async () => {
-    const { session, code } = await startStore();
-    const keys = await deriveStoreKeys(code);
+    const { session, code } = await startLedger();
+    const keys = await deriveLedgerKeys(code);
     const dump = JSON.stringify(rowsOf(await db.execute(`select * from ledgers, devices`)));
     expect(dump).not.toContain(session.token);
     expect(dump).not.toContain(keys.authSecret);
     expect(dump).not.toContain(code);
   });
 
-  it("opens the store on a second phone, which can then decrypt the first phone's records", async () => {
-    const { code, dataKey, session } = await startStore();
-    const sealed = await seal(dataKey, { name: "Aling Nena Santos" }, `${session.storeId}|r1`);
+  it("opens the ledger on a second phone, which can then decrypt the first phone's records", async () => {
+    const { code, dataKey, session } = await startLedger();
+    const sealed = await seal(dataKey, { name: "Aling Nena Santos" }, `${session.ledgerId}|r1`);
 
     // Typed on the other phone in lowercase with spaces, read by the same parser the app uses.
     const typed = parseRecoveryCode(code.toLowerCase().replace(/(.{5})/g, "$1 "));
     if (!typed) throw new Error("parse failed");
     const second = await openWith(typed);
     if (!second.ok) throw second.error;
-    expect(second.value.storeId).toBe(session.storeId);
+    expect(second.value.ledgerId).toBe(session.ledgerId);
     expect(second.value.deviceId).not.toBe(session.deviceId);
 
-    const keys = await deriveStoreKeys(code);
+    const keys = await deriveLedgerKeys(code);
     const unwrapped = await unwrapDataKey(second.value.wrappedKey, keys.kek);
-    expect(await open(unwrapped, sealed, `${session.storeId}|r1`)).toEqual({
+    expect(await open(unwrapped, sealed, `${session.ledgerId}|r1`)).toEqual({
       name: "Aling Nena Santos",
     });
   });
 
-  it("gives the same answer for a wrong code and an unknown store (no store enumeration)", async () => {
-    await startStore();
+  it("gives the same answer for a wrong code and an unknown ledger (no ledger enumeration)", async () => {
+    await startLedger();
     const wrong = await openWith(newCode());
     expect(!wrong.ok && wrong.error.code).toBe(ErrorCode.Unauthenticated);
 
-    const { code } = await startStore();
-    const keys = await deriveStoreKeys(code);
-    const forged = await service().openStore(
+    const { code } = await startLedger();
+    const keys = await deriveLedgerKeys(code);
+    const forged = await service().openLedger(
       {
         lookup: keys.lookup,
-        authSecret: (await deriveStoreKeys(newCode())).authSecret,
+        authSecret: (await deriveLedgerKeys(newCode())).authSecret,
         deviceName: "x",
       },
       meta("c"),
@@ -123,13 +126,14 @@ describe("identity service (Postgres)", () => {
     expect(!forged.ok && forged.error.message).toBe(!wrong.ok && wrong.error.message);
   });
 
-  it("rate-limits guessing from one client", async () => {
-    for (let i = 0; i < LIMITS.openPerClient.limit; i++) await openWith(newCode(), "x", "attacker");
+  it("rate-limits guessing from one network", async () => {
+    for (let i = 0; i < LIMITS.openPerRequester.limit; i++)
+      await openWith(newCode(), "x", "attacker");
     const blocked = await openWith(newCode(), "x", "attacker");
     expect(!blocked.ok && blocked.error.code).toBe(ErrorCode.RateLimited);
-    // A different client is unaffected, and the window resets.
+    // A different network is unaffected, and the window resets.
     expect((await openWith(newCode(), "x", "someone-else")).ok).toBe(false);
-    now = new Date(now.getTime() + LIMITS.openPerClient.windowSeconds * 1000);
+    now = new Date(now.getTime() + LIMITS.openPerRequester.windowSeconds * 1000);
     const later = await openWith(newCode(), "x", "attacker");
     expect(!later.ok && later.error.code).toBe(ErrorCode.Unauthenticated);
   });
@@ -142,7 +146,7 @@ describe("identity service (Postgres)", () => {
   });
 
   it("signs out a lost phone: it gets DEVICE_REVOKED, the others keep working", async () => {
-    const { code, session } = await startStore();
+    const { code, session } = await startLedger();
     const lost = await openWith(code);
     if (!lost.ok) throw lost.error;
 
@@ -161,9 +165,9 @@ describe("identity service (Postgres)", () => {
     ]);
   });
 
-  it("never lets one store touch another store's phones", async () => {
-    const a = await startStore();
-    const b = await startStore();
+  it("never lets one ledger touch another ledger's phones", async () => {
+    const a = await startLedger();
+    const b = await startLedger();
     const authA = await service().authenticate(a.session.token);
     if (!authA.ok) throw authA.error;
     const r = await service().revokeDevice(authA.value, b.session.deviceId as DeviceId);
@@ -175,12 +179,12 @@ describe("identity service (Postgres)", () => {
   });
 
   it("makes a new recovery code: old code stops working, open phones stay open, data key unchanged", async () => {
-    const { code: oldCode, dataKey, session } = await startStore();
+    const { code: oldCode, dataKey, session } = await startLedger();
     const auth = await service().authenticate(session.token);
     if (!auth.ok) throw auth.error;
 
     const newer = newCode();
-    const keys = await deriveStoreKeys(newer);
+    const keys = await deriveLedgerKeys(newer);
     const rotated = await service().rotateCode(auth.value, {
       lookup: keys.lookup,
       authSecret: keys.authSecret,
@@ -198,17 +202,17 @@ describe("identity service (Postgres)", () => {
     expect((await service().authenticate(session.token)).ok).toBe(true);
   });
 
-  it("deletes a store with all its phones", async () => {
-    const { session, code } = await startStore();
+  it("deletes a ledger with all its phones", async () => {
+    const { session, code } = await startLedger();
     const auth = await service().authenticate(session.token);
     if (!auth.ok) throw auth.error;
-    await service().deleteStore(auth.value);
+    await service().deleteLedger(auth.value);
     expect((await service().authenticate(session.token)).ok).toBe(false);
     expect((await openWith(code)).ok).toBe(false);
   });
 
   it("updates last-seen at most every five minutes", async () => {
-    const { session } = await startStore();
+    const { session } = await startLedger();
     const seen = async () =>
       rowsOf<{ last_seen_at: Date }>(await db.execute(`select last_seen_at from devices`))[0]!;
     const first = (await seen()).last_seen_at;
@@ -221,7 +225,7 @@ describe("identity service (Postgres)", () => {
   });
 
   it("cleans device names", async () => {
-    const r = await startStore(newCode(), "  My\u0007   phone  ");
+    const r = await startLedger(newCode(), "  My\u0007   phone  ");
     const auth = await service().authenticate(r.session.token);
     if (!auth.ok) throw auth.error;
     expect((await service().listDevices(auth.value))[0]?.name).toBe("My phone");

@@ -1,12 +1,12 @@
 import { type Cents } from "@/core/money";
-import { calendarDaysBetween, storeDay } from "@/core/time";
+import { calendarDaysBetween, ledgerDay } from "@/core/time";
 import { type CustomerOverview, type WeekTotals } from "./queries";
 
 /**
- * In-app notifications, worked out on the phone from the store's own records. Nothing is sent
- * anywhere, and Atrazo never contacts clients by itself.
+ * In-app notifications, worked out on the phone from the ledger's own records. Nothing is sent
+ * anywhere, and Atrazo never contacts borrowers by itself.
  *
- * Each notification has a stable `key`: it changes only when the situation changes (a client goes
+ * Each notification has a stable `key`: it changes only when the situation changes (a borrower goes
  * over the limit again after paying, a new week starts), so "read" survives refreshes and a
  * recurring problem shows up as new.
  */
@@ -59,7 +59,7 @@ export function ledgerNotifications(
         key: `overdue:${c.id}:${a.openSince.getTime()}`,
         kind: "overdue",
         severity: "danger",
-        at: atMorning(storeDay(since)),
+        at: atMorning(ledgerDay(since)),
         customerId: c.id,
         customerName: c.name,
         balance: a.balance,
@@ -69,10 +69,10 @@ export function ledgerNotifications(
     }
   }
   if (week.utangCount + week.bayadCount > 0) {
-    // One summary per week, dated Monday morning (store time).
-    const today = storeDay(now);
+    // One summary per week, dated Monday morning (ledger time).
+    const today = ledgerDay(now);
     const weekday = (new Date(`${today}T12:00:00+08:00`).getUTCDay() + 6) % 7; // Mon = 0
-    const monday = storeDay(new Date(now.getTime() - weekday * 86_400_000));
+    const monday = ledgerDay(new Date(now.getTime() - weekday * 86_400_000));
     out.push({
       key: `weekly:${monday}`,
       kind: "weekly",

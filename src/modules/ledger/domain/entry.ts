@@ -18,7 +18,7 @@ export interface Entry {
   readonly amount: Cents;
   readonly note: string | null;
   readonly voidsEntryId: EntryId | null;
-  /** When it happened at the store (the owner may back-date). */
+  /** When it happened (the owner may back-date). */
   readonly occurredAt: Date;
   /** When it was written into Atrazo. Breaks ties and orders sync. */
   readonly recordedAt: Date;

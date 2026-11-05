@@ -33,7 +33,7 @@ function Cols() {
   );
 }
 
-/** First screen on a phone with no store: start one, or open an existing one with its recovery code. */
+/** First screen on a phone with no ledger: start one, or open an existing one with its recovery code. */
 export function WelcomeScreen() {
   return (
     <div className="app solo">

@@ -2,7 +2,7 @@ import { expect, test as setup } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { afterSplash, CODE, STATE } from "./helpers";
 
-/** Starts the one store the other tests share, and saves its recovery code and browser state. */
+/** Starts the one ledger the other tests share, and saves its recovery code and browser state. */
 setup("start a listahan and confirm the recovery code", async ({ page }) => {
   await page.goto("/welcome");
   await afterSplash(page);

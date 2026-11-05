@@ -10,7 +10,7 @@
  * Every page is pre-cached on install, with the scripts and styles it references, so screens you
  * haven't opened yet also work offline. Bump VERSION to drop old caches after a breaking change.
  */
-const VERSION = "v1";
+const VERSION = "v2";
 const STATIC = `atrazo-static-${VERSION}`;
 const PAGES = `atrazo-pages-${VERSION}`;
 const ROUTES = [
@@ -18,9 +18,9 @@ const ROUTES = [
   "/welcome",
   "/start",
   "/restore",
-  "/client",
-  "/clients/new",
-  "/clients/edit",
+  "/borrower",
+  "/borrowers/new",
+  "/borrowers/edit",
   "/entry",
   "/activity",
   "/settings",
@@ -93,7 +93,7 @@ async function networkFirst(req, key, fallbackToHome) {
     if (res.ok && res.type === "basic") await cache.put(key, res.clone());
     return res;
   } catch (err) {
-    // Pages share one HTML shell per path (/client?id=… reads the id on the phone), so match by path.
+    // Pages share one HTML shell per path (/borrower?id=… reads the id on the phone), so match by path.
     const hit = (await cache.match(key)) || (await cache.match(key, { ignoreSearch: true }));
     if (hit) return hit;
     if (fallbackToHome) {

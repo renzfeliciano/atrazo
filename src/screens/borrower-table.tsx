@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type Cents, formatPeso } from "@/core/money";
-import { calendarDaysBetween, formatStoreDay } from "@/core/time";
+import { calendarDaysBetween, formatLedgerDay } from "@/core/time";
 import { type CustomerOverview } from "@/modules/ledger/application/queries";
 import { formatPhilippineMobile } from "@/modules/ledger/domain/customer";
 import { Icon } from "@/ui/icons";
 
 /**
- * The client list on tablets and desktops: one row per client with what a store owner scans for
+ * The borrower list on tablets and desktops: one row per borrower with what a lender scans for
  * (who owes most, who is late, who is near the limit), quick + Utang / − Bayad, sortable headers
  * and a totals row. Phones use the stacked list instead.
  */
@@ -17,7 +17,7 @@ export type SortLabel =
   "Highest balance" | "Longest unpaid" | "Most recent" | "Name A–Z" | "Most limit used";
 
 const COLUMNS: { label: string; sort?: SortLabel; className?: string }[] = [
-  { label: "Borrower", sort: "Name A–Z", className: "ct-client" },
+  { label: "Borrower", sort: "Name A–Z", className: "ct-borrower" },
   { label: "Balance", sort: "Highest balance", className: "num ct-balance" },
   { label: "Limit used", sort: "Most limit used", className: "ct-limit" },
   { label: "Days unpaid", sort: "Longest unpaid", className: "num ct-days" },
@@ -51,7 +51,7 @@ export function relative(at: Date | null, now: Date): string {
   return d === 0 ? "Today" : d === 1 ? "Yesterday" : `${d} days ago`;
 }
 
-export function ClientTable({
+export function BorrowerTable({
   list,
   now,
   sort,
@@ -67,7 +67,7 @@ export function ClientTable({
   const late = list.filter((o) => o.account.isOverdue).length;
 
   return (
-    <table className="tbl client-table ct">
+    <table className="tbl borrower-table ct">
       <thead>
         <tr>
           {COLUMNS.map((c) => {
@@ -106,7 +106,7 @@ export function ClientTable({
           const pct = Math.min(100, Math.round(a.limitUsedPercent));
           const meterTone =
             a.limitUsedPercent >= 100 ? "danger" : a.limitUsedPercent >= 80 ? "warn" : "ok";
-          const href = `/client?id=${o.customer.id}`;
+          const href = `/borrower?id=${o.customer.id}`;
           return (
             <tr
               key={o.customer.id}
@@ -116,7 +116,7 @@ export function ClientTable({
                 if (!(e.target as HTMLElement).closest("a, button")) router.push(href);
               }}
             >
-              <td className="ct-client">
+              <td className="ct-borrower">
                 <span className={`ct-avatar tone-${status.tone}`} aria-hidden="true">
                   {initials(o.customer.name)}
                 </span>
@@ -161,7 +161,7 @@ export function ClientTable({
               <td className="ct-last">
                 <span>{relative(a.lastEntryAt, now)}</span>
                 {a.lastEntryAt && calendarDaysBetween(a.lastEntryAt, now) > 1 && (
-                  <span className="ct-sub">{formatStoreDay(a.lastEntryAt, now)}</span>
+                  <span className="ct-sub">{formatLedgerDay(a.lastEntryAt, now)}</span>
                 )}
               </td>
               <td className="ct-status">
@@ -197,7 +197,7 @@ export function ClientTable({
       {list.length > 0 && (
         <tfoot>
           <tr>
-            <td className="ct-client">
+            <td className="ct-borrower">
               {list.length} {list.length === 1 ? "borrower" : "borrowers"}
               {late > 0 && <span className="ct-foot-late"> · {late} overdue</span>}
             </td>
@@ -218,9 +218,9 @@ export function ClientTable({
  * The same list on phones: one fixed grid per row (avatar · name and status · amount), so names,
  * chips and amounts line up down the list. Same statuses and colours as the table.
  */
-export function ClientRowsPhone({ list, now }: { list: readonly CustomerOverview[]; now: Date }) {
+export function BorrowerRowsPhone({ list, now }: { list: readonly CustomerOverview[]; now: Date }) {
   return (
-    <ul className="client-rows cr">
+    <ul className="borrower-rows cr">
       {list.map((o) => {
         const a = o.account;
         const status = statusOf(o);
@@ -229,7 +229,7 @@ export function ClientRowsPhone({ list, now }: { list: readonly CustomerOverview
           a.limitUsedPercent >= 100 ? "danger" : a.limitUsedPercent >= 80 ? "warn" : "ok";
         return (
           <li key={o.customer.id}>
-            <Link href={`/client?id=${o.customer.id}`} className="cr-row">
+            <Link href={`/borrower?id=${o.customer.id}`} className="cr-row">
               <span className={`ct-avatar tone-${status.tone} cr-avatar`} aria-hidden="true">
                 {initials(o.customer.name)}
               </span>

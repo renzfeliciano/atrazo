@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { AppError, ErrorCode } from "@/core/errors";
 import {
-  CreateStoreRequest,
-  OpenStoreRequest,
+  CreateLedgerRequest,
+  OpenLedgerRequest,
   RotateCodeRequest,
 } from "@/modules/identity/api/contracts";
 import { type DeviceId } from "@/modules/identity/domain/identity";
@@ -22,7 +22,7 @@ export function apiHandlers(getContainer: () => Container | Promise<Container>) 
     return {
       appUrl: c.appUrl,
       auth: c.identity,
-      minClientVersion: c.minClientVersion,
+      minAppVersion: c.minAppVersion,
       extraOrigins: c.extraOrigins,
     };
   };
@@ -33,24 +33,28 @@ export function apiHandlers(getContainer: () => Container | Promise<Container>) 
 
   return {
     /** POST /api/v1/ledgers: "Start my listahan". */
-    createStore: apiRoute(
+    createLedger: apiRoute(
       deps,
-      { name: "ledgers.create", auth: "none", body: CreateStoreRequest },
-      async ({ body, clientKey }) => {
-        const s = unwrap(await (await get()).identity.createStore(body, { clientKey }));
+      { name: "ledgers.create", auth: "none", body: CreateLedgerRequest },
+      async ({ body, requesterKey }) => {
+        const s = unwrap(await (await get()).identity.createLedger(body, { requesterKey }));
         return {
           status: 201,
-          body: { storeId: s.storeId, deviceId: s.deviceId, wrappedKey: s.wrappedKey },
+          body: { ledgerId: s.ledgerId, deviceId: s.deviceId, wrappedKey: s.wrappedKey },
           setCookie: sessionCookie(s.token),
         };
       },
     ),
 
     /** DELETE /api/v1/ledgers: "Delete listahan" removes every backup and phone. */
-    deleteStore: apiRoute(deps, { name: "ledgers.delete", auth: "device" }, async ({ session }) => {
-      await (await get()).identity.deleteStore(session!);
-      return { status: 204, setCookie: clearedSessionCookie() };
-    }),
+    deleteLedger: apiRoute(
+      deps,
+      { name: "ledgers.delete", auth: "device" },
+      async ({ session }) => {
+        await (await get()).identity.deleteLedger(session!);
+        return { status: 204, setCookie: clearedSessionCookie() };
+      },
+    ),
 
     /** PUT /api/v1/ledgers/code: "Make a new recovery code". */
     rotateCode: apiRoute(
@@ -62,15 +66,15 @@ export function apiHandlers(getContainer: () => Container | Promise<Container>) 
       },
     ),
 
-    /** POST /api/v1/session: open a store on this phone with its recovery code. */
+    /** POST /api/v1/session: open a ledger on this phone with its recovery code. */
     openSession: apiRoute(
       deps,
-      { name: "session.open", auth: "none", body: OpenStoreRequest },
-      async ({ body, clientKey }) => {
-        const s = unwrap(await (await get()).identity.openStore(body, { clientKey }));
+      { name: "session.open", auth: "none", body: OpenLedgerRequest },
+      async ({ body, requesterKey }) => {
+        const s = unwrap(await (await get()).identity.openLedger(body, { requesterKey }));
         return {
           status: 201,
-          body: { storeId: s.storeId, deviceId: s.deviceId, wrappedKey: s.wrappedKey },
+          body: { ledgerId: s.ledgerId, deviceId: s.deviceId, wrappedKey: s.wrappedKey },
           setCookie: sessionCookie(s.token),
         };
       },

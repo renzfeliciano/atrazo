@@ -2,7 +2,7 @@ import { type CreditPolicy, DEFAULT_POLICY } from "../domain/account";
 import { type Customer } from "../domain/customer";
 import { type Entry } from "../domain/entry";
 import { type CustomerId, type EntryId } from "../domain/ids";
-import { DEFAULT_SETTINGS, type StoreSettings } from "../domain/store-settings";
+import { DEFAULT_SETTINGS, type LedgerSettings } from "../domain/ledger-settings";
 import { changeEntityId, type ChangeOutbox, type LedgerChange, type LedgerDeps } from "./ports";
 
 /**
@@ -13,7 +13,7 @@ export function inMemoryLedger(opts: { now?: () => Date; policy?: CreditPolicy }
   const customers = new Map<CustomerId, Customer>();
   const entries = new Map<EntryId, Entry>();
   const queue: { entityId: string; change: LedgerChange; sent: boolean }[] = [];
-  let storeSettings: StoreSettings = { ...DEFAULT_SETTINGS, ...(opts.policy ?? DEFAULT_POLICY) };
+  let ledgerSettings: LedgerSettings = { ...DEFAULT_SETTINGS, ...(opts.policy ?? DEFAULT_POLICY) };
   let n = 0;
   const nextId = (prefix: string) => `${prefix}-0000-7000-8000-${String(++n).padStart(12, "0")}`;
 
@@ -60,11 +60,11 @@ export function inMemoryLedger(opts: { now?: () => Date; policy?: CreditPolicy }
     outbox,
     settings: {
       getPolicy: async () => ({
-        defaultLimit: storeSettings.defaultLimit,
-        overdueAfterDays: storeSettings.overdueAfterDays,
+        defaultLimit: ledgerSettings.defaultLimit,
+        overdueAfterDays: ledgerSettings.overdueAfterDays,
       }),
-      get: async () => storeSettings,
-      save: async (s) => void (storeSettings = s),
+      get: async () => ledgerSettings,
+      save: async (s) => void (ledgerSettings = s),
     },
     uow: { run: (work) => work() },
     ids: {
@@ -74,5 +74,5 @@ export function inMemoryLedger(opts: { now?: () => Date; policy?: CreditPolicy }
     clock: { now: opts.now ?? (() => new Date("2026-11-05T04:00:00Z")) },
   };
 
-  return { deps, outbox, store: { customers, entries } };
+  return { deps, outbox, ledger: { customers, entries } };
 }

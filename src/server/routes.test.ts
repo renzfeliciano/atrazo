@@ -2,7 +2,7 @@ import { v7 as uuidv7 } from "uuid";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { generateRecoveryCode } from "@/modules/vault/domain/recovery-code";
 import {
-  deriveStoreKeys,
+  deriveLedgerKeys,
   generateDataKey,
   wrapDataKey,
 } from "@/modules/vault/infrastructure/web-crypto";
@@ -53,11 +53,11 @@ function request({
 
 const cookieOf = (res: Response) => res.headers.get("set-cookie")!.split(";")[0]!;
 
-async function startStore(deviceName = "Samsung Galaxy A15") {
+async function startLedger(deviceName = "Samsung Galaxy A15") {
   const code = generateRecoveryCode((a) => crypto.getRandomValues(a));
-  const keys = await deriveStoreKeys(code);
+  const keys = await deriveLedgerKeys(code);
   const wrappedKey = await wrapDataKey(await generateDataKey(), keys.kek);
-  const res = await api.createStore(
+  const res = await api.createLedger(
     request({ body: { lookup: keys.lookup, authSecret: keys.authSecret, wrappedKey, deviceName } }),
   );
   return {
@@ -65,28 +65,28 @@ async function startStore(deviceName = "Samsung Galaxy A15") {
     code,
     keys,
     cookie: cookieOf(res),
-    json: (await res.json()) as { storeId: string; deviceId: string },
+    json: (await res.json()) as { ledgerId: string; deviceId: string },
   };
 }
 
 const change = () => ({ id: uuidv7(), iv: "AAAAAAAAAAAAAAAA", ciphertext: "B".repeat(64) });
 
 describe("HTTP API", () => {
-  it("starts a store: 201, session in an HttpOnly SameSite=Strict cookie, never in the body", async () => {
-    const { res, json } = await startStore();
+  it("starts a ledger: 201, session in an HttpOnly SameSite=Strict cookie, never in the body", async () => {
+    const { res, json } = await startLedger();
     expect(res.status).toBe(201);
     const setCookie = res.headers.get("set-cookie")!;
     expect(setCookie).toMatch(/HttpOnly/);
     expect(setCookie).toMatch(/SameSite=Strict/);
     expect(setCookie).toMatch(/Path=\//);
-    expect(Object.keys(json).sort()).toEqual(["deviceId", "storeId", "wrappedKey"]);
+    expect(Object.keys(json).sort()).toEqual(["deviceId", "ledgerId", "wrappedKey"]);
     expect(res.headers.get("cache-control")).toBe("no-store");
   });
 
   it("blocks cross-site writes", async () => {
-    const res = await api.createStore(request({ body: {}, origin: "https://evil.example" }));
+    const res = await api.createLedger(request({ body: {}, origin: "https://evil.example" }));
     expect(res.status).toBe(403);
-    const fetchSite = await api.createStore(
+    const fetchSite = await api.createLedger(
       request({ body: {}, origin: null, headers: { "sec-fetch-site": "cross-site" } }),
     );
     expect(fetchSite.status).toBe(403);
@@ -119,7 +119,7 @@ describe("HTTP API", () => {
     expect(res.status).toBe(413);
   });
 
-  it("requires a session for store data and never leaks internals", async () => {
+  it("requires a session for ledger data and never leaks internals", async () => {
     const res = await api.pull(request({ method: "GET", path: "/api/sync" }));
     expect(res.status).toBe(401);
     const body = (await res.json()) as { error: { code: string; message: string } };
@@ -128,9 +128,9 @@ describe("HTTP API", () => {
     expect(res.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/);
   });
 
-  it("backs up and restores across phones; each store sees only its own changes", async () => {
-    const a = await startStore();
-    const b = await startStore();
+  it("backs up and restores across phones; each ledger sees only its own changes", async () => {
+    const a = await startLedger();
+    const b = await startLedger();
     const pushed = await api.push(
       request({ cookie: a.cookie, body: { changes: [change(), change()] } }),
     );
@@ -157,7 +157,7 @@ describe("HTTP API", () => {
   });
 
   it("signs out a lost phone: its next request gets 410 and a cleared cookie", async () => {
-    const a = await startStore();
+    const a = await startLedger();
     const lost = await api.openSession(
       request({
         body: { lookup: a.keys.lookup, authSecret: a.keys.authSecret, deviceName: "Redmi 13C" },
@@ -188,18 +188,18 @@ describe("HTTP API", () => {
   it("asks phones on a too-old app version to update, and serves newer ones", async () => {
     const strict = apiHandlers(() => buildContainer(tdb.db, APP, undefined, "1.2.0"));
     const old = await strict.pull(
-      request({ method: "GET", path: "/api/v1/sync", headers: { "x-atrazo-client": "1.1.9" } }),
+      request({ method: "GET", path: "/api/v1/sync", headers: { "x-atrazo-version": "1.1.9" } }),
     );
     expect(old.status).toBe(426);
     expect(((await old.json()) as { error: { code: string } }).error.code).toBe("UPGRADE_REQUIRED");
     const current = await strict.pull(
-      request({ method: "GET", path: "/api/v1/sync", headers: { "x-atrazo-client": "1.2.0" } }),
+      request({ method: "GET", path: "/api/v1/sync", headers: { "x-atrazo-version": "1.2.0" } }),
     );
     expect(current.status).toBe(401); // passes the version gate, then needs a session
   });
 
   it("validates path parameters", async () => {
-    const a = await startStore();
+    const a = await startLedger();
     const res = await api.revokeDevice(
       request({ method: "DELETE", cookie: a.cookie, path: "/api/devices/not-a-uuid" }),
     );
@@ -207,16 +207,16 @@ describe("HTTP API", () => {
   });
 
   it("signing out this phone revokes its session", async () => {
-    const a = await startStore();
+    const a = await startLedger();
     const out = await api.closeSession(request({ method: "DELETE", cookie: a.cookie }));
     expect(out.status).toBe(204);
     expect((await api.listDevices(request({ method: "GET", cookie: a.cookie }))).status).toBe(410);
   });
 
-  it("deleting the store removes everything", async () => {
-    const a = await startStore();
+  it("deleting the ledger removes everything", async () => {
+    const a = await startLedger();
     await api.push(request({ cookie: a.cookie, body: { changes: [change()] } }));
-    expect((await api.deleteStore(request({ method: "DELETE", cookie: a.cookie }))).status).toBe(
+    expect((await api.deleteLedger(request({ method: "DELETE", cookie: a.cookie }))).status).toBe(
       204,
     );
     expect(

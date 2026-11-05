@@ -8,10 +8,10 @@ import * as entry from "../domain/entry";
 import { type Entry } from "../domain/entry";
 import { type CustomerId, type EntryId } from "../domain/ids";
 import {
-  type StoreSettings,
-  type StoreSettingsDraft,
-  validateStoreSettings,
-} from "../domain/store-settings";
+  type LedgerSettings,
+  type LedgerSettingsDraft,
+  validateLedgerSettings,
+} from "../domain/ledger-settings";
 import { type LedgerDeps } from "./ports";
 
 export interface RecordEntryInput {
@@ -56,10 +56,10 @@ export function ledgerCommands(deps: LedgerDeps) {
   }
 
   return {
-    /** Store name and credit rules; synced so every phone of the store agrees. */
-    async saveSettings(draft: StoreSettingsDraft): Promise<Result<StoreSettings, AppError>> {
+    /** Ledger name and credit rules; synced so every phone of the ledger agrees. */
+    async saveSettings(draft: LedgerSettingsDraft): Promise<Result<LedgerSettings, AppError>> {
       return uow.run(async () => {
-        const next = validateStoreSettings(draft, await settings.get(), clock.now());
+        const next = validateLedgerSettings(draft, await settings.get(), clock.now());
         if (!next.ok) return next;
         await settings.save(next.value);
         await outbox.enqueue({ type: "settings.saved", settings: next.value });

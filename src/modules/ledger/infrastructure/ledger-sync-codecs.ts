@@ -8,7 +8,7 @@ import {
 } from "@/modules/sync/domain/bundle";
 import { type Customer } from "../domain/customer";
 import { type Entry } from "../domain/entry";
-import { type StoreSettings } from "../domain/store-settings";
+import { type LedgerSettings } from "../domain/ledger-settings";
 import { SETTINGS_KEY } from "./indexeddb-ledger";
 import { type CustomerId, type EntryId } from "../domain/ids";
 import { type LedgerChange } from "../application/ports";
@@ -100,22 +100,35 @@ const SettingsV1 = z.strictObject({
 });
 
 export const settingsSavedV1: RecordCodec<z.infer<typeof SettingsV1>, ApplyContext> = {
-  type: "store.settings",
+  type: "ledger.settings",
   version: 1,
   schema: SettingsV1,
   async apply(d, { db }) {
-    const incoming: StoreSettings = { ...d, defaultLimit: d.defaultLimit as Cents };
-    const current = (await db.settings.get(SETTINGS_KEY))?.value as StoreSettings | undefined;
+    const incoming: LedgerSettings = { ...d, defaultLimit: d.defaultLimit as Cents };
+    const current = (await db.settings.get(SETTINGS_KEY))?.value as LedgerSettings | undefined;
     if (!current || incoming.updatedAt.getTime() >= current.updatedAt.getTime()) {
       await db.settings.put({ key: SETTINGS_KEY, value: incoming });
     }
   },
 };
 
+/**
+ * The same record under its name from before the account was called a ledger. Backups written
+ * by those versions still hold it, so restoring them must keep working. Read only; never written.
+ */
+export const legacySettingsSavedV1: typeof settingsSavedV1 = {
+  ...settingsSavedV1,
+  type: "store.settings",
+};
+
 export function registerLedgerCodecs(
   registry: CodecRegistry<ApplyContext>,
 ): CodecRegistry<ApplyContext> {
-  return registry.register(customerSavedV1).register(entryAddedV1).register(settingsSavedV1);
+  return registry
+    .register(customerSavedV1)
+    .register(entryAddedV1)
+    .register(settingsSavedV1)
+    .register(legacySettingsSavedV1);
 }
 
 /** Outbox change → wire record (current versions only). */
@@ -126,6 +139,6 @@ export function ledgerChangeToWire(change: LedgerChange): WireRecord {
     case "entry.added":
       return { t: "entry.added", v: 1, d: change.entry };
     case "settings.saved":
-      return { t: "store.settings", v: 1, d: change.settings };
+      return { t: "ledger.settings", v: 1, d: change.settings };
   }
 }

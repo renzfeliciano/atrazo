@@ -37,7 +37,7 @@ const entry = (
 
 const nena = customer("c1", "Aling Nena");
 const ben = customer("c2", "Kuya Ben");
-const gone = customer("c3", "Hidden Client", NOW);
+const gone = customer("c3", "Hidden Borrower", NOW);
 
 describe("activityFeed", () => {
   const today = entry("c1", "utang", 150, "2026-11-05T02:00:00Z");
@@ -57,7 +57,7 @@ describe("activityFeed", () => {
     7,
   );
 
-  it("groups the last 7 store days, newest first, and leaves voids and hidden clients out", () => {
+  it("groups the last 7 ledger days, newest first, and leaves voids and hidden borrowers out", () => {
     expect(feed.days.map((d) => d.day)).toEqual(["2026-11-05", "2026-11-04", "2026-10-30"]);
     expect(feed.days[0]!.items.map((i) => i.entry.id)).toEqual([todayBayad.id, today.id]);
     expect(feed.days.flatMap((d) => d.items).some((i) => i.entry.kind === "void")).toBe(false);

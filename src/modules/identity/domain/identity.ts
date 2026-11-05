@@ -1,11 +1,11 @@
 import { type Brand } from "@/core/brand";
 
-export type StoreId = Brand<string, "StoreId">;
+export type LedgerId = Brand<string, "LedgerId">;
 export type DeviceId = Brand<string, "DeviceId">;
 
-/** Who is calling: a phone that holds a valid, unrevoked session for a store. */
+/** Who is calling: a phone that holds a valid, unrevoked session for a ledger. */
 export interface DeviceSession {
-  readonly storeId: StoreId;
+  readonly ledgerId: LedgerId;
   readonly deviceId: DeviceId;
 }
 

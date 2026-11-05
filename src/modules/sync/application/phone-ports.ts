@@ -27,7 +27,7 @@ export interface SyncOutbox {
 }
 
 export interface BundleCodec {
-  /** records → compressed → encrypted, bound to this store and bundle id. */
+  /** records → compressed → encrypted, bound to this ledger and bundle id. */
   seal(bundleId: string, records: readonly WireRecord[]): Promise<SealedBundle>;
   open(bundle: SealedBundle): Promise<WireRecord[]>;
 }
@@ -47,6 +47,6 @@ export interface Inbox {
 }
 
 export interface SyncIdentity {
-  readonly storeId: string;
+  readonly ledgerId: string;
   readonly deviceId: string;
 }

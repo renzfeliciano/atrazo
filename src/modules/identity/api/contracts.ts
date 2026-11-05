@@ -17,20 +17,20 @@ export const AuthSecret = b64url(32);
 export const WrappedKey = b64url(40);
 export const DeviceName = z.string().trim().min(1).max(DEVICE_NAME_MAX);
 
-export const CreateStoreRequest = z.strictObject({
+export const CreateLedgerRequest = z.strictObject({
   lookup: CodeLookup,
   authSecret: AuthSecret,
   wrappedKey: WrappedKey,
   deviceName: DeviceName,
 });
-export type CreateStoreRequest = z.infer<typeof CreateStoreRequest>;
+export type CreateLedgerRequest = z.infer<typeof CreateLedgerRequest>;
 
-export const OpenStoreRequest = z.strictObject({
+export const OpenLedgerRequest = z.strictObject({
   lookup: CodeLookup,
   authSecret: AuthSecret,
   deviceName: DeviceName,
 });
-export type OpenStoreRequest = z.infer<typeof OpenStoreRequest>;
+export type OpenLedgerRequest = z.infer<typeof OpenLedgerRequest>;
 
 export const RotateCodeRequest = z.strictObject({
   lookup: CodeLookup,
@@ -40,7 +40,7 @@ export const RotateCodeRequest = z.strictObject({
 export type RotateCodeRequest = z.infer<typeof RotateCodeRequest>;
 
 export const SessionResponse = z.strictObject({
-  storeId: z.uuid(),
+  ledgerId: z.uuid(),
   deviceId: z.uuid(),
   wrappedKey: WrappedKey,
 });

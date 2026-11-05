@@ -1,7 +1,7 @@
-import { API_BASE, APP_VERSION, CLIENT_VERSION_HEADER } from "@/core/app-version";
+import { API_BASE, APP_VERSION, APP_VERSION_HEADER } from "@/core/app-version";
 import { type ErrorCode } from "@/core/errors";
 import { PullResponse } from "../api/contracts";
-import { type SyncApi } from "../application/client-ports";
+import { type SyncApi } from "../application/phone-ports";
 
 /** An HTTP failure with the server's stable error code, so the coordinator can react precisely. */
 export class SyncHttpError extends Error {
@@ -32,7 +32,7 @@ export function httpSyncApi(
   fetchFn: FetchLike = (i, init) => fetch(i, init),
   baseUrl = "",
 ): SyncApi {
-  const headers = { [CLIENT_VERSION_HEADER]: APP_VERSION };
+  const headers = { [APP_VERSION_HEADER]: APP_VERSION };
 
   async function call(path: string, init: RequestInit): Promise<Response> {
     let res: Response;

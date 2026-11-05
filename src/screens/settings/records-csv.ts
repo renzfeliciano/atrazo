@@ -1,4 +1,4 @@
-import { storeDay } from "@/core/time";
+import { ledgerDay } from "@/core/time";
 import { type Customer, formatPhilippineMobile } from "@/modules/ledger/domain/customer";
 import { type Entry } from "@/modules/ledger/domain/entry";
 
@@ -50,7 +50,7 @@ export function recordsToCsv(customers: readonly Customer[], entries: readonly E
       return [
         text(c?.name ?? "(unknown borrower)"),
         c?.phone ? formatPhilippineMobile(c.phone) : "",
-        storeDay(e.occurredAt),
+        ledgerDay(e.occurredAt),
         TYPE[e.kind],
         pesos(e.amount),
         text(e.note ?? ""),

@@ -6,10 +6,10 @@ import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { APP_VERSION } from "@/core/app-version";
 import { type Cents, formatPeso, fromPesos } from "@/core/money";
-import { formatStoreDay, storeDay } from "@/core/time";
+import { formatLedgerDay, ledgerDay } from "@/core/time";
 import { type CustomerId } from "@/modules/ledger/domain/ids";
 import { SyncHttpError } from "@/modules/sync/infrastructure/http-sync-api";
-import { type PhoneInfo } from "@/modules/vault/application/store-access";
+import { type PhoneInfo } from "@/modules/vault/application/ledger-access";
 import { useApp } from "@/app/providers";
 import { AppShell, syncLabel } from "@/ui/app-shell";
 import { Icon } from "@/ui/icons";
@@ -38,7 +38,7 @@ const ACTIONS = {
   phones: { doing: "Loading your phones", verb: "load your phones" },
   signOutPhone: { doing: "Signing out a phone", verb: "sign out that phone" },
   signOut: { doing: "Signing out", verb: "sign you out" },
-  deleteStore: { doing: "Deleting the listahan", verb: "delete the listahan" },
+  deleteLedger: { doing: "Deleting the listahan", verb: "delete the listahan" },
 } satisfies Record<string, Action>;
 
 function problemText(e: unknown, action: Action): string {
@@ -47,8 +47,8 @@ function problemText(e: unknown, action: Action): string {
       return `${action.doing} needs the internet. Check your connection and try again.`;
     if (e.code === "RATE_LIMITED")
       return "Too many tries. Please wait a few minutes and try again.";
-    // The phone still has the store, but the server no longer knows this phone (for example,
-    // the browser's cookies were cleared). Retrying can't fix that; opening the store again can.
+    // The phone still has the ledger, but the server no longer knows this phone (for example,
+    // the browser's cookies were cleared). Retrying can't fix that; opening the ledger again can.
     if (e.code === "UNAUTHENTICATED")
       return `Couldn’t ${action.verb}: this phone’s connection to your backup has ended. Your entries here are safe. Back them up from another phone, or sign out and open the listahan again with your recovery code.`;
   }
@@ -67,7 +67,7 @@ export function SettingsScreen() {
   const shown = useMinimumDelay();
   const ready = !!phone && !!session && !!settings && shown;
   const router = useRouter();
-  // No store on this device (signed out, or opened from a bookmark): go to Welcome.
+  // No ledger on this device (signed out, or opened from a bookmark): go to Welcome.
   useEffect(() => {
     if (session === null) router.replace("/welcome");
   }, [session, router]);
@@ -88,7 +88,7 @@ export function SettingsScreen() {
         <div className="page set-page" aria-busy={!ready}>
           {ready ? (
             <>
-              <StoreSection name={settings.name} />
+              <LedgerSection name={settings.name} />
               <RecoverySection />
               <PhonesSection />
               <BackupSection />
@@ -98,9 +98,9 @@ export function SettingsScreen() {
                 name={settings.name}
               />
               <AppearanceSection />
-              <DataSection storeName={settings.name} />
+              <DataSection ledgerName={settings.name} />
               <LegalSection />
-              <AccountSection storeName={settings.name} />
+              <AccountSection ledgerName={settings.name} />
               <p className="set-version">
                 Atrazo {APP_VERSION} · Your records are encrypted on this phone before backup.
               </p>
@@ -188,7 +188,7 @@ function Dialog({
 type PhoneApi = NonNullable<ReturnType<typeof useApp>["phone"]>;
 
 /** Saves every record as a CSV file (see records-csv.ts). Returns how many entries it holds. */
-async function downloadRecords(phone: PhoneApi, storeName: string): Promise<number> {
+async function downloadRecords(phone: PhoneApi, ledgerName: string): Promise<number> {
   const [customers, entries] = await Promise.all([
     phone.db.customers.toArray(),
     phone.db.entries.toArray(),
@@ -197,16 +197,16 @@ async function downloadRecords(phone: PhoneApi, storeName: string): Promise<numb
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  const slug = storeName.replace(/[^\w-]+/g, "-").replace(/^-|-$/g, "") || "atrazo";
-  a.download = `${slug}-records-${storeDay(new Date())}.csv`;
+  const slug = ledgerName.replace(/[^\w-]+/g, "-").replace(/^-|-$/g, "") || "atrazo";
+  a.download = `${slug}-records-${ledgerDay(new Date())}.csv`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   return entries.length;
 }
 
-// ── Store ─────────────────────────────────────────────────────────────────────
+// ── Ledger ─────────────────────────────────────────────────────────────────────
 
-function StoreSection({ name }: { name: string }) {
+function LedgerSection({ name }: { name: string }) {
   const { phone, sync, toast } = useApp();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(name);
@@ -229,14 +229,14 @@ function StoreSection({ name }: { name: string }) {
 
   return (
     <Section title="Listahan">
-      <div className="card set-store" style={{ overflow: "hidden" }} aria-live="polite">
+      <div className="card set-ledger" style={{ overflow: "hidden" }} aria-live="polite">
         {editing ? (
-          <form onSubmit={save} className="set-store-form" noValidate>
-            <label className="label" htmlFor="set-store-name">
+          <form onSubmit={save} className="set-ledger-form" noValidate>
+            <label className="label" htmlFor="set-ledger-name">
               Listahan name
             </label>
             <input
-              id="set-store-name"
+              id="set-ledger-name"
               className={`input ${error ? "input-error" : ""}`}
               value={draft}
               maxLength={60}
@@ -513,7 +513,7 @@ function PhonesSection() {
   const now = new Date();
   const seen = (d: string) => {
     const at = new Date(d);
-    return `Last online ${formatStoreDay(at, now)}, ${timeFmt.format(at)}`;
+    return `Last online ${formatLedgerDay(at, now)}, ${timeFmt.format(at)}`;
   };
   const phones =
     state.status === "ready"
@@ -575,7 +575,7 @@ function PhonesSection() {
               </span>
               <span className="row-sub">
                 {p.current
-                  ? `Active now · opened ${formatStoreDay(new Date(p.createdAt), now)}`
+                  ? `Active now · opened ${formatLedgerDay(new Date(p.createdAt), now)}`
                   : p.revokedAt
                     ? "Signed out · erased when it reconnects"
                     : seen(p.lastSeenAt)}
@@ -890,7 +890,7 @@ function AppearanceSection() {
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-function DataSection({ storeName }: { storeName: string }) {
+function DataSection({ ledgerName }: { ledgerName: string }) {
   const { phone, sync, toast } = useApp();
   const hidden = useLiveQuery(
     async () => (phone ? (await phone.db.customers.toArray()).filter((c) => c.hiddenAt) : []),
@@ -902,7 +902,7 @@ function DataSection({ storeName }: { storeName: string }) {
 
   async function download() {
     if (!phone) return;
-    const entries = await downloadRecords(phone, storeName);
+    const entries = await downloadRecords(phone, ledgerName);
     toast({
       title: "Records downloaded",
       detail: `${entries.toLocaleString("en-PH")} entries · CSV`,
@@ -970,7 +970,7 @@ function DataSection({ storeName }: { storeName: string }) {
             <li key={c.id} className="row set-sub-row" style={{ cursor: "default" }}>
               <span className="row-main">
                 <span className="row-title">{c.name}</span>
-                <span className="row-sub">Hidden {formatStoreDay(c.hiddenAt!, new Date())}</span>
+                <span className="row-sub">Hidden {formatLedgerDay(c.hiddenAt!, new Date())}</span>
               </span>
               <button
                 type="button"
@@ -1014,29 +1014,29 @@ function LegalSection() {
 
 // ── Sign out / delete ─────────────────────────────────────────────────────────
 
-function AccountSection({ storeName }: { storeName: string }) {
+function AccountSection({ ledgerName }: { ledgerName: string }) {
   const router = useRouter();
   const { phone, sync, toast } = useApp();
   const [dialog, setDialog] = useState<"signout" | "delete" | null>(null);
   const { pending: busy, run } = usePendingAction();
   const [problem, setProblem] = useState<string | null>(null);
   const [typed, setTyped] = useState("");
-  const nameMatches = typed.trim().toLowerCase() === storeName.trim().toLowerCase();
+  const nameMatches = typed.trim().toLowerCase() === ledgerName.trim().toLowerCase();
   const [downloaded, setDownloaded] = useState(false);
   // Real numbers for the delete confirmation, read only while it is open.
   const impact = useLiveQuery(async () => {
     if (!phone || dialog !== "delete") return undefined;
-    const [clients, entries, dash] = await Promise.all([
+    const [borrowers, entries, dash] = await Promise.all([
       phone.db.customers.count(),
       phone.db.entries.count(),
       phone.queries.dashboard(),
     ]);
-    return { clients, entries, owed: dash.totalOwed };
+    return { borrowers, entries, owed: dash.totalOwed };
   }, [phone, dialog]);
 
   async function downloadFirst() {
     if (!phone) return;
-    const n = await downloadRecords(phone, storeName);
+    const n = await downloadRecords(phone, ledgerName);
     setDownloaded(true);
     toast({ title: "Records downloaded", detail: `${n.toLocaleString("en-PH")} entries · CSV` });
   }
@@ -1075,17 +1075,17 @@ function AccountSection({ storeName }: { storeName: string }) {
     });
   }
 
-  async function deleteStore() {
+  async function deleteLedger() {
     if (!phone || !nameMatches) return;
     setProblem(null);
     await run(async () => {
       try {
-        await phone.access.deleteStore();
+        await phone.access.deleteLedger();
         await phone.db.wipe();
         router.replace("/welcome");
         toast({ title: "Listahan deleted", detail: "Its backups were removed from our servers." });
       } catch (e) {
-        setProblem(problemText(e, ACTIONS.deleteStore));
+        setProblem(problemText(e, ACTIONS.deleteLedger));
       }
     });
   }
@@ -1110,7 +1110,7 @@ function AccountSection({ storeName }: { storeName: string }) {
       {dialog === "signout" && (
         <Dialog title="Sign out of this phone?" onClose={close}>
           <p className="set-dialog-p">
-            This phone’s copy of <strong>{storeName}</strong> is erased. To open it here again
+            This phone’s copy of <strong>{ledgerName}</strong> is erased. To open it here again
             you’ll need your recovery code.
           </p>
           {sync.pending > 0 && (
@@ -1147,7 +1147,7 @@ function AccountSection({ storeName }: { storeName: string }) {
 
       {dialog === "delete" && (
         <Dialog
-          title={`Delete ${storeName}?`}
+          title={`Delete ${ledgerName}?`}
           onClose={close}
           danger={{ subtitle: "Permanent. This can’t be undone." }}
         >
@@ -1157,7 +1157,7 @@ function AccountSection({ storeName }: { storeName: string }) {
               <li>
                 <span>Borrowers</span>
                 <strong className="mono">
-                  {impact ? impact.clients.toLocaleString("en-PH") : "…"}
+                  {impact ? impact.borrowers.toLocaleString("en-PH") : "…"}
                 </strong>
               </li>
               <li>
@@ -1190,7 +1190,7 @@ function AccountSection({ storeName }: { storeName: string }) {
 
           <div className="field">
             <label className="label" htmlFor="set-delete-name">
-              To confirm, type <span className="confirm-pill mono">{storeName}</span>
+              To confirm, type <span className="confirm-pill mono">{ledgerName}</span>
             </label>
             <div className="input-wrap">
               <input
@@ -1199,7 +1199,7 @@ function AccountSection({ storeName }: { storeName: string }) {
                 value={typed}
                 autoComplete="off"
                 spellCheck={false}
-                placeholder={storeName}
+                placeholder={ledgerName}
                 onChange={(e) => setTyped(e.target.value)}
                 aria-describedby="set-delete-help"
               />
@@ -1227,7 +1227,7 @@ function AccountSection({ storeName }: { storeName: string }) {
             <button
               type="button"
               className="btn btn-danger-solid"
-              onClick={() => void deleteStore()}
+              onClick={() => void deleteLedger()}
               disabled={busy || !nameMatches}
             >
               {busy ? (

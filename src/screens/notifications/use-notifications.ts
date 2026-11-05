@@ -8,7 +8,7 @@ import {
   ledgerNotifications,
   type Severity,
 } from "@/modules/ledger/application/notifications";
-import { type PhoneInfo } from "@/modules/vault/application/store-access";
+import { type PhoneInfo } from "@/modules/vault/application/ledger-access";
 import { useApp } from "@/app/providers";
 
 /** Kept on this phone only: which notifications have been read (device table, never synced). */
@@ -48,7 +48,7 @@ export function useNotifications() {
   );
   const [phones, setPhones] = useState<PhoneInfo[]>([]);
 
-  // Phones that recently opened this store (needs the internet; skipped quietly offline).
+  // Phones that recently opened this ledger (needs the internet; skipped quietly offline).
   useEffect(() => {
     if (!phone || !session) return;
     let alive = true;

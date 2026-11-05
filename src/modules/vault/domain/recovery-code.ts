@@ -1,8 +1,8 @@
 import { type Brand } from "@/core/brand";
 
 /**
- * A store's recovery code: 125 random bits written as 25 Crockford base32 characters in five
- * groups ("7KQ2M-XD9PA-R4TWE-H6NBZ-3FJC8"). It is the store's only credential and the root of its
+ * A ledger's recovery code: 125 random bits written as 25 Crockford base32 characters in five
+ * groups ("7KQ2M-XD9PA-R4TWE-H6NBZ-3FJC8"). It is the ledger's only credential and the root of its
  * encryption keys, so it is generated on the phone and never sent to the server.
  *
  * Crockford base32 has no I, L, O or U, and reading tolerates the common mix-ups

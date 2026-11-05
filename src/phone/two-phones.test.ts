@@ -54,12 +54,12 @@ function network(ip: string) {
     if (cookie) headers.set("cookie", cookie);
     const req = new Request(u, { method, headers, body: init.body ?? null });
     const route: Record<string, (r: Request) => Promise<Response>> = {
-      "POST /api/v1/ledgers": api.createStore,
+      "POST /api/v1/ledgers": api.createLedger,
       "POST /api/v1/session": api.openSession,
       "POST /api/v1/sync": api.push,
       "GET /api/v1/sync": api.pull,
       "PUT /api/v1/ledgers/code": api.rotateCode,
-      "DELETE /api/v1/ledgers": api.deleteStore,
+      "DELETE /api/v1/ledgers": api.deleteLedger,
       "DELETE /api/v1/session": api.closeSession,
       "GET /api/v1/devices": api.listDevices,
     };
@@ -100,10 +100,10 @@ async function nena(p: Phone) {
   return r.value.id;
 }
 
-describe("two phones, one store", () => {
+describe("two phones, one ledger", () => {
   it("backs up a busy day as ONE encrypted row, and restores it on a second phone", async () => {
     const a = phone("203.0.113.1");
-    const { code } = await a.phone.access.startStore("Samsung Galaxy A15");
+    const { code } = await a.phone.access.startLedger("Samsung Galaxy A15");
     const nenaId = await nena(a.phone);
     const ben = await a.phone.commands.createCustomer({
       name: "Kuya Ben Dela Cruz",
@@ -128,7 +128,7 @@ describe("two phones, one store", () => {
     expect(Buffer.from(rows[0]!.ciphertext, "base64url").includes("Nena")).toBe(false); // encrypted
 
     const b = phone("198.51.100.2");
-    const opened = await b.phone.access.openStore(
+    const opened = await b.phone.access.openLedger(
       code.toLowerCase().replace(/-/g, " "),
       "Redmi 13C",
     );
@@ -150,13 +150,13 @@ describe("two phones, one store", () => {
 
   it("carries changes both ways and applies each only once", async () => {
     const a = phone("203.0.113.1");
-    const { code } = await a.phone.access.startStore("A");
+    const { code } = await a.phone.access.startLedger("A");
     const nenaId = await nena(a.phone);
     await a.phone.commands.recordEntry({ customerId: nenaId, kind: "utang", amount: P(2300) });
     await (await a.phone.engine()).syncNow();
 
     const b = phone("198.51.100.2");
-    await b.phone.access.openStore(code, "B");
+    await b.phone.access.openLedger(code, "B");
     await (await b.phone.engine()).syncNow();
     await b.phone.commands.recordEntry({
       customerId: nenaId,
@@ -182,7 +182,7 @@ describe("two phones, one store", () => {
 
   it("retries the SAME bundle after a dropped upload, so nothing is stored twice", async () => {
     const a = phone("203.0.113.1");
-    await a.phone.access.startStore("A");
+    await a.phone.access.startLedger("A");
     const nenaId = await nena(a.phone);
     await a.phone.commands.recordEntry({ customerId: nenaId, kind: "utang", amount: P(150) });
 
@@ -196,7 +196,7 @@ describe("two phones, one store", () => {
 
   it("once a change is sealed for upload, Undo voids it instead of deleting it", async () => {
     const a = phone("203.0.113.1");
-    await a.phone.access.startStore("A");
+    await a.phone.access.startLedger("A");
     const nenaId = await nena(a.phone);
     const r = await a.phone.commands.recordEntry({
       customerId: nenaId,
@@ -214,7 +214,7 @@ describe("two phones, one store", () => {
 
   it("keeps records from a newer app version instead of dropping them", async () => {
     const a = phone("203.0.113.1");
-    const { code } = await a.phone.access.startStore("A");
+    const { code } = await a.phone.access.startLedger("A");
     const nenaId = await nena(a.phone);
     await (await a.phone.engine()).pushPending();
 
@@ -245,7 +245,7 @@ describe("two phones, one store", () => {
     const sealed = await sealBytes(
       session!.dataKey,
       await gzip(utf8(JSON.stringify(future))),
-      `${session!.storeId}|bundle|${bundleId}`,
+      `${session!.ledgerId}|bundle|${bundleId}`,
     );
     const push = await a.net.fetchFn(`${APP}/api/v1/sync`, {
       method: "POST",
@@ -255,16 +255,16 @@ describe("two phones, one store", () => {
     expect(push.status).toBe(200);
 
     const b = phone("198.51.100.2");
-    await b.phone.access.openStore(code, "B");
+    await b.phone.access.openLedger(code, "B");
     const pulled = await (await b.phone.engine()).pullAll();
     expect(pulled).toEqual({ applied: 2, deferred: 2 });
     expect(await b.phone.db.deferred.count()).toBe(2);
     expect((await b.phone.db.customers.get(nenaId))?.name).toBe("Aling Nena"); // newer edit won
   });
 
-  it("restores the store name and credit rules on the second phone", async () => {
+  it("restores the ledger name and credit rules on the second phone", async () => {
     const a = phone("203.0.113.1");
-    const { code } = await a.phone.access.startStore("A");
+    const { code } = await a.phone.access.startLedger("A");
     const saved = await a.phone.commands.saveSettings({
       name: "Tindahan ni Aling Rosa",
       defaultLimit: P(1500),
@@ -274,7 +274,7 @@ describe("two phones, one store", () => {
     await (await a.phone.engine()).pushPending();
 
     const b = phone("198.51.100.2");
-    await b.phone.access.openStore(code, "B");
+    await b.phone.access.openLedger(code, "B");
     await (await b.phone.engine()).pullAll();
     expect(await b.phone.queries.settings()).toMatchObject({
       name: "Tindahan ni Aling Rosa",
@@ -285,18 +285,18 @@ describe("two phones, one store", () => {
 
   it("refuses a wrong recovery code on a new phone", async () => {
     const a = phone("203.0.113.1");
-    await a.phone.access.startStore("A");
+    await a.phone.access.startLedger("A");
     const b = phone("198.51.100.2");
     await expect(
-      b.phone.access.openStore("7KQ2M-XD9PA-R4TWE-H6NBZ-3FJC8", "B"),
+      b.phone.access.openLedger("7KQ2M-XD9PA-R4TWE-H6NBZ-3FJC8", "B"),
     ).rejects.toMatchObject({ code: "UNAUTHENTICATED" });
-    const typo = await b.phone.access.openStore("7KQ2M-XD9PA", "B");
+    const typo = await b.phone.access.openLedger("7KQ2M-XD9PA", "B");
     expect(!typo.ok && typo.error.code).toBe("VALIDATION");
   });
 
   it("a new recovery code replaces the old one, and open phones keep working", async () => {
     const a = phone("203.0.113.1");
-    const { code: oldCode } = await a.phone.access.startStore("A");
+    const { code: oldCode } = await a.phone.access.startLedger("A");
     await nena(a.phone);
     await (await a.phone.engine()).pushPending();
 
@@ -304,10 +304,10 @@ describe("two phones, one store", () => {
     expect(newCode).not.toBe(oldCode);
 
     const b = phone("198.51.100.2");
-    await expect(b.phone.access.openStore(oldCode, "B")).rejects.toMatchObject({
+    await expect(b.phone.access.openLedger(oldCode, "B")).rejects.toMatchObject({
       code: "UNAUTHENTICATED",
     });
-    expect((await b.phone.access.openStore(newCode, "B")).ok).toBe(true);
+    expect((await b.phone.access.openLedger(newCode, "B")).ok).toBe(true);
     expect(await (await b.phone.engine()).pullAll()).toEqual({ applied: 1, deferred: 0 }); // same data key
 
     // Phone A was never signed out and still backs up.
@@ -315,11 +315,11 @@ describe("two phones, one store", () => {
     expect(await (await a.phone.engine()).pushPending()).toBe(1);
   });
 
-  it("lists the store's phones and signs a lost one out", async () => {
+  it("lists the ledger's phones and signs a lost one out", async () => {
     const a = phone("203.0.113.1");
-    const { code } = await a.phone.access.startStore("Samsung Galaxy A15");
+    const { code } = await a.phone.access.startLedger("Samsung Galaxy A15");
     const b = phone("198.51.100.2");
-    const opened = await b.phone.access.openStore(code, "Redmi 13C");
+    const opened = await b.phone.access.openLedger(code, "Redmi 13C");
     if (!opened.ok) throw opened.error;
 
     const phones = await a.phone.access.listPhones();
@@ -336,17 +336,17 @@ describe("two phones, one store", () => {
     expect(after.find((p) => p.name === "Redmi 13C")?.revokedAt).not.toBeNull();
   });
 
-  it("deleting the store removes every backup, and the code stops working", async () => {
+  it("deleting the ledger removes every backup, and the code stops working", async () => {
     const a = phone("203.0.113.1");
-    const { code } = await a.phone.access.startStore("A");
+    const { code } = await a.phone.access.startLedger("A");
     await nena(a.phone);
     await (await a.phone.engine()).pushPending();
     expect(await serverRows()).toHaveLength(1);
 
-    await a.phone.access.deleteStore();
+    await a.phone.access.deleteLedger();
     expect(await serverRows()).toHaveLength(0);
     const b = phone("198.51.100.2");
-    await expect(b.phone.access.openStore(code, "B")).rejects.toMatchObject({
+    await expect(b.phone.access.openLedger(code, "B")).rejects.toMatchObject({
       code: "UNAUTHENTICATED",
     });
   });

@@ -1,8 +1,8 @@
 import { AppError, ErrorCode } from "@/core/errors";
 import { err, ok, type Result } from "@/core/result";
 import {
-  type CreateStoreRequest,
-  type OpenStoreRequest,
+  type CreateLedgerRequest,
+  type OpenLedgerRequest,
   type RotateCodeRequest,
 } from "../api/contracts";
 import {
@@ -11,7 +11,7 @@ import {
   type DeviceId,
   type DeviceSession,
   LAST_SEEN_RESOLUTION_MS,
-  type StoreId,
+  type LedgerId,
 } from "../domain/identity";
 import { type IdentityRepository, type RateLimiter, type SecretTools } from "./ports";
 
@@ -23,7 +23,7 @@ export interface IdentityDeps {
 }
 
 export interface IssuedSession {
-  readonly storeId: StoreId;
+  readonly ledgerId: LedgerId;
   readonly deviceId: DeviceId;
   /** Goes only into the HttpOnly cookie; the server keeps its hash. */
   readonly token: string;
@@ -32,15 +32,15 @@ export interface IssuedSession {
 
 /** The caller's network identity, already hashed by the HTTP layer (no raw IPs reach here). */
 export interface RequestMeta {
-  readonly clientKey: string;
+  readonly requesterKey: string;
 }
 
 /**
- * One generic message for "no such store" and "wrong secret", so the API never reveals whether
- * a store exists.
+ * One generic message for "no such ledger" and "wrong secret", so the API never reveals whether
+ * a ledger exists.
  */
 const noMatch = () =>
-  err(new AppError(ErrorCode.Unauthenticated, "That recovery code didn't match a store."));
+  err(new AppError(ErrorCode.Unauthenticated, "That recovery code didn't match a listahan."));
 const tooMany = (retry: number) =>
   err(
     new AppError(
@@ -50,21 +50,21 @@ const tooMany = (retry: number) =>
   );
 
 export const LIMITS = {
-  createPerClient: { limit: 5, windowSeconds: 3600 },
-  openPerClient: { limit: 10, windowSeconds: 900 },
-  openPerStore: { limit: 20, windowSeconds: 3600 },
+  createPerRequester: { limit: 5, windowSeconds: 3600 },
+  openPerRequester: { limit: 10, windowSeconds: 900 },
+  openPerLedger: { limit: 20, windowSeconds: 3600 },
 } as const;
 
 export function identityService({ repo, secrets, limiter, clock }: IdentityDeps) {
   return {
-    async createStore(
-      req: CreateStoreRequest,
+    async createLedger(
+      req: CreateLedgerRequest,
       meta: RequestMeta,
     ): Promise<Result<IssuedSession, AppError>> {
       const rl = await limiter.hit(
-        `create:${meta.clientKey}`,
-        LIMITS.createPerClient.limit,
-        LIMITS.createPerClient.windowSeconds,
+        `create:${meta.requesterKey}`,
+        LIMITS.createPerRequester.limit,
+        LIMITS.createPerRequester.windowSeconds,
       );
       if (!rl.allowed) return tooMany(rl.retryAfterSeconds);
 
@@ -76,11 +76,11 @@ export function identityService({ repo, secrets, limiter, clock }: IdentityDeps)
           ]),
         );
 
-      const storeId = secrets.newId() as StoreId;
+      const ledgerId = secrets.newId() as LedgerId;
       const deviceId = secrets.newId() as DeviceId;
       const token = secrets.newToken();
-      const outcome = await repo.createStore(
-        storeId,
+      const outcome = await repo.createLedger(
+        ledgerId,
         {
           codeLookup: req.lookup,
           authVerifier: secrets.hash(req.authSecret),
@@ -91,27 +91,27 @@ export function identityService({ repo, secrets, limiter, clock }: IdentityDeps)
       // A lookup collision means a 256-bit HKDF output repeated: effectively impossible, but never overwrite.
       if (outcome === "lookup_taken")
         return err(
-          new AppError(ErrorCode.Conflict, "Could not create the store. Please try again."),
+          new AppError(ErrorCode.Conflict, "Could not create the listahan. Please try again."),
         );
-      return ok({ storeId, deviceId, token, wrappedKey: req.wrappedKey });
+      return ok({ ledgerId, deviceId, token, wrappedKey: req.wrappedKey });
     },
 
-    async openStore(
-      req: OpenStoreRequest,
+    async openLedger(
+      req: OpenLedgerRequest,
       meta: RequestMeta,
     ): Promise<Result<IssuedSession, AppError>> {
-      const byClient = await limiter.hit(
-        `open:${meta.clientKey}`,
-        LIMITS.openPerClient.limit,
-        LIMITS.openPerClient.windowSeconds,
+      const byRequester = await limiter.hit(
+        `open:${meta.requesterKey}`,
+        LIMITS.openPerRequester.limit,
+        LIMITS.openPerRequester.windowSeconds,
       );
-      if (!byClient.allowed) return tooMany(byClient.retryAfterSeconds);
-      const byStore = await limiter.hit(
-        `open-store:${secrets.hash(req.lookup)}`,
-        LIMITS.openPerStore.limit,
-        LIMITS.openPerStore.windowSeconds,
+      if (!byRequester.allowed) return tooMany(byRequester.retryAfterSeconds);
+      const byLedger = await limiter.hit(
+        `open-ledger:${secrets.hash(req.lookup)}`,
+        LIMITS.openPerLedger.limit,
+        LIMITS.openPerLedger.windowSeconds,
       );
-      if (!byStore.allowed) return tooMany(byStore.retryAfterSeconds);
+      if (!byLedger.allowed) return tooMany(byLedger.retryAfterSeconds);
 
       const name = cleanDeviceName(req.deviceName);
       if (!name)
@@ -121,37 +121,39 @@ export function identityService({ repo, secrets, limiter, clock }: IdentityDeps)
           ]),
         );
 
-      const store = await repo.findStoreByLookup(req.lookup);
-      // Hash even when the store is missing, so response time does not reveal whether it exists.
+      const ledger = await repo.findLedgerByLookup(req.lookup);
+      // Hash even when the ledger is missing, so response time does not reveal whether it exists.
       const presented = secrets.hash(req.authSecret);
-      if (!store || !secrets.equals(presented, store.authVerifier)) return noMatch();
+      if (!ledger || !secrets.equals(presented, ledger.authVerifier)) return noMatch();
 
       const deviceId = secrets.newId() as DeviceId;
       const token = secrets.newToken();
-      if (!(await repo.addDevice(store.id, { id: deviceId, name, tokenHash: secrets.hash(token) })))
+      if (
+        !(await repo.addDevice(ledger.id, { id: deviceId, name, tokenHash: secrets.hash(token) }))
+      )
         return noMatch();
-      return ok({ storeId: store.id, deviceId, token, wrappedKey: store.wrappedKey });
+      return ok({ ledgerId: ledger.id, deviceId, token, wrappedKey: ledger.wrappedKey });
     },
 
     /** Resolves a session cookie. Revoked phones get a distinct error so they can wipe themselves. */
     async authenticate(token: string | undefined): Promise<Result<DeviceSession, AppError>> {
       if (!token || token.length > 128)
-        return err(new AppError(ErrorCode.Unauthenticated, "Open your store to continue."));
+        return err(new AppError(ErrorCode.Unauthenticated, "Open your listahan to continue."));
       const record = await repo.findDeviceByTokenHash(secrets.hash(token));
       if (!record)
-        return err(new AppError(ErrorCode.Unauthenticated, "Open your store to continue."));
+        return err(new AppError(ErrorCode.Unauthenticated, "Open your listahan to continue."));
       if (record.revokedAt)
         return err(
-          new AppError(ErrorCode.DeviceRevoked, "This phone was signed out of the store."),
+          new AppError(ErrorCode.DeviceRevoked, "This phone was signed out of the listahan."),
         );
       const now = clock.now();
       if (now.getTime() - record.lastSeenAt.getTime() > LAST_SEEN_RESOLUTION_MS)
         await repo.touchDevice(record.deviceId, now);
-      return ok({ storeId: record.storeId, deviceId: record.deviceId });
+      return ok({ ledgerId: record.ledgerId, deviceId: record.deviceId });
     },
 
     async listDevices(session: DeviceSession): Promise<(Device & { current: boolean })[]> {
-      const devices = await repo.listDevices(session.storeId);
+      const devices = await repo.listDevices(session.ledgerId);
       return devices.map((d) => ({ ...d, current: d.id === session.deviceId }));
     },
 
@@ -159,7 +161,7 @@ export function identityService({ repo, secrets, limiter, clock }: IdentityDeps)
       session: DeviceSession,
       deviceId: DeviceId,
     ): Promise<Result<void, AppError>> {
-      const done = await repo.revokeDevice(session.storeId, deviceId, clock.now());
+      const done = await repo.revokeDevice(session.ledgerId, deviceId, clock.now());
       return done ? ok(undefined) : err(new AppError(ErrorCode.NotFound, "Phone not found"));
     },
 
@@ -168,7 +170,7 @@ export function identityService({ repo, secrets, limiter, clock }: IdentityDeps)
       session: DeviceSession,
       req: RotateCodeRequest,
     ): Promise<Result<void, AppError>> {
-      const outcome = await repo.updateCredentials(session.storeId, {
+      const outcome = await repo.updateCredentials(session.ledgerId, {
         codeLookup: req.lookup,
         authVerifier: secrets.hash(req.authSecret),
         wrappedKey: req.wrappedKey,
@@ -178,8 +180,8 @@ export function identityService({ repo, secrets, limiter, clock }: IdentityDeps)
         : err(new AppError(ErrorCode.Conflict, "Could not change the code. Please try again."));
     },
 
-    async deleteStore(session: DeviceSession): Promise<void> {
-      await repo.deleteStore(session.storeId);
+    async deleteLedger(session: DeviceSession): Promise<void> {
+      await repo.deleteLedger(session.ledgerId);
     },
   };
 }

@@ -7,7 +7,7 @@
  *   be safe (426 UPGRADE_REQUIRED) and the app then shows "Update Atrazo".
  */
 export const API_BASE = "/api/v1";
-export const CLIENT_VERSION_HEADER = "x-atrazo-client";
+export const APP_VERSION_HEADER = "x-atrazo-version";
 
 /** Set at build time from package.json (next.config.ts). */
 export const APP_VERSION: string = process.env.NEXT_PUBLIC_APP_VERSION ?? "0.0.0";

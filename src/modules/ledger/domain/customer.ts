@@ -3,14 +3,14 @@ import { type Cents, MAX_ENTRY_CENTS } from "@/core/money";
 import { err, ok, type Result } from "@/core/result";
 import { type CustomerId } from "./ids";
 
-/** A person who buys on credit from the store. One customer keeps one ledger for life. */
+/** A person who owes the lender (utang). One customer keeps one ledger for life. */
 export interface Customer {
   readonly id: CustomerId;
   readonly name: string;
   /** E.164 Philippine mobile number, e.g. "+639171234567". */
   readonly phone: string | null;
   readonly note: string | null;
-  /** null = use the store's default credit limit. */
+  /** null = use the ledger's default credit limit. */
   readonly creditLimit: Cents | null;
   readonly createdAt: Date;
   readonly updatedAt: Date;

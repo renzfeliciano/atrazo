@@ -22,6 +22,13 @@ export interface OutboxRow {
   bundleId?: string;
 }
 
+/** Names written by app versions before v3 (when the account was called a "store"). */
+const LEGACY = {
+  settingsKey: "store",
+  sessionId: "storeId",
+  settingsEntityId: "store-settings",
+} as const;
+
 /** A backed-up record of a type or version this app does not know yet; kept for a future update. */
 export interface DeferredRow {
   id?: number;
@@ -60,6 +67,35 @@ export class LocalDb extends Dexie {
       outbox: "++seq, entityId, bundleId",
       deferred: "++id, type",
     });
+    // v3: the account is called a ledger everywhere. Moves the names saved by earlier versions:
+    // the settings row, the session's id field and the settings change waiting in the outbox.
+    this.version(3)
+      .stores({})
+      .upgrade(async (tx) => {
+        const settings = tx.table<KeyValueRow, string>("settings");
+        const old = await settings.get(LEGACY.settingsKey);
+        if (old) {
+          if (!(await settings.get("ledger")))
+            await settings.put({ key: "ledger", value: old.value });
+          await settings.delete(LEGACY.settingsKey);
+        }
+        await tx
+          .table<KeyValueRow, string>("device")
+          .where("key")
+          .equals("vault.session")
+          .modify((row) => {
+            const s = row.value as Record<string, unknown> | undefined;
+            if (s && LEGACY.sessionId in s) {
+              s.ledgerId ??= s[LEGACY.sessionId];
+              delete s[LEGACY.sessionId];
+            }
+          });
+        await tx
+          .table<OutboxRow, number>("outbox")
+          .where("entityId")
+          .equals(LEGACY.settingsEntityId)
+          .modify({ entityId: "ledger-settings" });
+      });
   }
 
   /** Erases everything on this phone (sign-out, or a phone signed out from another device). */

@@ -38,7 +38,7 @@ function explain(e: unknown): string {
   return "We couldn't start your listahan. Please try again.";
 }
 
-export function StoreSetupScreen() {
+export function LedgerSetupScreen() {
   const router = useRouter();
   const { phone, session } = useApp();
   const [step, setStep] = useState<Step>("name");
@@ -52,7 +52,7 @@ export function StoreSetupScreen() {
   const [copied, setCopied] = useState(false);
   const [typed, setTyped] = useState("");
 
-  // Resume an unfinished setup (the store exists but the code was never confirmed).
+  // Resume an unfinished setup (the ledger exists but the code was never confirmed).
   useEffect(() => {
     if (!phone || session === undefined) return;
     void phone.db.device.get(UNCONFIRMED_CODE_KEY).then((row) => {
@@ -65,17 +65,17 @@ export function StoreSetupScreen() {
     });
   }, [phone, session, router]);
 
-  async function createStore(e: React.FormEvent) {
+  async function createLedger(e: React.FormEvent) {
     e.preventDefault();
     if (!phone) return;
     if (!name.trim()) return setNameError("Enter your listahan's name");
-    // An empty limit means the default (₱1,000), not ₱0, which would put every client over limit.
+    // An empty limit means the default (₱1,000), not ₱0, which would put every borrower over limit.
     const typed = limit.replace(/[^0-9.]/g, "");
     const pesos = typed ? Number(typed) : 1000;
     setBusy(true);
     setProblem(null);
     try {
-      const { code: newCode } = await phone.access.startStore(guessDeviceName());
+      const { code: newCode } = await phone.access.startLedger(guessDeviceName());
       await phone.db.device.put({ key: UNCONFIRMED_CODE_KEY, value: newCode });
       await phone.commands.saveSettings({
         name,
@@ -172,8 +172,8 @@ export function StoreSetupScreen() {
         {step === "name" && <SecureContextNotice />}
         {step === "name" && (
           <form
-            id="store-form"
-            onSubmit={createStore}
+            id="ledger-form"
+            onSubmit={createLedger}
             style={{ display: "flex", flexDirection: "column", gap: 16 }}
             noValidate
           >
@@ -186,38 +186,38 @@ export function StoreSetupScreen() {
               </p>
             </div>
             <div className="field">
-              <label className="label" htmlFor="store-name">
+              <label className="label" htmlFor="ledger-name">
                 Listahan name
               </label>
               <input
-                id="store-name"
+                id="ledger-name"
                 className={`input ${nameError ? "input-error" : ""}`}
                 value={name}
                 autoFocus
                 maxLength={60}
                 placeholder="e.g. Tindahan ni Aling Rosa, or Listahan ni Renzo"
                 aria-invalid={!!nameError}
-                aria-describedby={nameError ? "store-name-err" : undefined}
+                aria-describedby={nameError ? "ledger-name-err" : undefined}
                 onChange={(e) => {
                   setName(e.target.value);
                   setNameError(null);
                 }}
               />
               {nameError && (
-                <span id="store-name-err" className="help-error">
+                <span id="ledger-name-err" className="help-error">
                   <Icon name="alert" size={14} />
                   {nameError}
                 </span>
               )}
             </div>
             <div className="field">
-              <label className="label" htmlFor="store-limit">
+              <label className="label" htmlFor="ledger-limit">
                 Default credit limit <span className="opt">· optional</span>
               </label>
               <div className="input-wrap">
                 <span className="pre">₱</span>
                 <input
-                  id="store-limit"
+                  id="ledger-limit"
                   className="input mono"
                   inputMode="decimal"
                   placeholder="1,000.00"
@@ -393,7 +393,7 @@ export function StoreSetupScreen() {
         {step === "name" && (
           <button
             type="submit"
-            form="store-form"
+            form="ledger-form"
             className="btn btn-primary btn-lg btn-block"
             disabled={busy || !phone}
           >

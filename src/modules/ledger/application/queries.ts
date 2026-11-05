@@ -29,10 +29,10 @@ export interface Dashboard {
   readonly totalOwed: Cents;
   readonly owingCount: number;
   readonly customers: readonly CustomerOverview[];
-  /** Overdue clients, longest unpaid first. */
+  /** Overdue borrowers, longest unpaid first. */
   readonly toCollect: readonly CustomerOverview[];
   readonly overdueTotal: Cents;
-  /** The last 7 store days, today included. Voided entries are excluded. */
+  /** The last 7 ledger days, today included. Voided entries are excluded. */
   readonly week: WeekTotals;
 }
 
@@ -78,7 +78,7 @@ export function ledgerQueries(
   const { customers, entries, outbox, settings, clock } = deps;
 
   return {
-    /** Store-wide feed for the Activity tab: the last `days` store days, newest first. */
+    /** Ledger-wide feed for the Activity tab: the last `days` ledger days, newest first. */
     async activity(days = 7): Promise<ActivityFeed> {
       const [all, list] = await Promise.all([customers.list(), entries.listAll()]);
       return activityFeed(list, all, clock.now(), days);

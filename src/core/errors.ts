@@ -1,5 +1,5 @@
 /**
- * One error vocabulary for the whole app. Codes are stable and safe to show to clients;
+ * One error vocabulary for the whole app. Codes are stable and safe to show in the app;
  * `detail` is for humans and must never contain secrets or personal data.
  */
 export const ErrorCode = {

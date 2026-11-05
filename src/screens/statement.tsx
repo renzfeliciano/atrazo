@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { type Cents, formatPeso } from "@/core/money";
-import { formatStoreDay, STORE_TIME_ZONE, storeDay } from "@/core/time";
+import { formatLedgerDay, LEDGER_TIME_ZONE, ledgerDay } from "@/core/time";
 import {
   buildStatement,
   type Statement,
@@ -25,11 +25,11 @@ const noon = (day: string) => new Date(`${day}T04:00:00Z`);
 const stampFmt = new Intl.DateTimeFormat("en-PH", {
   dateStyle: "medium",
   timeStyle: "short",
-  timeZone: STORE_TIME_ZONE,
+  timeZone: LEDGER_TIME_ZONE,
 });
 
 function monthOf(now: Date, offset: number): string {
-  const [y, m] = storeDay(now).split("-").map(Number) as [number, number];
+  const [y, m] = ledgerDay(now).split("-").map(Number) as [number, number];
   const d = new Date(Date.UTC(y, m - 1 + offset, 1));
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
 }
@@ -42,14 +42,14 @@ function periodFor(key: PeriodKey, settledAt: Date | null, now: Date): Statement
 }
 
 function periodText(s: Statement, now: Date): string {
-  const to = formatStoreDay(noon(s.to), now);
-  return s.from ? `${formatStoreDay(noon(s.from), now)} – ${to}` : `Up to ${to}`;
+  const to = formatLedgerDay(noon(s.to), now);
+  return s.from ? `${formatLedgerDay(noon(s.from), now)} – ${to}` : `Up to ${to}`;
 }
 
 /** Plain-text version for messaging apps (Copy / Share). */
-function statementText(s: Statement, store: string, now: Date): string {
+function statementText(s: Statement, ledger: string, now: Date): string {
   const lines = [
-    `${store}`,
+    `${ledger}`,
     `Statement of account ${s.number}`,
     `Borrower: ${s.customer.name}`,
     `Period: ${periodText(s, now)}`,
@@ -57,7 +57,7 @@ function statementText(s: Statement, store: string, now: Date): string {
     `Opening balance: ${peso(s.opening)}`,
     ...s.rows.map(
       (r) =>
-        `${formatStoreDay(r.entry.occurredAt, now)}  ${r.entry.note ?? (r.entry.kind === "bayad" ? "Bayad" : "Utang")}  ${peso(r.entry.amount, "always")}  → ${peso(r.balance)}`,
+        `${formatLedgerDay(r.entry.occurredAt, now)}  ${r.entry.note ?? (r.entry.kind === "bayad" ? "Bayad" : "Utang")}  ${peso(r.entry.amount, "always")}  → ${peso(r.balance)}`,
     ),
     "",
     `Total utang: ${peso(s.totalUtang)}`,
@@ -69,7 +69,7 @@ function statementText(s: Statement, store: string, now: Date): string {
   return lines.join("\n");
 }
 
-/** /statement?id=… : a client's statement of account, to print, save as PDF, copy or share. */
+/** /statement?id=… : a borrower's statement of account, to print, save as PDF, copy or share. */
 export function StatementScreen() {
   const { phone, toast } = useApp();
   const id = useSearchParams().get("id") as CustomerId | null;
@@ -82,7 +82,7 @@ export function StatementScreen() {
       phone.queries.settings(),
     ]);
     return customer && ledger
-      ? { customer, entries, settledAt: ledger.account.settledAt, store: settings.name }
+      ? { customer, entries, settledAt: ledger.account.settledAt, ledger: settings.name }
       : null;
   }, [phone, id]);
   const shown = useMinimumDelay(id);
@@ -90,7 +90,7 @@ export function StatementScreen() {
 
   const back = (
     <Link
-      href={id ? `/client?id=${id}` : "/"}
+      href={id ? `/borrower?id=${id}` : "/"}
       className="icon-btn"
       aria-label="Back to the borrower"
       style={{ color: "#fff" }}
@@ -164,11 +164,11 @@ export function StatementScreen() {
   ];
 
   async function copy() {
-    await navigator.clipboard?.writeText(statementText(s, data!.store, now));
+    await navigator.clipboard?.writeText(statementText(s, data!.ledger, now));
     toast({ title: "Statement copied", detail: "Paste it into Messenger, Viber or SMS" });
   }
   async function share() {
-    const text = statementText(s, data!.store, now);
+    const text = statementText(s, data!.ledger, now);
     if (navigator.share) {
       await navigator
         .share({ title: `Statement for ${s.customer.name}`, text })
@@ -205,7 +205,7 @@ export function StatementScreen() {
         <article className="stmt-doc" aria-label={`Statement of account for ${s.customer.name}`}>
           <header className="stmt-head">
             <div>
-              <strong className="disp stmt-store">{data.store}</strong>
+              <strong className="disp stmt-ledger">{data.ledger}</strong>
               <span className="stmt-kind">Statement of account</span>
             </div>
             <span className="stmt-no mono">#{s.number}</span>
@@ -253,7 +253,7 @@ export function StatementScreen() {
               <tbody>
                 {s.rows.map((r) => (
                   <tr key={r.entry.id}>
-                    <td>{formatStoreDay(r.entry.occurredAt, now)}</td>
+                    <td>{formatLedgerDay(r.entry.occurredAt, now)}</td>
                     <td>{r.entry.note ?? (r.entry.kind === "bayad" ? "Bayad" : "Utang")}</td>
                     <td className={`num mono ${r.entry.kind === "bayad" ? "stmt-bayad" : ""}`}>
                       {peso(r.entry.amount, "always")}

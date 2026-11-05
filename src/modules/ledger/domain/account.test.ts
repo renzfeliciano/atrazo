@@ -18,7 +18,7 @@ describe("summarizeAccount", () => {
     expect(s.isOverLimit).toBe(false);
   });
 
-  it("restarts days-unpaid after the client is fully paid (old debt never makes them overdue)", () => {
+  it("restarts days-unpaid after the borrower is fully paid (old debt never makes them overdue)", () => {
     const entries = [
       e("2026-06-01", "utang", 500),
       e("2026-06-20", "bayad", 500),
@@ -53,7 +53,7 @@ describe("summarizeAccount", () => {
     expect(s.limitUsedPercent).toBe(100);
   });
 
-  it("uses the store default limit when the client has none", () => {
+  it("uses the ledger default limit when the borrower has none", () => {
     const s = summarizeAccount([e("2026-11-01", "utang", 1200)], DEFAULT_POLICY, null, NOV5);
     expect(s.limit).toBe(100_000);
     expect(s.isOverLimit).toBe(true);
@@ -84,7 +84,7 @@ describe("summarizeAccount", () => {
     expect(s.openSince).toEqual(day("2026-11-03"));
   });
 
-  it("is a clean zero for a client with no entries", () => {
+  it("is a clean zero for a borrower with no entries", () => {
     const s = summarizeAccount([], DEFAULT_POLICY, null, NOV5);
     expect(s).toMatchObject({
       balance: 0,

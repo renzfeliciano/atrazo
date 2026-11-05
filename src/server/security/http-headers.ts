@@ -55,7 +55,7 @@ export function securityHeaders(dev: boolean): SecurityHeader[] {
         ]),
     { key: "X-Content-Type-Options", value: "nosniff" },
     { key: "X-Frame-Options", value: "DENY" },
-    // Nothing about Atrazo URLs (which hold client ids) leaks to other sites.
+    // Nothing about Atrazo URLs (which hold borrower ids) leaks to other sites.
     { key: "Referrer-Policy", value: "no-referrer" },
     {
       key: "Permissions-Policy",

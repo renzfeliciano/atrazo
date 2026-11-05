@@ -1,12 +1,12 @@
-import { API_BASE, APP_VERSION, CLIENT_VERSION_HEADER } from "@/core/app-version";
+import { API_BASE, APP_VERSION, APP_VERSION_HEADER } from "@/core/app-version";
 import { type LocalDb } from "@/infrastructure/local-db/local-db";
 import { DeviceListResponse, SessionResponse } from "@/modules/identity/api/contracts";
 import { type FetchLike, toSyncError } from "@/modules/sync/infrastructure/http-sync-api";
-import { type IdentityApi, type KeyStore } from "../application/store-access";
+import { type IdentityApi, type KeyStore } from "../application/ledger-access";
 
 const SESSION_KEY = "vault.session";
 
-/** The store session in the phone's own database (device table: never synced, wiped on sign-out). */
+/** The ledger session in the phone's own database (device table: never synced, wiped on sign-out). */
 export function indexedDbKeyStore(db: LocalDb): KeyStore {
   return {
     save: async (s) => void (await db.device.put({ key: SESSION_KEY, value: s })),
@@ -24,7 +24,7 @@ export function httpIdentityApi(
       method,
       credentials: "same-origin",
       headers: {
-        [CLIENT_VERSION_HEADER]: APP_VERSION,
+        [APP_VERSION_HEADER]: APP_VERSION,
         ...(body === undefined ? {} : { "content-type": "application/json" }),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -35,12 +35,12 @@ export function httpIdentityApi(
   const session = async (path: string, body: unknown) =>
     SessionResponse.parse(await (await call("POST", path, body)).json());
   return {
-    createStore: (body) => session("/ledgers", body),
-    openStore: (body) => session("/session", body),
+    createLedger: (body) => session("/ledgers", body),
+    openLedger: (body) => session("/session", body),
     rotateCode: async (body) => void (await call("PUT", "/ledgers/code", body)),
     listDevices: async () => DeviceListResponse.parse(await (await call("GET", "/devices")).json()),
     revokeDevice: async (id) => void (await call("DELETE", `/devices/${encodeURIComponent(id)}`)),
     closeSession: async () => void (await call("DELETE", "/session")),
-    deleteStore: async () => void (await call("DELETE", "/ledgers")),
+    deleteLedger: async () => void (await call("DELETE", "/ledgers")),
   };
 }

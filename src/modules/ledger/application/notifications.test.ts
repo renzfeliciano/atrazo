@@ -66,7 +66,7 @@ const week = { utang: 296000 as Cents, bayad: 214000 as Cents, utangCount: 31, b
 describe("ledgerNotifications", () => {
   const list = ledgerNotifications([jose, ben, fine], week, 1245000 as Cents, 30, NOW);
 
-  it("raises over-limit and overdue alerts, newest first, and nothing for clients in good standing", () => {
+  it("raises over-limit and overdue alerts, newest first, and nothing for borrowers in good standing", () => {
     expect(list.map((n) => n.kind)).toEqual(["over-limit", "weekly", "overdue"]);
     expect(list.some((n) => n.customerId === "c3")).toBe(false);
     expect(list[0]).toMatchObject({ customerName: "Mang Jose", overBy: 35000, severity: "danger" });

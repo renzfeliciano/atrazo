@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { unstable_rethrow } from "next/navigation";
 import { type z } from "zod";
-import { CLIENT_VERSION_HEADER, compareVersions } from "@/core/app-version";
+import { APP_VERSION_HEADER, compareVersions } from "@/core/app-version";
 import { AppError, ErrorCode, httpStatusFor } from "@/core/errors";
 import { type DeviceSession } from "@/modules/identity/domain/identity";
 import { log } from "@/server/observability/logger";
@@ -26,8 +26,8 @@ export interface RouteContext<B, Q> {
   readonly body: B;
   readonly query: Q;
   readonly session: DeviceSession | null;
-  /** Hashed, daily-rotating client key for rate limits. Never a raw IP. */
-  readonly clientKey: string;
+  /** Hashed, daily-rotating requester key for rate limits. Never a raw IP. */
+  readonly requesterKey: string;
   readonly requestId: string;
 }
 
@@ -68,8 +68,8 @@ export function problem(
   );
 }
 
-/** Rate-limit key: SHA-256 of the client IP plus today's date, so it cannot track anyone across days. */
-export function clientKeyOf(req: Request, now = new Date()): string {
+/** Rate-limit key: SHA-256 of the requester's IP plus today's date, so it cannot track anyone across days. */
+export function requesterKeyOf(req: Request, now = new Date()): string {
   const ip =
     req.headers.get("x-real-ip") ??
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
@@ -140,7 +140,7 @@ export function apiRoute<
   deps: () => Promise<{
     appUrl: string;
     auth: Authenticator;
-    minClientVersion?: string | undefined;
+    minAppVersion?: string | undefined;
     /** Development only (see config/dev-origins.ts); empty in production. */
     extraOrigins?: readonly string[];
   }>,
@@ -154,16 +154,12 @@ export function apiRoute<
     let status = 500;
     let interrupted = true;
     try {
-      const { appUrl, auth, minClientVersion, extraOrigins } = await deps();
+      const { appUrl, auth, minAppVersion, extraOrigins } = await deps();
       if (method !== "GET" && method !== "HEAD" && !isSameOrigin(req, appUrl, extraOrigins)) {
         throw new AppError(ErrorCode.Forbidden, "Cross-site request blocked");
       }
-      const clientVersion = req.headers.get(CLIENT_VERSION_HEADER);
-      if (
-        clientVersion &&
-        minClientVersion &&
-        compareVersions(clientVersion, minClientVersion) < 0
-      ) {
+      const appVersion = req.headers.get(APP_VERSION_HEADER);
+      if (appVersion && minAppVersion && compareVersions(appVersion, minAppVersion) < 0) {
         throw new AppError(
           ErrorCode.UpgradeRequired,
           "Update Atrazo to keep backing up. Your entries are safe on this phone.",
@@ -201,7 +197,7 @@ export function apiRoute<
         body,
         query,
         session,
-        clientKey: clientKeyOf(req),
+        requesterKey: requesterKeyOf(req),
         requestId,
       });
       interrupted = false;

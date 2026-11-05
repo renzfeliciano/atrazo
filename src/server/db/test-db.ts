@@ -13,13 +13,13 @@ export async function createTestDatabase(): Promise<{
   reset(): Promise<void>;
   close(): Promise<void>;
 }> {
-  const client = new PGlite();
-  const db = drizzle(client);
+  const pg = new PGlite();
+  const db = drizzle(pg);
   await migrate(db, { migrationsFolder: "drizzle" });
   return {
     db: db as unknown as Database,
     reset: async () =>
       void (await db.execute(sql`truncate ledgers, devices, changes, rate_limits cascade`)),
-    close: () => client.close(),
+    close: () => pg.close(),
   };
 }

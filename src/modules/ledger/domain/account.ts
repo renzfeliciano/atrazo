@@ -3,7 +3,7 @@ import { calendarDaysBetween } from "@/core/time";
 import { compareChronological, type Entry } from "./entry";
 import { type EntryId } from "./ids";
 
-/** Store-wide credit rules, set in Settings. */
+/** Ledger-wide credit rules, set in Settings. */
 export interface CreditPolicy {
   readonly defaultLimit: Cents;
   readonly overdueAfterDays: number;
@@ -115,7 +115,7 @@ export type LedgerRow =
   | { readonly type: "settled"; readonly at: Date };
 
 /**
- * The client's page, newest first: every entry with the balance after it, voided entries shown
+ * The borrower's page, newest first: every entry with the balance after it, voided entries shown
  * struck through (their void rows are folded into them), and a "fully paid" marker each time the
  * balance came back to zero.
  */

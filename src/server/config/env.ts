@@ -28,7 +28,7 @@ const EnvSchema = z.object({
   DATABASE_URL_UNPOOLED: optional(postgresUrl),
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
   /** Optional. Phones running an older app version are asked to update. */
-  MIN_CLIENT_VERSION: optional(z.string().regex(/^\d+\.\d+\.\d+$/, "must look like 1.2.0")),
+  MIN_APP_VERSION: optional(z.string().regex(/^\d+\.\d+\.\d+$/, "must look like 1.2.0")),
   /** Optional. Authorises the daily retention job (Vercel Cron sends it as a Bearer token). Unset = job off. */
   CRON_SECRET: optional(z.string().min(32, "must be at least 32 characters")),
 });

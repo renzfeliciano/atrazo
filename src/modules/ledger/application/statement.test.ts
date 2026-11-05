@@ -86,7 +86,7 @@ describe("buildStatement", () => {
     });
   });
 
-  it("has a stable statement number for the client and closing day", () => {
+  it("has a stable statement number for the borrower and closing day", () => {
     const s = buildStatement(nena, all, { kind: "all" }, NOW);
     expect(s.number).toBe("ST-20261120-ABCD");
   });

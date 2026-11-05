@@ -2,7 +2,7 @@
  * Responsive app shell.
  *   phone   < 768px   one column, bottom tab bar (the approved mobile design)
  *   tablet  ≥ 768px   graphite side rail; screens can show list + detail side by side
- *   desktop ≥ 1200px  full sidebar with labels and the store card
+ *   desktop ≥ 1200px  full sidebar with labels and the ledger card
  */
 
 /* Onboarding screens (welcome, setup, restore): a centred card on larger screens. */
@@ -287,10 +287,10 @@
   font-weight: 700;
   cursor: pointer;
 }
-.client-rows > li:first-child {
+.borrower-rows > li:first-child {
   border-top: 0 !important;
 }
-.client-table {
+.borrower-table {
   display: none;
   table-layout: auto;
 }
@@ -342,10 +342,10 @@
   .dash-caughtup {
     display: flex !important;
   }
-  .client-rows {
+  .borrower-rows {
     display: none;
   }
-  .client-table {
+  .borrower-table {
     display: table;
   }
 }
@@ -385,7 +385,7 @@
 
 /* ── Welcome ──
    Dark hero (brand, promise) with Lapis standing on the edge of a grey sheet whose first thing is
-   "Start my store", then a sample ledger as proof. Everything ends by 90% of the screen height;
+   "Start my listahan", then a sample ledger as proof. Everything ends by 90% of the screen height;
    the sheet's bottom padding is the last 10%. Short phones trim the sample instead of scrolling. */
 .welcome-scroll {
   display: flex;
@@ -924,7 +924,7 @@ li + li > .set-row-btn,
   gap: 14px;
   padding: 14px;
 }
-.set-store-form {
+.set-ledger-form {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1355,7 +1355,7 @@ li + li > .set-row-btn,
 }
 
 /* ── Tables that scroll inside their card ──
-   On the dashboard and a client's ledger the page itself stays still: header, totals, search and
+   On the dashboard and a borrower's ledger the page itself stays still: header, totals, search and
    tabs keep their place and only the table card scrolls, with its heading rows pinned. */
 :root {
   --tabs-h: 45px;
@@ -1574,7 +1574,7 @@ li + li > .set-row-btn,
   flex-direction: column;
   gap: 2px;
 }
-.stmt-store {
+.stmt-ledger {
   font-size: 18px;
   line-height: 1.2;
 }
@@ -1990,12 +1990,12 @@ li + li > .set-row-btn,
   gap: 8px;
 }
 
-/* ── Client table, tablets and desktops (src/screens/client-table.tsx) ── */
+/* ── Borrower table, tablets and desktops (src/screens/borrower-table.tsx) ── */
 @media (min-width: 768px) {
-  .client-rows {
+  .borrower-rows {
     display: none;
   }
-  .client-table {
+  .borrower-table {
     display: table;
   }
 }
@@ -2053,8 +2053,8 @@ li + li > .set-row-btn,
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-/* client */
-td.ct-client {
+/* borrower */
+td.ct-borrower {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -2248,7 +2248,7 @@ td.ct-last > span:first-child {
   font-size: 12.5px;
   font-weight: 650;
 }
-.ct tfoot td.ct-client {
+.ct tfoot td.ct-borrower {
   display: table-cell;
 }
 .ct-foot-late {
@@ -2278,7 +2278,7 @@ td.ct-last > span:first-child {
 }
 /* Wider screens: the table's own sortable headers and totals row replace the list header bar. */
 @media (min-width: 768px) {
-  .scroll-card > .list-head:has(+ .client-rows + .ct),
+  .scroll-card > .list-head:has(+ .borrower-rows + .ct),
   .scroll-card > .list-head:has(~ .ct) {
     display: none;
   }
@@ -2310,7 +2310,7 @@ td.ct-last > span:first-child {
   white-space: nowrap;
 }
 /* Column budget so the table fits next to "Singilin today" without sideways scrolling. */
-td.ct-client {
+td.ct-borrower {
   min-width: 180px;
 }
 .ct-days {
@@ -2324,7 +2324,7 @@ th.ct-last {
   width: 124px;
 }
 
-/* ── Client list on phones: a fixed grid per row (src/screens/client-table.tsx) ── */
+/* ── Borrower list on phones: a fixed grid per row (src/screens/borrower-table.tsx) ── */
 .cr > li + li {
   border-top: 1px solid var(--line-soft);
 }
@@ -2403,7 +2403,7 @@ th.ct-last {
   margin-top: 4px;
 }
 
-/* ── Borrower entries on phones: a fixed grid per entry (src/screens/client-ledger.tsx) ── */
+/* ── Borrower entries on phones: a fixed grid per entry (src/screens/borrower-ledger.tsx) ── */
 .le-table {
   display: none;
 }

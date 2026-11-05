@@ -32,6 +32,14 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  /** Addresses from before "client" became "borrower"; saved links and notifications keep working. */
+  async redirects() {
+    return [
+      { source: "/client", destination: "/borrower", permanent: true },
+      { source: "/clients/new", destination: "/borrowers/new", permanent: true },
+      { source: "/clients/edit", destination: "/borrowers/edit", permanent: true },
+    ];
+  },
   reactStrictMode: true,
   /** Loaded from node_modules at runtime (local dev database only); never bundled. */
   serverExternalPackages: ["@electric-sql/pglite"],

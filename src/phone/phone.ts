@@ -16,9 +16,9 @@ import { httpSyncApi, type FetchLike } from "@/modules/sync/infrastructure/http-
 import {
   indexedDbInbox,
   indexedDbSyncOutbox,
-} from "@/modules/sync/infrastructure/indexeddb-sync-stores";
+} from "@/modules/sync/infrastructure/indexeddb-sync-adapters";
 import { webBundleCodec } from "@/modules/sync/infrastructure/web-bundle-codec";
-import { storeAccess } from "@/modules/vault/application/store-access";
+import { ledgerAccess } from "@/modules/vault/application/ledger-access";
 import { httpIdentityApi, indexedDbKeyStore } from "@/modules/vault/infrastructure/device-adapters";
 
 /**
@@ -37,18 +37,18 @@ export function createPhone(opts: PhoneOptions = {}) {
   const clock = opts.clock ?? systemClock;
   const ledgerDeps = indexedDbLedger(db, clock);
   const registry = registerLedgerCodecs(new CodecRegistry<ApplyContext>());
-  const access = storeAccess({
+  const access = ledgerAccess({
     api: httpIdentityApi(opts.fetch, opts.baseUrl),
     keys: indexedDbKeyStore(db),
   });
 
-  /** Built on demand: sync needs the store's data key, which exists only after start/open. */
+  /** Built on demand: sync needs the ledger's data key, which exists only after start/open. */
   async function engine(): Promise<SyncEngine> {
     const session = await access.current();
-    if (!session) throw new Error("No store is open on this phone");
+    if (!session) throw new Error("No listahan is open on this phone");
     return syncEngine({
       outbox: indexedDbSyncOutbox(db, (c) => ledgerChangeToWire(c as LedgerChange)),
-      codec: webBundleCodec(session.dataKey, session.storeId),
+      codec: webBundleCodec(session.dataKey, session.ledgerId),
       api: httpSyncApi(opts.fetch, opts.baseUrl),
       inbox: indexedDbInbox(db, registry, { db }),
       newBundleId: () => uuidv7(),

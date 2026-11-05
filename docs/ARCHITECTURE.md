@@ -1,27 +1,26 @@
 # Atrazo architecture
 
-Atrazo is an offline-first utang (store credit) ledger for one store owner and many clients.
+Atrazo is an offline-first utang (ledger credit) ledger for one lender and many borrowers.
 The phone is the source of truth; the server is an encrypted backup it cannot read.
 
 ## Principles
 
 1. **Offline first.** Every screen reads and writes the phone's database (IndexedDB). The network is only for backup and restore.
 2. **Append-only ledger.** Entries are never edited or deleted after backup; mistakes are voided. Balances are always the sum of entries.
-3. **Zero-knowledge server.** Records are encrypted on the phone (AES-256-GCM). The server stores ciphertext, a random store id and a one-way fingerprint of the recovery code.
-4. **No accounts, no tracking.** The recovery code is the store's credential. No email, no third-party sign-in, no analytics, no third-party scripts.
+3. **Zero-knowledge server.** Records are encrypted on the phone (AES-256-GCM). The server stores ciphertext, a random ledger id and a one-way fingerprint of the recovery code.
+4. **No accounts, no tracking.** The recovery code is the ledger's credential. No email, no third-party sign-in, no analytics, no third-party scripts.
 5. **Free to run.** Vercel Hobby + Neon free tier; batching keeps the database asleep most of the day.
 
 ## Glossary: code names vs. what users see
 
-The app's wording was broadened beyond shops (a person lending to relatives uses Atrazo too). Only
-the **user-facing text** changed; code, database, API and encryption keep their original names, on
-purpose, so existing data and backups stay valid.
+Atrazo is for anyone who lends, not only shops, so the words "store" and "client" are not used
+anywhere: not in the UI, the code, the database or the API.
 
-| Users see                                                          | In code, database and API                                                                                                                                                                                                                | Notes                                                                 |
-| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| **Listahan** (the account: "Start my listahan", "Delete listahan") | Database: `ledgers` table, `ledger_id` columns (renamed from `stores`/`store_id` in migration 0001). API: `/api/v1/ledgers` (the old `/api/v1/stores` paths still answer, marked deprecated). Code: `store` (`storeId`, `StoreSettings`) | Also part of encryption labels (`atrazo/v1                            | store | …`). Renaming would make existing backups unreadable, so never rename it. |
-| **Borrower**                                                       | `customer` (`customers`, `CustomerId`); routes `/client`, `/clients/new`                                                                                                                                                                 | URLs keep `client` so saved links and the offline cache keep working. |
-| **Utang** / **Bayad**                                              | entry `kind`: `"utang"` / `"bayad"` (and `"void"`)                                                                                                                                                                                       |                                                                       |
+| Users see                                                          | In code, database and API                                                                                                    | Notes                                                                                                                                                                        |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Listahan** (the account: "Start my listahan", "Delete listahan") | `ledger`: `ledgers` table, `ledger_id` columns, `/api/v1/ledgers`, `ledgerId`, `LedgerSettings`                              | Renamed from "store" (database: migration 0001; phones: IndexedDB v3 upgrade). Backups written before the rename use the record type `store.settings`; phones still read it. |
+| **Borrower**                                                       | `customer` in the domain (`customers`, `CustomerId`); screens, routes and CSS use `borrower` (`/borrower`, `/borrowers/new`) | The old `/client` and `/clients/*` addresses redirect (next.config.ts), so saved links keep working.                                                                         |
+| **Utang** / **Bayad**                                              | entry `kind`: `"utang"` / `"bayad"` (and `"void"`)                                                                           |                                                                                                                                                                              |
 
 When adding UI text, use the left column; when naming code, follow the middle one.
 
@@ -31,7 +30,7 @@ Dependencies point inward only; ESLint enforces the boundaries.
 
 ```
 presentation    src/app/**                     React screens, thin API route files
-composition     src/client/phone.ts            wires the phone; src/server/container.ts wires the server
+composition     src/phone/phone.ts            wires the phone; src/server/container.ts wires the server
 infrastructure  modules/*/infrastructure,      IndexedDB (Dexie), Postgres (Drizzle), Web Crypto, fetch
                 src/infrastructure, src/server
 application     modules/*/application          use cases + ports (interfaces)
@@ -49,8 +48,8 @@ domain          modules/*/domain, src/core     entities, value objects, rules (p
 | ------------------ | ----------------------------------------------------------------------------------------- | ------- |
 | `core`             | Money, Manila calendar, errors, `Result`, encoding, versioning                            | both    |
 | `modules/ledger`   | Customers, entries, balances, overdue, limits, ledger rows, dashboard, sync codecs        | phone   |
-| `modules/vault`    | Recovery code, key derivation, encryption, start/open a store                             | phone   |
-| `modules/identity` | Stores, phones, sessions, rate limits                                                     | server  |
+| `modules/vault`    | Recovery code, key derivation, encryption, start/open a ledger                            | phone   |
+| `modules/identity` | Ledgers, phones, sessions, rate limits                                                    | server  |
 | `modules/sync`     | Bundles, codec registry, sync engine + coordinator (phone); encrypted change log (server) | both    |
 
 Wire contracts live in each module's `api/contracts.ts` (Zod), shared by phone and server.
@@ -67,13 +66,13 @@ engine pull: GET /api/v1/sync?after=cursor ─► decrypt + gunzip all ─► ap
 - **One row per sync, not per entry.** A busy day of 30+ entries is a single ~5 KB encrypted row.
 - **Exactly-once storage.** A bundle is saved with its id before upload and retried unchanged; the server ignores repeat ids.
 - **Undo stays consistent.** Once a change is sealed into a bundle it counts as sent: Undo voids it instead of deleting it.
-- **No skipped changes.** A per-store advisory lock inside the insert statement makes each store's rows commit in sequence order.
+- **No skipped changes.** A per-ledger advisory lock inside the insert statement makes each ledger's rows commit in sequence order.
 - **Every server write is one SQL statement**, so the transaction-less Neon HTTP driver is safe.
 
 ## Keys
 
 ```
-recovery code (125 bits) ─HKDF-SHA256─┬─ lookup      → finds the store
+recovery code (125 bits) ─HKDF-SHA256─┬─ lookup      → finds the ledger
                                        ├─ authSecret  → server keeps SHA-256 only
                                        └─ KEK (AES-KW) → wraps the data key
 data key (random AES-256) → encrypts every bundle; the server stores it only wrapped
@@ -83,7 +82,7 @@ A new recovery code re-wraps the same data key; nothing is re-encrypted.
 
 ## Extending and upgrading
 
-Atrazo is built to grow without breaking stores already in use.
+Atrazo is built to grow without breaking ledgers already in use.
 
 | Change you want                     | How                                                                                                                                                            |
 | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -94,8 +93,8 @@ Atrazo is built to grow without breaking stores already in use.
 | Change the phone database           | Add `this.version(n+1)` in `local-db.ts` with an upgrade function. Never edit a released version.                                                              |
 | Change the server database          | Edit `schema.ts`, run `pnpm db:generate`, commit the SQL in `drizzle/`. CI checks they match.                                                                  |
 | A breaking API change               | Add `/api/v2/...`; keep `/api/v1` serving older phones until they update.                                                                                      |
-| Retire an old app version           | Set `MIN_CLIENT_VERSION`; older phones get `426 UPGRADE_REQUIRED` and the app asks to update. Their entries stay safe locally.                                 |
-| New cryptography                    | Version strings (`atrazo/v1`) are bound into every key and ciphertext, and stores carry `key_version`; add v2 alongside v1.                                    |
+| Retire an old app version           | Set `MIN_APP_VERSION`; older phones get `426 UPGRADE_REQUIRED` and the app asks to update. Their entries stay safe locally.                                    |
+| New cryptography                    | Version strings (`atrazo/v1`) are bound into every key and ciphertext, and ledgers carry `key_version`; add v2 alongside v1.                                   |
 | Move off Neon or Vercel             | Implement the repository ports for the new database; nothing above infrastructure changes.                                                                     |
 
 Decisions and their reasons are recorded in [`docs/adr`](./adr).

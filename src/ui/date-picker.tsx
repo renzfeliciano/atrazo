@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/ui/icons";
 
 /**
- * Atrazo's date picker (bottom sheet on phones, dialog on larger screens). Works on store calendar
+ * Atrazo's date picker (bottom sheet on phones, dialog on larger screens). Works on ledger calendar
  * days ("2026-11-05", Manila), never on device time zones. Future days can't be picked.
  *
  * Keyboard: arrows move by day/week, PageUp/PageDown by month, Home/End to week start/end,

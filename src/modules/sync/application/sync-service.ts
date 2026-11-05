@@ -16,10 +16,10 @@ export interface StoredChange extends ChangeDto {
 }
 
 export interface ChangeLogRepository {
-  /** Appends changes; ids already stored for this store are skipped. Returns how many were new. */
+  /** Appends changes; ids already stored for this ledger are skipped. Returns how many were new. */
   append(session: DeviceSession, changes: readonly ChangeDto[]): Promise<number>;
   /** Changes with seq > after, oldest first, at most `limit`. */
-  after(storeId: DeviceSession["storeId"], after: bigint, limit: number): Promise<StoredChange[]>;
+  after(ledgerId: DeviceSession["ledgerId"], after: bigint, limit: number): Promise<StoredChange[]>;
 }
 
 export const PUSH_LIMIT = { limit: 240, windowSeconds: 600 } as const;
@@ -43,7 +43,7 @@ export function syncService(deps: { log: ChangeLogRepository; limiter: RateLimit
     },
 
     async pull(session: DeviceSession, q: PullQuery): Promise<PullResponse> {
-      const rows = await deps.log.after(session.storeId, BigInt(q.after), q.limit + 1);
+      const rows = await deps.log.after(session.ledgerId, BigInt(q.after), q.limit + 1);
       const page = rows.slice(0, q.limit);
       const last = page.at(-1);
       return {

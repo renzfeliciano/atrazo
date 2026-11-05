@@ -2,9 +2,9 @@ import { fromBase64Url, fromUtf8, toBase64Url, utf8 } from "@/core/encoding";
 import { type RecoveryCode, recoveryCodeBytes } from "../domain/recovery-code";
 
 /**
- * Store encryption, built only on the platform's Web Crypto API (browser and Node).
+ * Ledger encryption, built only on the platform's Web Crypto API (browser and Node).
  *
- *   recovery code ──HKDF-SHA256──┬─ lookup     (finds the store; useless for decryption)
+ *   recovery code ──HKDF-SHA256──┬─ lookup     (finds the ledger; useless for decryption)
  *                                ├─ authSecret (proves knowledge of the code; server keeps only its SHA-256)
  *                                └─ KEK        (AES-KW; wraps the data key)
  *   data key (random AES-256-GCM) encrypts every record; the server stores it only wrapped by the KEK.
@@ -25,8 +25,8 @@ export class VaultError extends Error {
   }
 }
 
-export interface StoreKeys {
-  /** base64url, 32 bytes. Sent to the server to find the store. */
+export interface LedgerKeys {
+  /** base64url, 32 bytes. Sent to the server to find the ledger. */
   readonly lookup: string;
   /** base64url, 32 bytes. Sent once per sign-in; the server stores only SHA-256(authSecret). */
   readonly authSecret: string;
@@ -46,7 +46,7 @@ async function hkdf(
   return new Uint8Array(bits);
 }
 
-export async function deriveStoreKeys(code: RecoveryCode): Promise<StoreKeys> {
+export async function deriveLedgerKeys(code: RecoveryCode): Promise<LedgerKeys> {
   const ikm = await subtle.importKey(
     "raw",
     recoveryCodeBytes(code) as Uint8Array<ArrayBuffer>,
@@ -87,7 +87,7 @@ export async function unwrapDataKey(wrapped: string, kek: CryptoKey): Promise<Cr
     ]);
   } catch {
     // AES-KW has a built-in integrity check: a wrong code cannot produce a key.
-    throw new VaultError("WRONG_CODE", "The recovery code does not unlock this store");
+    throw new VaultError("WRONG_CODE", "The recovery code does not unlock this listahan");
   }
 }
 
@@ -102,8 +102,8 @@ export interface Sealed {
 const BUCKET = 64;
 
 /**
- * `context` is bound as additional authenticated data (e.g. store id + record id), so the server
- * cannot move a ciphertext to another record or store without decryption failing.
+ * `context` is bound as additional authenticated data (e.g. ledger id + record id), so the server
+ * cannot move a ciphertext to another record or ledger without decryption failing.
  */
 export async function seal(dataKey: CryptoKey, payload: unknown, context: string): Promise<Sealed> {
   const json = JSON.stringify(payload);

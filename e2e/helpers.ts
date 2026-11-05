@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 
-export const STATE = "e2e/.auth/store.json";
+export const STATE = "e2e/.auth/ledger.json";
 export const CODE = "e2e/.auth/code.txt";
 
 export const recoveryCode = () => readFileSync(CODE, "utf8").trim();

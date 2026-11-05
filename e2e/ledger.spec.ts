@@ -15,9 +15,9 @@ test("a borrower's utang and bayad add up, with undo and void", async ({ page })
   await page.getByLabel("Name").fill("Aling Nena");
   await page.getByLabel(/Starting balance/).fill("500");
   await page.getByRole("button", { name: "Save borrower" }).click();
-  await expect(page).toHaveURL(/\/client\?id=/);
+  await expect(page).toHaveURL(/\/borrower\?id=/);
   await expect(balanceOf(page)).toContainText("₱500.00");
-  // An empty store limit means the ₱1,000 default.
+  // An empty default limit means the ₱1,000 default.
   await expect(balanceOf(page)).toContainText("limit ₱1,000");
 
   // Utang with the calculator: 3 × 25 + 75 = 150.

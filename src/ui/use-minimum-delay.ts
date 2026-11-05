@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
  * since it was opened.
  *
  * "Opened" means every link or tab tap (Next's bfcacheId changes on push/replace navigations), and
- * a new `key` (e.g. a different client). Browser back/forward keeps the same bfcacheId, so going
+ * a new `key` (e.g. a different borrower). Browser back/forward keeps the same bfcacheId, so going
  * back stays instant.
  */
 export const MIN_SKELETON_MS = 450;

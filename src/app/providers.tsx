@@ -12,7 +12,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { createPhone, type Phone } from "@/client/phone";
+import { createPhone, type Phone } from "@/phone/phone";
 import { syncCoordinator, type SyncState } from "@/modules/sync/application/sync-coordinator";
 import { SyncHttpError } from "@/modules/sync/infrastructure/http-sync-api";
 import { VisitTracker } from "@/ui/in-app-history";
@@ -21,17 +21,17 @@ import { ToastViewport, type ToastInput, type ToastItem } from "@/ui/toast";
 import { PageLoader } from "@/ui/page-loader";
 
 /**
- * Client-side providers: the phone (local database + use cases), the open store, toasts and sync.
+ * Phone-side providers: the phone (local database + use cases), the open ledger, toasts and sync.
  * Everything here runs only in the browser; on the server the phone is null and screens show skeletons.
  */
 interface SessionInfo {
-  readonly storeId: string;
+  readonly ledgerId: string;
   readonly deviceId: string;
 }
 
 interface AppContextValue {
   readonly phone: Phone | null;
-  /** undefined while loading, null when no store is open on this phone. */
+  /** undefined while loading, null when no ledger is open on this phone. */
   readonly session: SessionInfo | null | undefined;
   readonly sync: {
     state: SyncState;
@@ -106,7 +106,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     [dismiss],
   );
 
-  // ── Sync: batched backups while a store is open.
+  // ── Sync: batched backups while a ledger is open.
   const [syncState, setSyncState] = useState<SyncState>("idle");
   const coordinator = useMemo(() => {
     if (!phone || !session) return null;

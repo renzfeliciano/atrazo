@@ -14,10 +14,10 @@ import { SecureContextNotice } from "@/ui/secure-context-notice";
 
 type Step = "enter" | "opening" | "done";
 interface Restored {
-  readonly clients: number;
+  readonly borrowers: number;
   readonly entries: number;
   readonly total: string;
-  readonly store: string;
+  readonly ledger: string;
 }
 
 /** Formats as the owner types: uppercase, Crockford-friendly, dashes every 5 characters. */
@@ -53,7 +53,7 @@ export function RestoreScreen() {
   const [progress, setProgress] = useState<"checking" | "downloading">("checking");
   const [restored, setRestored] = useState<Restored | null>(null);
 
-  // A device that already has a store open goes straight to it.
+  // A device that already has a ledger open goes straight to it.
   useEffect(() => {
     if (session && step === "enter") router.replace("/");
   }, [session, step, router]);
@@ -69,7 +69,7 @@ export function RestoreScreen() {
     setStep("opening");
     setProgress("checking");
     try {
-      const r = await phone.access.openStore(code, deviceName.trim() || guessDeviceName());
+      const r = await phone.access.openLedger(code, deviceName.trim() || guessDeviceName());
       if (!r.ok) {
         setStep("enter");
         return setProblem(r.error.issues[0]?.message ?? r.error.message);
@@ -81,10 +81,10 @@ export function RestoreScreen() {
         phone.queries.settings(),
       ]);
       setRestored({
-        clients: dash.customers.length,
+        borrowers: dash.customers.length,
         entries: pulled.applied,
         total: formatPeso(dash.totalOwed),
-        store: settings.name,
+        ledger: settings.name,
       });
       setStep("done");
     } catch (err) {
@@ -254,13 +254,13 @@ export function RestoreScreen() {
                 Andito pa lahat.
               </h2>
               <p className="muted" style={{ fontSize: 14 }}>
-                {restored.store} is open on this device.
+                {restored.ledger} is open on this device.
               </p>
             </section>
             <ul className="card" style={{ overflow: "hidden" }}>
               {[
                 ["Listahan unlocked", ""],
-                ["Borrowers", String(restored.clients)],
+                ["Borrowers", String(restored.borrowers)],
                 ["Entries downloaded", restored.entries.toLocaleString("en-PH")],
                 ["Total owed to you", restored.total],
               ].map(([label, value], i) => (

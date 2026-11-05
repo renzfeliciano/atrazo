@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useLayoutEffect, useMemo, useState } from "react";
 import { add, type Cents, formatPeso, ZERO } from "@/core/money";
-import { formatStoreDay, STORE_TIME_ZONE } from "@/core/time";
+import { formatLedgerDay, LEDGER_TIME_ZONE } from "@/core/time";
 import { type LedgerRow } from "@/modules/ledger/domain/account";
 import { formatPhilippineMobile } from "@/modules/ledger/domain/customer";
 import { type Entry } from "@/modules/ledger/domain/entry";
@@ -19,22 +19,22 @@ import { useMinimumDelay } from "@/ui/use-minimum-delay";
 type Tab = "all" | "utang" | "bayad";
 const yearFmt = new Intl.DateTimeFormat("en-PH", {
   year: "numeric",
-  timeZone: STORE_TIME_ZONE,
+  timeZone: LEDGER_TIME_ZONE,
 });
 const dayFmt = new Intl.DateTimeFormat("en-PH", {
   month: "short",
   day: "numeric",
-  timeZone: STORE_TIME_ZONE,
+  timeZone: LEDGER_TIME_ZONE,
 });
 const weekdayFmt = new Intl.DateTimeFormat("en-PH", {
   weekday: "short",
-  timeZone: STORE_TIME_ZONE,
+  timeZone: LEDGER_TIME_ZONE,
 });
 const sinceFmt = new Intl.DateTimeFormat("en-PH", {
   month: "short",
   day: "numeric",
   year: "numeric",
-  timeZone: STORE_TIME_ZONE,
+  timeZone: LEDGER_TIME_ZONE,
 });
 const plain = (c: number, sign: "auto" | "always" = "always") =>
   formatPeso(c as Cents, { symbol: false, sign });
@@ -64,7 +64,7 @@ function groupByYear(rows: readonly LedgerRow[], tab: Tab): Group[] {
   return groups;
 }
 
-export function ClientLedgerScreen() {
+export function BorrowerLedgerScreen() {
   const id = useSearchParams().get("id") as CustomerId | null;
   const { phone, toast, sync } = useApp();
   const ledger = useLiveQuery(
@@ -155,7 +155,7 @@ export function ClientLedgerScreen() {
           <Icon name="file" size={20} />
         </Link>
         <Link
-          href={`/clients/edit?id=${customer.id}`}
+          href={`/borrowers/edit?id=${customer.id}`}
           className="icon-btn"
           aria-label="Edit borrower"
           style={{ color: "#fff" }}
@@ -231,7 +231,7 @@ export function ClientLedgerScreen() {
               <MiniStat
                 label={
                   account.settledAt
-                    ? `Utang since ${formatStoreDay(account.settledAt, new Date())}`
+                    ? `Utang since ${formatLedgerDay(account.settledAt, new Date())}`
                     : "Total utang"
                 }
                 value={peso(account.utangSinceSettled)}
@@ -240,7 +240,7 @@ export function ClientLedgerScreen() {
               <MiniStat
                 label={
                   account.settledAt
-                    ? `Bayad since ${formatStoreDay(account.settledAt, new Date())}`
+                    ? `Bayad since ${formatLedgerDay(account.settledAt, new Date())}`
                     : "Total bayad"
                 }
                 hint={account.settledAt ? "after last fully paid" : undefined}
@@ -267,7 +267,7 @@ export function ClientLedgerScreen() {
             ) : (
               // No number yet: offer to add one instead of a dead Call button.
               <Link
-                href={`/clients/edit?id=${customer.id}&focus=phone`}
+                href={`/borrowers/edit?id=${customer.id}&focus=phone`}
                 className="btn btn-secondary btn-sm"
               >
                 <Icon name="plus" size={15} />
@@ -372,7 +372,7 @@ export function ClientLedgerScreen() {
                                 style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
                               >
                                 <Icon name="check" size={14} strokeWidth={2.8} />
-                                Fully paid · {formatStoreDay(r.at, new Date())} · balance ₱0.00
+                                Fully paid · {formatLedgerDay(r.at, new Date())} · balance ₱0.00
                               </span>
                             </td>
                           </tr>
@@ -485,7 +485,7 @@ export function ClientLedgerScreen() {
             </h2>
             <p style={{ fontSize: 14, lineHeight: 1.5, color: "var(--text-2)" }}>
               <strong className="mono">{plain(voiding.amount)}</strong> on{" "}
-              {formatStoreDay(voiding.occurredAt, new Date())}
+              {formatLedgerDay(voiding.occurredAt, new Date())}
               {voiding.note ? ` · ${voiding.note}` : ""}. It stays on the page, crossed out, and the
               balance is corrected.
             </p>
@@ -540,7 +540,7 @@ function EntryRowsPhone({
                 return (
                   <li key={`settled-${r.at.getTime()}`} className="le-settled">
                     <Icon name="check" size={14} strokeWidth={2.8} />
-                    Fully paid · {formatStoreDay(r.at, new Date())} · balance ₱0.00
+                    Fully paid · {formatLedgerDay(r.at, new Date())} · balance ₱0.00
                   </li>
                 );
               }

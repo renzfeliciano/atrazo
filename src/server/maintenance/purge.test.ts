@@ -15,7 +15,7 @@ const NOW = new Date("2026-11-05T00:00:00Z");
 const daysAgo = (n: number) => new Date(NOW.getTime() - n * 86_400_000).toISOString();
 let n = 0;
 
-async function store(createdDaysAgo: number, phonesSeenDaysAgo: number[]) {
+async function ledger(createdDaysAgo: number, phonesSeenDaysAgo: number[]) {
   const id = crypto.randomUUID();
   n += 1;
   await tdb.db.execute(sql`
@@ -40,14 +40,14 @@ const ids = async (table: "ledgers" | "devices" | "changes") =>
   ).map((r) => r.id);
 
 describe("purgeExpired", () => {
-  it("deletes stores no phone has opened for a year, with their phones and backups", async () => {
-    const abandoned = await store(500, [400, 380]);
-    const active = await store(500, [400, 10]); // one phone still in use
-    const young = await store(30, []); // new store, no phone yet: kept
+  it("deletes ledgers no phone has opened for a year, with their phones and backups", async () => {
+    const abandoned = await ledger(500, [400, 380]);
+    const active = await ledger(500, [400, 10]); // one phone still in use
+    const young = await ledger(30, []); // new ledger, no phone yet: kept
 
     const r = await purgeExpired(tdb.db, NOW);
 
-    expect(r.storesDeleted).toBe(1);
+    expect(r.ledgersDeleted).toBe(1);
     expect(await ids("ledgers")).toEqual(expect.arrayContaining([active, young]));
     expect(await ids("ledgers")).not.toContain(abandoned);
     expect(await ids("devices")).not.toContain(abandoned);

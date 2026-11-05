@@ -1,7 +1,7 @@
 import { type CreditPolicy } from "../domain/account";
 import { type Customer } from "../domain/customer";
 import { type Entry } from "../domain/entry";
-import { type StoreSettings } from "../domain/store-settings";
+import { type LedgerSettings } from "../domain/ledger-settings";
 import { type CustomerId, type EntryId } from "../domain/ids";
 
 /**
@@ -27,10 +27,10 @@ export interface EntryRepository {
 export type LedgerChange =
   | { readonly type: "customer.saved"; readonly customer: Customer }
   | { readonly type: "entry.added"; readonly entry: Entry }
-  | { readonly type: "settings.saved"; readonly settings: StoreSettings };
+  | { readonly type: "settings.saved"; readonly settings: LedgerSettings };
 
-/** Outbox key for the single store-settings record. */
-export const SETTINGS_ENTITY_ID = "store-settings";
+/** Outbox key for the single ledger-settings record. */
+export const SETTINGS_ENTITY_ID = "ledger-settings";
 
 export function changeEntityId(change: LedgerChange): string {
   if (change.type === "entry.added") return change.entry.id;
@@ -49,8 +49,8 @@ export interface ChangeOutbox {
 
 export interface SettingsRepository {
   getPolicy(): Promise<CreditPolicy>;
-  get(): Promise<StoreSettings>;
-  save(settings: StoreSettings): Promise<void>;
+  get(): Promise<LedgerSettings>;
+  save(settings: LedgerSettings): Promise<void>;
 }
 
 /** Runs the callback atomically: all writes inside commit together or not at all. */

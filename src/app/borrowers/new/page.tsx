@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { ClientFormScreen } from "@/screens/client-form";
+import { BorrowerFormScreen } from "@/screens/borrower-form";
 import { FreshOnEachVisit } from "@/ui/fresh-on-each-visit";
-import { ClientFormSkeleton } from "@/ui/skeletons";
+import { BorrowerFormSkeleton } from "@/ui/skeletons";
 
 export const metadata: Metadata = { title: "New borrower" };
 
 export default function Page() {
   return (
-    <Suspense fallback={<ClientFormSkeleton />}>
+    <Suspense fallback={<BorrowerFormSkeleton />}>
       <FreshOnEachVisit>
-        <ClientFormScreen mode="new" />
+        <BorrowerFormScreen mode="new" />
       </FreshOnEachVisit>
     </Suspense>
   );

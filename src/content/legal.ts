@@ -15,9 +15,9 @@ export const LEGAL_DETAILS = {
   contactEmail: "renzofelicianopayod.personal@gmail.com" as string | null,
   /** Set on launch day, e.g. "1 December 2026". */
   effectiveDate: "7 November 2026" as string | null,
-  /** Days to remove a deleted store's backups. */
+  /** Days to remove a deleted ledger's backups. */
   deleteDays: "30" as string | null,
-  /** Days before backups of a store no phone has opened are removed. */
+  /** Days before backups of a ledger no phone has opened are removed. */
   orphanDays: "365" as string | null,
   /** Neon region, e.g. "Singapore (AWS ap-southeast-1)". */
   databaseRegion: "Singapore (AWS ap-southeast-1)" as string | null,

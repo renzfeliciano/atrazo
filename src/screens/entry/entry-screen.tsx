@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import { type Cents, formatPeso } from "@/core/money";
-import { formatStoreDay, storeDay } from "@/core/time";
+import { formatLedgerDay, ledgerDay } from "@/core/time";
 import { type CustomerId } from "@/modules/ledger/domain/ids";
 import { useApp } from "@/app/providers";
 import { Icon } from "@/ui/icons";
@@ -48,7 +48,7 @@ const peso = (c: number, sign: "auto" | "always" = "auto") => formatPeso(c as Ce
 
 /** Noon in Manila on the chosen day, or "now" when the day is today. */
 function occurredAtFor(day: string): Date {
-  return day === storeDay(new Date()) ? new Date() : new Date(`${day}T04:00:00Z`);
+  return day === ledgerDay(new Date()) ? new Date() : new Date(`${day}T04:00:00Z`);
 }
 
 export function EntryScreen() {
@@ -65,10 +65,10 @@ export function EntryScreen() {
   const [search, setSearch] = useState("");
   const [expr, setExpr] = useState("");
   const [note, setNote] = useState("");
-  const [day, setDay] = useState(() => storeDay(new Date()));
+  const [day, setDay] = useState(() => ledgerDay(new Date()));
   const [pickingDate, setPickingDate] = useState(false);
-  const backdated = day !== storeDay(new Date());
-  const dayLabel = backdated ? formatStoreDay(new Date(`${day}T04:00:00Z`), new Date()) : "Today";
+  const backdated = day !== ledgerDay(new Date());
+  const dayLabel = backdated ? formatLedgerDay(new Date(`${day}T04:00:00Z`), new Date()) : "Today";
   const { pending: saving, run } = usePendingAction();
   const [error, setError] = useState<string | null>(null);
 
@@ -92,9 +92,9 @@ export function EntryScreen() {
   const canSave = !!selected && amount > 0 && !saving;
 
   // Close goes to a fixed place and replaces this page in history, so it can never bounce back
-  // and forth with the client form ("Add a new borrower" → Cancel → New entry → Close → …).
+  // and forth with the borrower form ("Add a new borrower" → Cancel → New entry → Close → …).
   const from = params.get("c");
-  const close = () => router.replace(from ? `/client?id=${from}` : "/");
+  const close = () => router.replace(from ? `/borrower?id=${from}` : "/");
 
   async function save() {
     if (!phone || !selected || amount <= 0 || saving) return;
@@ -132,7 +132,7 @@ export function EntryScreen() {
           }),
       },
     });
-    router.replace(`/client?id=${selected.customer.id}`);
+    router.replace(`/borrower?id=${selected.customer.id}`);
   }
 
   // Physical keyboard: digits and operators type, Enter saves, Escape closes.
@@ -199,7 +199,7 @@ export function EntryScreen() {
         {pickingDate && (
           <DatePickerDialog
             value={day}
-            max={storeDay(new Date())}
+            max={ledgerDay(new Date())}
             onPick={(d) => {
               setDay(d);
               setPickingDate(false);
@@ -284,7 +284,7 @@ export function EntryScreen() {
             )}
           </ul>
           <Link
-            href={`/clients/new?next=entry${search ? `&name=${encodeURIComponent(search)}` : ""}`}
+            href={`/borrowers/new?next=entry${search ? `&name=${encodeURIComponent(search)}` : ""}`}
             className="btn btn-secondary btn-block"
           >
             <Icon name="userPlus" size={18} />

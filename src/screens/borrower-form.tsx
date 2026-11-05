@@ -10,7 +10,7 @@ import { type CustomerId } from "@/modules/ledger/domain/ids";
 import { useApp } from "@/app/providers";
 import { Icon } from "@/ui/icons";
 import { usePendingAction } from "@/ui/use-pending-action";
-import { ClientFormSkeleton } from "@/ui/skeletons";
+import { BorrowerFormSkeleton } from "@/ui/skeletons";
 import { useMinimumDelay } from "@/ui/use-minimum-delay";
 
 type Errors = Partial<
@@ -24,8 +24,8 @@ const toCents = (text: string): Cents | null => {
   return Number.isFinite(n) ? fromPesos(n) : null;
 };
 
-/** New client (/clients/new) and edit client (/clients/edit?id=…). */
-export function ClientFormScreen({ mode }: { mode: "new" | "edit" }) {
+/** New borrower (/borrowers/new) and edit borrower (/borrowers/edit?id=…). */
+export function BorrowerFormScreen({ mode }: { mode: "new" | "edit" }) {
   const router = useRouter();
   const params = useSearchParams();
   const { phone, toast, sync } = useApp();
@@ -40,9 +40,9 @@ export function ClientFormScreen({ mode }: { mode: "new" | "edit" }) {
   const all = useLiveQuery(async () => (phone ? phone.db.customers.toArray() : []), [phone]);
 
   if (!shown || settings === undefined || (mode === "edit" && existing === undefined))
-    return <ClientFormSkeleton />;
+    return <BorrowerFormSkeleton />;
   return (
-    <ClientForm
+    <BorrowerForm
       key={existing?.id ?? "new"}
       mode={mode}
       existing={existing ?? null}
@@ -55,7 +55,7 @@ export function ClientFormScreen({ mode }: { mode: "new" | "edit" }) {
         sync.notifyWrite();
         toast({ title: created ? "Borrower added" : "Borrower saved", detail: name });
         if (params.get("next") === "entry") router.replace(`/entry?c=${id}`);
-        else router.replace(`/client?id=${id}`);
+        else router.replace(`/borrower?id=${id}`);
       }}
       onHidden={(name) => {
         sync.notifyWrite();
@@ -68,7 +68,7 @@ export function ClientFormScreen({ mode }: { mode: "new" | "edit" }) {
   );
 }
 
-function ClientForm(props: {
+function BorrowerForm(props: {
   mode: "new" | "edit";
   existing: Customer | null;
   defaultLimit: Cents | undefined;
@@ -84,7 +84,7 @@ function ClientForm(props: {
   const { mode, existing } = props;
   // Cancel returns to where the form was opened from, replacing this page in history.
   const cancelHref = existing
-    ? `/client?id=${existing.id}`
+    ? `/borrower?id=${existing.id}`
     : props.next === "entry"
       ? "/entry"
       : "/";
@@ -105,7 +105,7 @@ function ClientForm(props: {
   const duplicate = name.trim()
     ? props.others.find((c) => !c.hiddenAt && c.id !== existing?.id && sameName(c.name, name))
     : undefined;
-  const storeDefault = props.defaultLimit != null ? formatPeso(props.defaultLimit) : "₱1,000.00";
+  const ledgerDefault = props.defaultLimit != null ? formatPeso(props.defaultLimit) : "₱1,000.00";
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -172,7 +172,7 @@ function ClientForm(props: {
         style={{ display: "flex", flexDirection: "column", gap: 12, padding: "14px 14px 16px" }}
       >
         <form
-          id="client-form"
+          id="borrower-form"
           onSubmit={submit}
           noValidate
           style={{ display: "flex", flexDirection: "column", gap: 12 }}
@@ -207,7 +207,7 @@ function ClientForm(props: {
                 <span>
                   There’s already a <strong>{duplicate.name}</strong>. Same person?
                 </span>
-                <Link href={`/client?id=${duplicate.id}`} className="banner-act">
+                <Link href={`/borrower?id=${duplicate.id}`} className="banner-act">
                   Open it
                 </Link>
               </div>
@@ -256,13 +256,13 @@ function ClientForm(props: {
                   id="c-limit"
                   className={`input mono ${errors.creditLimit ? "input-error" : ""}`}
                   inputMode="decimal"
-                  placeholder={storeDefault.replace("₱", "")}
+                  placeholder={ledgerDefault.replace("₱", "")}
                   value={limit}
                   onChange={(e) => setLimit(e.target.value)}
                 />
               </div>
               {err("creditLimit") ?? (
-                <span className="help">Leave empty to use the store default, {storeDefault}.</span>
+                <span className="help">Leave empty to use the default limit, {ledgerDefault}.</span>
               )}
             </div>
             {mode === "new" && (
@@ -360,7 +360,7 @@ function ClientForm(props: {
         </Link>
         <button
           type="submit"
-          form="client-form"
+          form="borrower-form"
           className="btn btn-primary btn-lg"
           disabled={!props.phoneReady || saving}
           style={{ flex: 2 }}

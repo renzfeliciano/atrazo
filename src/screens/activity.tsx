@@ -4,7 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import Link from "next/link";
 import { useState } from "react";
 import { type Cents, formatPeso } from "@/core/money";
-import { formatStoreDay, STORE_TIME_ZONE, storeDay } from "@/core/time";
+import { formatLedgerDay, LEDGER_TIME_ZONE, ledgerDay } from "@/core/time";
 import { type ActivityDay, type ActivityItem } from "@/modules/ledger/application/activity";
 import { useApp } from "@/app/providers";
 import { AppShell } from "@/ui/app-shell";
@@ -20,21 +20,24 @@ const STEP_DAYS = 7;
 const timeFmt = new Intl.DateTimeFormat("en-PH", {
   hour: "numeric",
   minute: "2-digit",
-  timeZone: STORE_TIME_ZONE,
+  timeZone: LEDGER_TIME_ZONE,
 });
-const weekdayFmt = new Intl.DateTimeFormat("en-PH", { weekday: "long", timeZone: STORE_TIME_ZONE });
+const weekdayFmt = new Intl.DateTimeFormat("en-PH", {
+  weekday: "long",
+  timeZone: LEDGER_TIME_ZONE,
+});
 const peso = (c: number, sign: "auto" | "always" = "always") => formatPeso(c as Cents, { sign });
 const noon = (day: string) => new Date(`${day}T04:00:00Z`);
 
 function dayLabel(day: string, now: Date): string {
-  const today = storeDay(now);
-  const yesterday = storeDay(new Date(now.getTime() - 86_400_000));
+  const today = ledgerDay(now);
+  const yesterday = ledgerDay(new Date(now.getTime() - 86_400_000));
   if (day === today) return "Today";
   if (day === yesterday) return "Yesterday";
-  return `${weekdayFmt.format(noon(day))}, ${formatStoreDay(noon(day), now)}`;
+  return `${weekdayFmt.format(noon(day))}, ${formatLedgerDay(noon(day), now)}`;
 }
 
-/** "Every utang and bayad, newest first", across all clients. */
+/** "Every utang and bayad, newest first", across all borrowers. */
 export function ActivityScreen() {
   const { phone } = useApp();
   const [days, setDays] = useState(STEP_DAYS);
@@ -79,7 +82,7 @@ export function ActivityScreen() {
               <Icon name="calendar" size={14} />
               {feed ? (
                 <>
-                  {formatStoreDay(noon(feed.from), now!)} – {formatStoreDay(noon(feed.to), now!)}
+                  {formatLedgerDay(noon(feed.from), now!)} – {formatLedgerDay(noon(feed.to), now!)}
                   <span>{days === STEP_DAYS ? "Last 7 days" : `Last ${days} days`}</span>
                 </>
               ) : (
@@ -244,7 +247,10 @@ function Row({ item }: { item: ActivityItem }) {
   const bayad = entry.kind === "bayad";
   return (
     <li>
-      <Link href={`/client?id=${customer.id}`} className={`row act-row ${voided ? "is-void" : ""}`}>
+      <Link
+        href={`/borrower?id=${customer.id}`}
+        className={`row act-row ${voided ? "is-void" : ""}`}
+      >
         <span className="act-time mono">{timeFmt.format(entry.occurredAt)}</span>
         <span className="row-main">
           <span className="row-title">{customer.name}</span>

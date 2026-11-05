@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { type Cents, formatPeso } from "@/core/money";
-import { formatStoreDay, STORE_TIME_ZONE } from "@/core/time";
+import { formatLedgerDay, LEDGER_TIME_ZONE } from "@/core/time";
 import { isToday } from "@/modules/ledger/application/notifications";
 import { AppShell } from "@/ui/app-shell";
 import { Lapis } from "@/ui/brand";
@@ -19,7 +19,7 @@ const peso = (c: number) => formatPeso(c as Cents);
 const timeFmt = new Intl.DateTimeFormat("en-PH", {
   hour: "numeric",
   minute: "2-digit",
-  timeZone: STORE_TIME_ZONE,
+  timeZone: LEDGER_TIME_ZONE,
 });
 
 const TILE: Record<AppNotification["severity"], [string, string]> = {
@@ -36,14 +36,14 @@ function view(n: AppNotification, now: Date) {
         icon: "alert" as IconName,
         title: `${n.customerName} is over the limit`,
         body: `Balance ${peso(n.balance!)} of a ${peso(n.limit!)} limit, ${peso(n.overBy!)} over.`,
-        action: { label: "Open ledger", href: `/client?id=${n.customerId}` },
+        action: { label: "Open ledger", href: `/borrower?id=${n.customerId}` },
       };
     case "overdue":
       return {
         icon: "calendar" as IconName,
         title: `${n.customerName}: ${n.daysUnpaid} days unpaid`,
-        body: `${peso(n.balance!)} owed.${n.lastBayadAt ? ` Last bayad was on ${formatStoreDay(n.lastBayadAt, now)}.` : " No bayad yet."}`,
-        action: { label: "Open ledger", href: `/client?id=${n.customerId}` },
+        body: `${peso(n.balance!)} owed.${n.lastBayadAt ? ` Last bayad was on ${formatLedgerDay(n.lastBayadAt, now)}.` : " No bayad yet."}`,
+        action: { label: "Open ledger", href: `/borrower?id=${n.customerId}` },
       };
     case "weekly":
       return {
@@ -56,7 +56,7 @@ function view(n: AppNotification, now: Date) {
       return {
         icon: "phone" as IconName,
         title: "A new phone opened your listahan",
-        body: `${n.phone.name} opened your listahan with your recovery code on ${formatStoreDay(new Date(n.phone.createdAt), now)}. Not you? Sign it out and make a new code.`,
+        body: `${n.phone.name} opened your listahan with your recovery code on ${formatLedgerDay(new Date(n.phone.createdAt), now)}. Not you? Sign it out and make a new code.`,
         action: { label: "Review phones", href: "/settings" },
       };
     case "backup":
@@ -69,7 +69,7 @@ function view(n: AppNotification, now: Date) {
   }
 }
 
-/** /notifications: alerts worked out on this phone from the store's own records. */
+/** /notifications: alerts worked out on this phone from the ledger's own records. */
 export function NotificationsScreen() {
   const { ready, items, isRead, unread, markRead, markAllRead } = useNotifications();
   const shown = useMinimumDelay();
@@ -206,7 +206,7 @@ export function NotificationsScreen() {
                                 <span className="ntf-time">
                                   {isToday(n.at, now!)
                                     ? timeFmt.format(n.at)
-                                    : formatStoreDay(n.at, now!)}
+                                    : formatLedgerDay(n.at, now!)}
                                 </span>
                               </div>
                               <p>{v.body}</p>

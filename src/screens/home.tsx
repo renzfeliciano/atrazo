@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useApp } from "@/app/providers";
 import { DashboardScreen, DashboardSkeleton } from "./dashboard";
-import { UNCONFIRMED_CODE_KEY } from "./store-setup";
+import { UNCONFIRMED_CODE_KEY } from "./ledger-setup";
 
-/** "/": the dashboard when a store is open on this device, otherwise the welcome screen. */
+/** "/": the dashboard when a ledger is open on this device, otherwise the welcome screen. */
 export function HomeScreen() {
   const router = useRouter();
   const { phone, session } = useApp();

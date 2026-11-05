@@ -31,7 +31,7 @@ async function create(): Promise<Container> {
   } else {
     db = drizzle(neon(e.DATABASE_URL)) as unknown as Database;
   }
-  const container = buildContainer(db, e.NEXT_PUBLIC_APP_URL, undefined, e.MIN_CLIENT_VERSION);
+  const container = buildContainer(db, e.NEXT_PUBLIC_APP_URL, undefined, e.MIN_APP_VERSION);
   // Development only: let a phone on the same Wi-Fi (or a listed HTTPS tunnel) use the API.
   if (e.NODE_ENV === "development") {
     const { extraDevOrigins } = await import("./config/dev-origins");

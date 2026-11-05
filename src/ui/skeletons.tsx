@@ -1,5 +1,5 @@
 /**
- * Page-shaped placeholders for the full-screen task pages (new entry, client form). Every screen
+ * Page-shaped placeholders for the full-screen task pages (new entry, borrower form). Every screen
  * that reads local data shows one of these, or its own, for at least MIN_SKELETON_MS when it opens.
  */
 const block = (height: number | string, width: number | string = "100%") => (
@@ -51,7 +51,7 @@ export function EntrySkeleton() {
   );
 }
 
-export function ClientFormSkeleton() {
+export function BorrowerFormSkeleton() {
   const field = (w: number) => (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       {block(12, w)}

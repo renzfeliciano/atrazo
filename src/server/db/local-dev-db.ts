@@ -59,8 +59,8 @@ export function localDevDatabase(url: string): Promise<Database> {
       import("drizzle-orm/pglite"),
       import("drizzle-orm/pglite/migrator"),
     ]);
-    const client = new PGlite(dir);
-    const db = drizzle(client);
+    const pg = new PGlite(dir);
+    const db = drizzle(pg);
     await migrate(db, { migrationsFolder: "drizzle" });
     return db as unknown as Database;
   })().catch((e: unknown) => {

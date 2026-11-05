@@ -6,8 +6,8 @@ import { defineConfig, devices } from "@playwright/test";
  *   pnpm test:e2e                      starts its own dev server on :6080 with a fresh database
  *   E2E_BASE_URL=http://… pnpm test:e2e  runs against a server you started yourself
  *
- * The "setup" project starts one store and saves the browser state (cookie + IndexedDB) for the
- * other tests, so a run creates a single store (the API allows only a few per hour per network).
+ * The "setup" project starts one ledger and saves the browser state (cookie + IndexedDB) for the
+ * other tests, so a run creates a single ledger (the API allows only a few per hour per network).
  * Locally the installed Google Chrome is used; CI installs Playwright's Chromium.
  */
 const PORT = 6080;
@@ -30,7 +30,7 @@ export default defineConfig({
     ...(ci ? {} : { channel: "chrome" }),
   },
   projects: [
-    { name: "setup", testMatch: /store\.setup\.ts/ },
+    { name: "setup", testMatch: /ledger\.setup\.ts/ },
     {
       name: "phone",
       use: { ...devices["Pixel 7"], ...(ci ? {} : { channel: "chrome" }) },
