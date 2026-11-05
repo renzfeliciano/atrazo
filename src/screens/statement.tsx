@@ -77,7 +77,7 @@ export function StatementScreen() {
     if (!phone || !id) return undefined;
     const [customer, entries, ledger, settings] = await Promise.all([
       phone.db.customers.get(id),
-      phone.db.entries.where("customerId").equals(id).toArray(),
+      phone.queries.entriesOf(id),
       phone.queries.customerLedger(id),
       phone.queries.settings(),
     ]);

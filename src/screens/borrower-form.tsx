@@ -102,8 +102,12 @@ function BorrowerForm(props: {
   const hiding = usePendingAction();
   const [confirmHide, setConfirmHide] = useState(false);
 
+  // Saving writes the borrower at once while the button stays busy a little longer. The list is
+  // frozen at the tap, so the new borrower never shows up as its own "already exists" match.
+  const [othersAtSave, setOthersAtSave] = useState<readonly Customer[] | null>(null);
+  const others = othersAtSave ?? props.others;
   const duplicate = name.trim()
-    ? props.others.find((c) => !c.hiddenAt && c.id !== existing?.id && sameName(c.name, name))
+    ? others.find((c) => !c.hiddenAt && c.id !== existing?.id && sameName(c.name, name))
     : undefined;
   const ledgerDefault = props.defaultLimit != null ? formatPeso(props.defaultLimit) : "₱1,000.00";
 
@@ -111,6 +115,7 @@ function BorrowerForm(props: {
     e.preventDefault();
     const commands = props.commands;
     if (!commands || saving) return;
+    setOthersAtSave(props.others);
     const draft = {
       name,
       phone: phoneText.trim() ? `0${phoneText.replace(/^0/, "")}` : null,
@@ -123,6 +128,7 @@ function BorrowerForm(props: {
         : commands.updateCustomer(existing!.id, draft),
     );
     if (!r.ok) {
+      setOthersAtSave(null);
       const next: Errors = {};
       for (const i of r.error.issues) next[i.field as keyof Errors] ??= i.message;
       setErrors(next);

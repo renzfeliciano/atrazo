@@ -22,6 +22,11 @@ export interface Entry {
   readonly occurredAt: Date;
   /** When it was written into Atrazo. Breaks ties and orders sync. */
   readonly recordedAt: Date;
+  /**
+   * Set only when the note shown was added or changed later (see entry-note.ts). Never stored on
+   * the entry itself and never part of its backup record.
+   */
+  readonly noteEditedAt?: Date;
 }
 
 export const ENTRY_NOTE_MAX = 120;

@@ -1,6 +1,7 @@
 import { type CreditPolicy, DEFAULT_POLICY } from "../domain/account";
 import { type Customer } from "../domain/customer";
 import { type Entry } from "../domain/entry";
+import { type EntryNote, latestNotes, withLatestNote } from "../domain/entry-note";
 import { type CustomerId, type EntryId } from "../domain/ids";
 import { DEFAULT_SETTINGS, type LedgerSettings } from "../domain/ledger-settings";
 import { changeEntityId, type ChangeOutbox, type LedgerChange, type LedgerDeps } from "./ports";
@@ -12,6 +13,11 @@ import { changeEntityId, type ChangeOutbox, type LedgerChange, type LedgerDeps }
 export function inMemoryLedger(opts: { now?: () => Date; policy?: CreditPolicy } = {}) {
   const customers = new Map<CustomerId, Customer>();
   const entries = new Map<EntryId, Entry>();
+  const notes: EntryNote[] = [];
+  const shown = (list: Entry[]) => {
+    const latest = latestNotes(notes);
+    return list.map((e) => withLatestNote(e, latest));
+  };
   const queue: { entityId: string; change: LedgerChange; sent: boolean }[] = [];
   let ledgerSettings: LedgerSettings = { ...DEFAULT_SETTINGS, ...(opts.policy ?? DEFAULT_POLICY) };
   let n = 0;
@@ -48,13 +54,18 @@ export function inMemoryLedger(opts: { now?: () => Date; policy?: CreditPolicy }
       save: async (c) => void customers.set(c.id, c),
     },
     entries: {
-      get: async (id) => entries.get(id),
-      listByCustomer: async (cid) => [...entries.values()].filter((e) => e.customerId === cid),
-      listAll: async () => [...entries.values()],
+      get: async (id) => {
+        const e = entries.get(id);
+        return e && shown([e])[0];
+      },
+      listByCustomer: async (cid) =>
+        shown([...entries.values()].filter((e) => e.customerId === cid)),
+      listAll: async () => shown([...entries.values()]),
       async add(e) {
         if (entries.has(e.id)) throw new Error(`Duplicate entry ${e.id}`);
         entries.set(e.id, e);
       },
+      addNote: async (n) => void notes.push(n),
       removeUnsynced: async (id) => void entries.delete(id),
     },
     outbox,
@@ -74,5 +85,5 @@ export function inMemoryLedger(opts: { now?: () => Date; policy?: CreditPolicy }
     clock: { now: opts.now ?? (() => new Date("2026-11-05T04:00:00Z")) },
   };
 
-  return { deps, outbox, ledger: { customers, entries } };
+  return { deps, outbox, ledger: { customers, entries, notes } };
 }

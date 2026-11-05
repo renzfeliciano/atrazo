@@ -84,7 +84,11 @@ export function EntryScreen() {
   const selected = customers.find((o) => o.customer.id === customerId);
 
   const amount = amountOf(expr);
-  const balance = selected?.account.balance ?? 0;
+  // The entry is written the moment Save is tapped, while the button keeps its busy state a little
+  // longer. The live balance already includes it by then, so the preview is frozen at the tap;
+  // otherwise "After saving" would count the amount twice and flash "over limit".
+  const [savingFrom, setSavingFrom] = useState<number | null>(null);
+  const balance = savingFrom ?? selected?.account.balance ?? 0;
   const after = balance + (kind === "utang" ? amount : -amount);
   const limit = selected?.account.limit ?? 0;
   const overBy = after - limit;
@@ -99,6 +103,7 @@ export function EntryScreen() {
   async function save() {
     if (!phone || !selected || amount <= 0 || saving) return;
     setError(null);
+    setSavingFrom(selected.account.balance);
     const r = await run(() =>
       phone.commands.recordEntry({
         customerId: selected.customer.id,
@@ -109,6 +114,7 @@ export function EntryScreen() {
       }),
     );
     if (!r.ok) {
+      setSavingFrom(null);
       setError(r.error.issues[0]?.message ?? r.error.message);
       return;
     }

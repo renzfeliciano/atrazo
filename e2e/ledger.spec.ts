@@ -43,9 +43,20 @@ test("a borrower's utang and bayad add up, with undo and void", async ({ page })
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(balanceOf(page)).toContainText("₱450.00");
 
+  // Forgot the note on the 200 bayad: add it later. Only the note changes, not the balance.
+  await page.getByRole("button", { name: /^Bayad/ }).click();
+  const sheet = page.getByRole("dialog", { name: /Bayad · ₱200\.00/ });
+  await expect(sheet.getByRole("button", { name: "Add note" })).toBeDisabled();
+  await sheet.getByLabel("Note").fill("GCash");
+  await sheet.getByRole("button", { name: "Add note" }).click();
+  await expect(page.getByRole("status").getByText(/Note saved/)).toBeVisible();
+  await expect(sheet).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /GCash/ })).toContainText("Note edited");
+  await expect(balanceOf(page)).toContainText("₱450.00");
+
   // Void the 150: it stays on the page, crossed out, and the balance is corrected.
   await page.getByRole("button", { name: /Bigas, mantika/ }).click();
-  await page.getByRole("dialog", { name: "Void this entry?" }).getByRole("button").first().click();
+  await page.getByRole("dialog").getByRole("button", { name: "Entered twice" }).click();
   await expect(balanceOf(page)).toContainText("₱300.00");
   await expect(page.getByText(/Voided/).filter({ visible: true })).toBeVisible();
 

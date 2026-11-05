@@ -2,6 +2,32 @@ import { expect, test as setup } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { afterSplash, CODE, STATE } from "./helpers";
 
+/**
+ * A fresh dev server compiles each page on its first visit, and a new compile reloads open pages.
+ * Visiting every page once first means no compile (and no reload) lands in the middle of a test.
+ */
+const PAGES = [
+  "/welcome",
+  "/start",
+  "/restore",
+  "/terms",
+  "/privacy",
+  "/",
+  "/borrower",
+  "/borrowers/new",
+  "/borrowers/edit",
+  "/entry",
+  "/activity",
+  "/settings",
+  "/statement",
+  "/notifications",
+];
+
+setup("warm up every page", async ({ page }) => {
+  setup.setTimeout(240_000);
+  for (const path of PAGES) await page.goto(path, { waitUntil: "load" });
+});
+
 /** Starts the one ledger the other tests share, and saves its recovery code and browser state. */
 setup("start a listahan and confirm the recovery code", async ({ page }) => {
   await page.goto("/welcome");

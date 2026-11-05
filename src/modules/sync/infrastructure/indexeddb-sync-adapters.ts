@@ -43,7 +43,8 @@ export function indexedDbSyncOutbox(
 
 /**
  * Applies pulled records through the codec registry, keeping unknown or malformed records in
- * `deferred` (never dropping data), and advances the cursor in the same transaction.
+ * `deferred` (never dropping data), and advances the cursor in the same transaction. After an
+ * app update, `replayDeferred` applies the kept records this version now understands.
  */
 export function indexedDbInbox<Ctx extends { db: LocalDb }>(
   db: LocalDb,
@@ -59,7 +60,7 @@ export function indexedDbInbox<Ctx extends { db: LocalDb }>(
       let deferred = 0;
       await db.transaction(
         "rw",
-        [db.customers, db.entries, db.settings, db.deferred, db.device],
+        [db.customers, db.entries, db.entryNotes, db.settings, db.deferred, db.device],
         async () => {
           for (const r of records) {
             const codec = registry.find(r);
@@ -76,6 +77,25 @@ export function indexedDbInbox<Ctx extends { db: LocalDb }>(
         },
       );
       return { applied, deferred };
+    },
+    async replayDeferred() {
+      let applied = 0;
+      await db.transaction(
+        "rw",
+        [db.customers, db.entries, db.entryNotes, db.settings, db.deferred],
+        async () => {
+          // Oldest first, as they arrived, so a later record still wins over an earlier one.
+          for (const row of await db.deferred.orderBy("id").toArray()) {
+            const codec = registry.find({ t: row.type, v: row.version, d: row.data });
+            const parsed = codec?.schema.safeParse(row.data);
+            if (!codec || !parsed?.success) continue;
+            await codec.apply(parsed.data, ctx);
+            await db.deferred.delete(row.id!);
+            applied += 1;
+          }
+        },
+      );
+      return applied;
     },
   };
 }

@@ -207,6 +207,63 @@ describe.each(adapters)("ledger use cases (%s)", (_name, make) => {
     expect(d.week.utangCount).toBe(0);
   });
 
+  it("adds a forgotten note later without touching the amount, and it shows everywhere", async () => {
+    const { cmd, q, deps } = setup();
+    const c = await nena(cmd);
+    const r = await cmd.recordEntry({ customerId: c.id, kind: "utang", amount: P(150) });
+    if (!r.ok) throw r.error;
+    now = new Date("2026-11-05T06:00:00Z");
+
+    const noted = await cmd.noteEntry(r.value.entry.id, "  Bigas,   mantika ");
+    expect(noted.ok && noted.value.note).toBe("Bigas, mantika");
+    expect(noted.ok && noted.value.noteEditedAt).toEqual(now);
+
+    const ledger = await q.customerLedger(c.id);
+    const row = ledger!.rows.find((x) => x.type === "entry" && x.entry.id === r.value.entry.id);
+    expect(row?.type === "entry" && row.entry.note).toBe("Bigas, mantika");
+    expect(ledger!.account.balance).toBe(P(150));
+    expect((await deps.entries.listAll())[0]!.note).toBe("Bigas, mantika");
+    const queued = await deps.outbox.pendingIds();
+    expect(queued.size).toBe(3); // customer, entry, note
+
+    // The newest note wins; clearing is allowed; the same note again writes nothing.
+    now = new Date("2026-11-05T07:00:00Z");
+    await cmd.noteEntry(r.value.entry.id, "Bigas");
+    expect((await deps.entries.get(r.value.entry.id))?.note).toBe("Bigas");
+    await cmd.noteEntry(r.value.entry.id, "Bigas");
+    expect((await deps.outbox.pendingIds()).size).toBe(4);
+    await cmd.noteEntry(r.value.entry.id, "   ");
+    expect((await deps.entries.get(r.value.entry.id))?.note).toBeNull();
+  });
+
+  it("refuses a note on a void, a missing entry, or one that is too long", async () => {
+    const { cmd } = setup();
+    const c = await nena(cmd);
+    const r = await cmd.recordEntry({ customerId: c.id, kind: "utang", amount: P(100) });
+    if (!r.ok) throw r.error;
+    const v = await cmd.voidEntry(r.value.entry.id, "Entered twice");
+    if (!v.ok) throw v.error;
+
+    const onVoid = await cmd.noteEntry(v.value.id, "x");
+    expect(!onVoid.ok && onVoid.error.code).toBe(ErrorCode.Conflict);
+    const missing = await cmd.noteEntry("nope" as EntryId, "x");
+    expect(!missing.ok && missing.error.code).toBe(ErrorCode.NotFound);
+    const long = await cmd.noteEntry(r.value.entry.id, "x".repeat(121));
+    expect(!long.ok && long.error.code).toBe(ErrorCode.Validation);
+  });
+
+  it("undo of an unsent entry never removes a backed-up note's change", async () => {
+    const { cmd, deps } = setup();
+    const c = await nena(cmd);
+    const r = await cmd.recordEntry({ customerId: c.id, kind: "utang", amount: P(100) });
+    if (!r.ok) throw r.error;
+    await h.markAllSent();
+    await cmd.noteEntry(r.value.entry.id, "Load");
+    const undo = await cmd.undoEntry(r.value.entry.id);
+    expect(undo.ok && undo.value).toBe("voided");
+    expect((await deps.outbox.pendingIds()).size).toBe(2); // the note and the void
+  });
+
   it("finds customers with the same name for the duplicate warning", async () => {
     const { cmd, q } = setup();
     await nena(cmd);

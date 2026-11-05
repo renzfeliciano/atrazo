@@ -262,6 +262,44 @@ describe("two phones, one ledger", () => {
     expect((await b.phone.db.customers.get(nenaId))?.name).toBe("Aling Nena"); // newer edit won
   });
 
+  it("applies records it set aside once an update teaches it how to read them", async () => {
+    const a = phone("203.0.113.1");
+    const { code } = await a.phone.access.startLedger("A");
+    const nenaId = await nena(a.phone);
+    const r = await a.phone.commands.recordEntry({
+      customerId: nenaId,
+      kind: "utang",
+      amount: P(80),
+    });
+    if (!r.ok) throw r.error;
+    await (await a.phone.engine()).syncNow();
+
+    const b = phone("198.51.100.2");
+    await b.phone.access.openLedger(code, "B");
+    await (await b.phone.engine()).pullAll();
+    // As if B ran an older version when this note arrived: it was kept aside, not applied.
+    await b.phone.db.deferred.add({
+      type: "entry.noted",
+      version: 1,
+      data: {
+        id: uuidv7(),
+        entryId: r.value.entry.id,
+        customerId: nenaId,
+        note: "Pandesal",
+        recordedAt: "2026-11-06T00:00:00.000Z",
+      },
+      receivedAt: new Date(),
+    });
+
+    const pulled = await (await b.phone.engine()).pullAll();
+    expect(pulled.applied).toBe(1);
+    expect(await b.phone.db.deferred.count()).toBe(0);
+    expect((await b.phone.db.entries.get(r.value.entry.id))?.note).toBeNull(); // entry unchanged
+    const ledger = await b.phone.queries.customerLedger(nenaId);
+    const row = ledger!.rows.find((x) => x.type === "entry" && x.entry.id === r.value.entry.id);
+    expect(row?.type === "entry" && row.entry.note).toBe("Pandesal");
+  });
+
   it("restores the ledger name and credit rules on the second phone", async () => {
     const a = phone("203.0.113.1");
     const { code } = await a.phone.access.startLedger("A");
@@ -281,6 +319,33 @@ describe("two phones, one ledger", () => {
       defaultLimit: P(1500),
       overdueAfterDays: 21,
     });
+  });
+
+  it("a note added later on one phone shows on the other, newest note winning", async () => {
+    const a = phone("203.0.113.1");
+    const { code } = await a.phone.access.startLedger("A");
+    const nenaId = await nena(a.phone);
+    const r = await a.phone.commands.recordEntry({
+      customerId: nenaId,
+      kind: "utang",
+      amount: P(320),
+    });
+    if (!r.ok) throw r.error;
+    await (await a.phone.engine()).syncNow();
+
+    const b = phone("198.51.100.2");
+    await b.phone.access.openLedger(code, "B");
+    await (await b.phone.engine()).syncNow();
+    await b.phone.commands.noteEntry(r.value.entry.id, "Gas at load");
+    await (await b.phone.engine()).syncNow();
+    await (await a.phone.engine()).syncNow();
+
+    for (const p of [a.phone, b.phone]) {
+      const ledger = await p.queries.customerLedger(nenaId);
+      const row = ledger!.rows.find((x) => x.type === "entry" && x.entry.id === r.value.entry.id);
+      expect(row?.type === "entry" && row.entry.note).toBe("Gas at load");
+      expect(ledger!.account.balance).toBe(P(320));
+    }
   });
 
   it("refuses a wrong recovery code on a new phone", async () => {

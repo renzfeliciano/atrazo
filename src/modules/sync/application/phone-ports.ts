@@ -44,6 +44,8 @@ export interface Inbox {
     records: readonly WireRecord[],
     nextCursor: string,
   ): Promise<{ applied: number; deferred: number }>;
+  /** Applies records kept from a newer app version that this version can now read. */
+  replayDeferred(): Promise<number>;
 }
 
 export interface SyncIdentity {

@@ -19,6 +19,7 @@ import { VisitTracker } from "@/ui/in-app-history";
 import { ServiceWorker } from "@/ui/service-worker";
 import { ToastViewport, type ToastInput, type ToastItem } from "@/ui/toast";
 import { PageLoader } from "@/ui/page-loader";
+import { keepDataOnThisPhone } from "@/ui/persistent-storage";
 
 /**
  * Phone-side providers: the phone (local database + use cases), the open ledger, toasts and sync.
@@ -85,6 +86,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
     undefined,
   );
   const pending = useLiveQuery(async () => (phone ? phone.db.outbox.count() : 0), [phone], 0);
+
+  // With a listahan open, ask the browser not to clear this phone's copy (see persistent-storage).
+  const hasLedger = !!session;
+  useEffect(() => {
+    if (hasLedger) void keepDataOnThisPhone();
+  }, [hasLedger]);
 
   // ── Toasts: one at a time, auto-dismiss after 3 s, closable, with an optional action (Undo).
   const [toasts, setToasts] = useState<ToastItem[]>([]);

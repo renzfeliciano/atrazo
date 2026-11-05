@@ -144,6 +144,15 @@ export function ledgerQueries(
 
     settings: () => settings.get(),
 
+    /** One borrower's entries as the app shows them (newest notes included), voids too. */
+    entriesOf: (id: CustomerId): Promise<Entry[]> => entries.listByCustomer(id),
+
+    /** Every borrower and entry as the app shows them (newest notes included), for exports. */
+    async records(): Promise<{ customers: Customer[]; entries: Entry[] }> {
+      const [all, list] = await Promise.all([customers.list(), entries.listAll()]);
+      return { customers: all, entries: list };
+    },
+
     /** Visible customers with the same name, for the "already exists" warning. */
     async findSameName(name: string): Promise<Customer[]> {
       if (!name.trim()) return [];

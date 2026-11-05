@@ -187,13 +187,11 @@ function Dialog({
 
 type PhoneApi = NonNullable<ReturnType<typeof useApp>["phone"]>;
 
-/** Saves every record as a CSV file (see records-csv.ts). Returns how many entries it holds. */
+/** Saves every record as a CSV file (see records-csv.ts). Returns how many rows it holds. */
 async function downloadRecords(phone: PhoneApi, ledgerName: string): Promise<number> {
-  const [customers, entries] = await Promise.all([
-    phone.db.customers.toArray(),
-    phone.db.entries.toArray(),
-  ]);
-  const blob = new Blob([recordsToCsv(customers, entries)], { type: "text/csv;charset=utf-8" });
+  const { customers, entries } = await phone.queries.records();
+  const csv = recordsToCsv(customers, entries);
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -201,7 +199,7 @@ async function downloadRecords(phone: PhoneApi, ledgerName: string): Promise<num
   a.download = `${slug}-records-${ledgerDay(new Date())}.csv`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  return entries.length;
+  return csv.trimEnd().split("\r\n").length - 1; // rows, without the header
 }
 
 // ── Ledger ─────────────────────────────────────────────────────────────────────

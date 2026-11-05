@@ -6,6 +6,7 @@ import * as customer from "../domain/customer";
 import { type Customer, type CustomerDraft } from "../domain/customer";
 import * as entry from "../domain/entry";
 import { type Entry } from "../domain/entry";
+import * as entryNote from "../domain/entry-note";
 import { type CustomerId, type EntryId } from "../domain/ids";
 import {
   type LedgerSettings,
@@ -170,6 +171,24 @@ export function ledgerCommands(deps: LedgerDeps) {
         if (!v.ok) return v;
         await addEntry(v.value);
         return v;
+      });
+    },
+
+    /**
+     * Adds, changes or clears the note on an entry written earlier. The entry itself (amount,
+     * date, balance) is untouched; the note is a separate record, so it syncs like any change.
+     * Saving the same note again writes nothing.
+     */
+    async noteEntry(id: EntryId, text: string | null): Promise<Result<Entry, AppError>> {
+      return uow.run(async () => {
+        const target = await entries.get(id);
+        if (!target) return notFound("Entry");
+        const r = entryNote.noteEntry(target, text, ids.entryId(), clock.now());
+        if (!r.ok) return r;
+        if (r.value.note === target.note) return ok(target);
+        await entries.addNote(r.value);
+        await outbox.enqueue({ type: "entry.noted", note: r.value });
+        return ok({ ...target, note: r.value.note, noteEditedAt: r.value.recordedAt });
       });
     },
 

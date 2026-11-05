@@ -74,7 +74,8 @@ export function syncEngine(deps: {
 
   async function pullAll(): Promise<{ applied: number; deferred: number }> {
     let cursor = await inbox.cursor();
-    const total = { applied: 0, deferred: 0 };
+    // Records set aside before this app update come first: they are older than anything pulled now.
+    const total = { applied: await inbox.replayDeferred(), deferred: 0 };
     for (;;) {
       const page = await api.pull(cursor, PULL_PAGE);
       const records = [];

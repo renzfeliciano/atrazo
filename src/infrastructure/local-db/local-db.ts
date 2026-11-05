@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from "dexie";
 import { type Customer } from "@/modules/ledger/domain/customer";
 import { type Entry } from "@/modules/ledger/domain/entry";
+import { type EntryNote } from "@/modules/ledger/domain/entry-note";
 
 /**
  * The phone's database (IndexedDB). It is the source of truth: the app reads and writes here,
@@ -46,6 +47,8 @@ export interface KeyValueRow {
 export class LocalDb extends Dexie {
   customers!: EntityTable<Customer, "id">;
   entries!: EntityTable<Entry, "id">;
+  /** Notes added to entries after they were written; the newest per entry is shown. */
+  entryNotes!: EntityTable<EntryNote, "id">;
   outbox!: EntityTable<OutboxRow, "seq">;
   settings!: EntityTable<KeyValueRow, "key">;
   /** Device-only secrets and sync state (data key, session info, pull cursor). Never synced. */
@@ -96,6 +99,8 @@ export class LocalDb extends Dexie {
           .equals(LEGACY.settingsEntityId)
           .modify({ entityId: "ledger-settings" });
       });
+    // v4: notes added to entries later (forgot to say what it was for).
+    this.version(4).stores({ entryNotes: "id, entryId, customerId" });
   }
 
   /** Erases everything on this phone (sign-out, or a phone signed out from another device). */
@@ -103,6 +108,7 @@ export class LocalDb extends Dexie {
     const tables = [
       this.customers,
       this.entries,
+      this.entryNotes,
       this.outbox,
       this.settings,
       this.device,

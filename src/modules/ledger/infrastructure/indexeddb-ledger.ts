@@ -2,6 +2,8 @@ import { v7 as uuidv7 } from "uuid";
 import { type Clock, systemClock } from "@/core/time";
 import { type LocalDb } from "@/infrastructure/local-db/local-db";
 import { type CreditPolicy } from "../domain/account";
+import { type Entry } from "../domain/entry";
+import { type EntryNote, latestNotes, withLatestNote } from "../domain/entry-note";
 import { DEFAULT_SETTINGS, type LedgerSettings } from "../domain/ledger-settings";
 import { type CustomerId, type EntryId } from "../domain/ids";
 import {
@@ -23,6 +25,13 @@ export function indexedDbLedger(
       ((await db.settings.get(SETTINGS_KEY))?.value as LedgerSettings | undefined) ??
       DEFAULT_SETTINGS
     );
+  }
+
+  /** Entries with their newest note (entry-note.ts); `notes` holds at least theirs. */
+  function shown(list: Entry[], notes: EntryNote[]): Entry[] {
+    if (notes.length === 0) return list;
+    const latest = latestNotes(notes);
+    return list.map((e) => withLatestNote(e, latest));
   }
 
   const outbox = {
@@ -58,10 +67,18 @@ export function indexedDbLedger(
       save: async (c) => void (await db.customers.put(c)),
     },
     entries: {
-      get: (id) => db.entries.get(id),
-      listByCustomer: (cid) => db.entries.where("customerId").equals(cid).toArray(),
-      listAll: () => db.entries.toArray(),
+      async get(id) {
+        const e = await db.entries.get(id);
+        return e && shown([e], await db.entryNotes.where("entryId").equals(id).toArray())[0];
+      },
+      listByCustomer: async (cid) =>
+        shown(
+          await db.entries.where("customerId").equals(cid).toArray(),
+          await db.entryNotes.where("customerId").equals(cid).toArray(),
+        ),
+      listAll: async () => shown(await db.entries.toArray(), await db.entryNotes.toArray()),
       add: async (e) => void (await db.entries.add(e)),
+      addNote: async (n) => void (await db.entryNotes.add(n)),
       removeUnsynced: (id) => db.entries.delete(id),
     },
     outbox,
@@ -75,7 +92,12 @@ export function indexedDbLedger(
     },
     uow: {
       // One IndexedDB transaction over every table a ledger write can touch.
-      run: (work) => db.transaction("rw", [db.customers, db.entries, db.outbox, db.settings], work),
+      run: (work) =>
+        db.transaction(
+          "rw",
+          [db.customers, db.entries, db.entryNotes, db.outbox, db.settings],
+          work,
+        ),
     },
     ids: {
       customerId: () => uuidv7() as CustomerId,

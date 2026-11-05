@@ -8,13 +8,15 @@ import { add, type Cents, formatPeso, ZERO } from "@/core/money";
 import { formatLedgerDay, LEDGER_TIME_ZONE } from "@/core/time";
 import { type LedgerRow } from "@/modules/ledger/domain/account";
 import { formatPhilippineMobile } from "@/modules/ledger/domain/customer";
-import { type Entry } from "@/modules/ledger/domain/entry";
+import { type Entry, ENTRY_NOTE_MAX } from "@/modules/ledger/domain/entry";
 import { type CustomerId } from "@/modules/ledger/domain/ids";
 import { useApp } from "@/app/providers";
 import { AppShell } from "@/ui/app-shell";
 import { EmptyState } from "@/ui/empty-state";
 import { Icon } from "@/ui/icons";
+import { ProgressStrip, SAVE_FEEDBACK_MS } from "@/ui/save-feedback";
 import { useMinimumDelay } from "@/ui/use-minimum-delay";
+import { usePendingAction } from "@/ui/use-pending-action";
 
 type Tab = "all" | "utang" | "bayad";
 const yearFmt = new Intl.DateTimeFormat("en-PH", {
@@ -66,7 +68,7 @@ function groupByYear(rows: readonly LedgerRow[], tab: Tab): Group[] {
 
 export function BorrowerLedgerScreen() {
   const id = useSearchParams().get("id") as CustomerId | null;
-  const { phone, toast, sync } = useApp();
+  const { phone } = useApp();
   const ledger = useLiveQuery(
     async () => (phone && id ? ((await phone.queries.customerLedger(id)) ?? null) : undefined),
     [phone, id],
@@ -74,9 +76,9 @@ export function BorrowerLedgerScreen() {
   const settings = useLiveQuery(() => phone?.queries.settings(), [phone]);
   const shown = useMinimumDelay(id);
   const [tab, setTab] = useState<Tab>("all");
-  const [voiding, setVoiding] = useState<Entry | null>(null);
-  // Next keeps this page mounted when you leave it; close the dialog so it never reopens on return.
-  useLayoutEffect(() => () => setVoiding(null), []);
+  const [selected, setSelected] = useState<Entry | null>(null);
+  // Next keeps this page mounted when you leave it; close the sheet so it never reopens on return.
+  useLayoutEffect(() => () => setSelected(null), []);
   const groups = useMemo(() => (ledger ? groupByYear(ledger.rows, tab) : []), [ledger, tab]);
 
   if (ledger === undefined || !shown) return <LedgerSkeleton />;
@@ -108,18 +110,6 @@ export function BorrowerLedgerScreen() {
         : account.balance === 0
           ? { cls: "tag-success", text: "Fully paid" }
           : { cls: "tag-success", text: "Within limit" };
-
-  async function confirmVoid(reason: string) {
-    if (!phone || !voiding) return;
-    const r = await phone.commands.voidEntry(voiding.id, reason);
-    setVoiding(null);
-    if (r.ok) {
-      sync.notifyWrite();
-      toast({ title: "Entry voided", detail: `${plain(voiding.amount)} · ${reason}` });
-    } else {
-      toast({ title: "Couldn't void this entry", detail: r.error.message, tone: "error" });
-    }
-  }
 
   return (
     <AppShell active="home">
@@ -331,7 +321,7 @@ export function BorrowerLedgerScreen() {
               />
             ) : (
               <>
-                <EntryRowsPhone groups={groups} onVoid={setVoiding} />
+                <EntryRowsPhone groups={groups} onOpen={setSelected} />
                 <table className="tbl le-table">
                   <thead>
                     <tr>
@@ -380,9 +370,9 @@ export function BorrowerLedgerScreen() {
                           <tr
                             key={r.entry.id}
                             className={r.type === "voided" ? "void" : undefined}
-                            onClick={r.type === "entry" ? () => setVoiding(r.entry) : undefined}
+                            onClick={r.type === "entry" ? () => setSelected(r.entry) : undefined}
                             style={{ cursor: r.type === "entry" ? "pointer" : undefined }}
-                            title={r.type === "entry" ? "Tap to void this entry" : undefined}
+                            title={r.type === "entry" ? "Add a note or void this entry" : undefined}
                           >
                             <td>
                               <span style={{ display: "flex", flexDirection: "column" }}>
@@ -410,6 +400,9 @@ export function BorrowerLedgerScreen() {
                                   <span className="tag tag-outline">
                                     Voided{r.reason ? ` · ${r.reason}` : ""}
                                   </span>
+                                )}
+                                {r.entry.noteEditedAt && (
+                                  <span className="tag tag-outline">Note edited</span>
                                 )}
                                 {r.pending && r.type === "entry" && (
                                   <span className="tag tag-warn">Not backed up yet</span>
@@ -470,48 +463,156 @@ export function BorrowerLedgerScreen() {
         </Link>
       </footer>
 
-      {voiding && (
-        <div className="dialog-backdrop" role="presentation" onClick={() => setVoiding(null)}>
-          <div
-            className="dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="void-h"
-            onClick={(e) => e.stopPropagation()}
-            style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}
-          >
-            <h2 id="void-h" className="disp" style={{ fontSize: 19 }}>
-              Void this entry?
-            </h2>
-            <p style={{ fontSize: 14, lineHeight: 1.5, color: "var(--text-2)" }}>
-              <strong className="mono">{plain(voiding.amount)}</strong> on{" "}
-              {formatLedgerDay(voiding.occurredAt, new Date())}
-              {voiding.note ? ` · ${voiding.note}` : ""}. It stays on the page, crossed out, and the
-              balance is corrected.
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {VOID_REASONS.map((reason) => (
-                <button
-                  key={reason}
-                  type="button"
-                  className="btn btn-secondary btn-block"
-                  onClick={() => void confirmVoid(reason)}
-                >
-                  {reason}
-                </button>
-              ))}
-              <button
-                type="button"
-                className="btn btn-ghost btn-block"
-                onClick={() => setVoiding(null)}
-              >
-                Keep entry
-              </button>
-            </div>
-          </div>
-        </div>
+      {selected && (
+        <EntrySheet key={selected.id} entry={selected} onClose={() => setSelected(null)} />
       )}
     </AppShell>
+  );
+}
+
+/**
+ * Tapping an entry: add or fix its note (forgot to say what it was for), or void it. The note
+ * never changes the amount, date or balance; a void is the only way to correct money.
+ */
+function EntrySheet({ entry, onClose }: { entry: Entry; onClose: () => void }) {
+  const { phone, toast, sync } = useApp();
+  const [draft, setDraft] = useState(entry.note ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const saving = usePendingAction();
+  const voiding = usePendingAction();
+  const [voidReason, setVoidReason] = useState<string | null>(null);
+  const busy = saving.pending || voiding.pending;
+  const kind = entry.kind === "bayad" ? "Bayad" : "Utang";
+  const amount = formatPeso(Math.abs(entry.amount) as Cents);
+  const when = formatLedgerDay(entry.occurredAt, new Date());
+  const changed = (draft.trim().replace(/\s+/g, " ") || null) !== (entry.note ?? null);
+
+  async function saveNote(e: React.FormEvent) {
+    e.preventDefault();
+    if (!phone || busy || !changed) return;
+    const r = await saving.run(() => phone.commands.noteEntry(entry.id, draft), SAVE_FEEDBACK_MS);
+    if (!r.ok) return setError(r.error.issues[0]?.message ?? r.error.message);
+    sync.notifyWrite();
+    toast({
+      title: r.value.note ? "Note saved" : "Note removed",
+      detail: `${kind} ${amount} · ${when}`,
+    });
+    onClose();
+  }
+
+  async function confirmVoid(reason: string) {
+    if (!phone || busy) return;
+    setVoidReason(reason);
+    const r = await voiding.run(() => phone.commands.voidEntry(entry.id, reason));
+    onClose();
+    if (r.ok) {
+      sync.notifyWrite();
+      toast({ title: "Entry voided", detail: `${plain(entry.amount)} · ${reason}` });
+    } else {
+      toast({ title: "Couldn't void this entry", detail: r.error.message, tone: "error" });
+    }
+  }
+
+  return (
+    <div className="dialog-backdrop" role="presentation" onClick={busy ? undefined : onClose}>
+      <div
+        className="dialog es"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="es-h"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <header className="es-head">
+          <span className={`le-icon is-${kind.toLowerCase()}`} aria-hidden="true">
+            <Icon name={kind === "Bayad" ? "minus" : "plus"} size={14} strokeWidth={2.8} />
+          </span>
+          <span className="es-title">
+            <h2 id="es-h">
+              {kind} · <span className="mono">{amount}</span>
+            </h2>
+            <span className="es-sub">
+              {weekdayFmt.format(entry.occurredAt)}, {when}
+            </span>
+          </span>
+          <button
+            type="button"
+            className="icon-btn"
+            aria-label="Close"
+            disabled={busy}
+            onClick={onClose}
+          >
+            <Icon name="close" size={20} />
+          </button>
+        </header>
+
+        <form className="es-note" onSubmit={saveNote} noValidate>
+          <label className="label" htmlFor="es-note">
+            Note
+          </label>
+          <input
+            id="es-note"
+            className={`input ${error ? "input-error" : ""}`}
+            value={draft}
+            maxLength={ENTRY_NOTE_MAX}
+            placeholder="What was it for? e.g. bigas, load, pamasahe"
+            autoComplete="off"
+            readOnly={busy}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              setError(null);
+            }}
+            aria-invalid={!!error}
+            aria-describedby="es-note-help"
+          />
+          {error ? (
+            <span className="help-error" id="es-note-help">
+              <Icon name="alert" size={14} />
+              {error}
+            </span>
+          ) : (
+            <span className="help es-help" id="es-note-help">
+              <span>
+                {entry.noteEditedAt
+                  ? `Note edited ${formatLedgerDay(entry.noteEditedAt, new Date())}`
+                  : "Only the note changes. The amount and date stay."}
+              </span>
+              <span className="mono">
+                {draft.length}/{ENTRY_NOTE_MAX}
+              </span>
+            </span>
+          )}
+          <button type="submit" className="btn btn-primary btn-block" disabled={busy || !changed}>
+            {saving.pending && <span className="spin" aria-hidden="true" />}
+            {saving.pending ? "Saving…" : entry.note ? "Save note" : "Add note"}
+          </button>
+          {saving.pending && <ProgressStrip label="Saving the note" />}
+        </form>
+
+        <section className="es-void" aria-labelledby="es-void-h">
+          <h3 id="es-void-h">Void this entry?</h3>
+          <p>
+            For a wrong amount or an entry written twice. It stays on the page, crossed out, and the
+            balance is corrected.
+          </p>
+          <div className="es-reasons">
+            {VOID_REASONS.map((reason) => (
+              <button
+                key={reason}
+                type="button"
+                className="btn btn-secondary btn-sm"
+                disabled={busy}
+                onClick={() => void confirmVoid(reason)}
+              >
+                {voiding.pending && voidReason === reason && (
+                  <span className="spin" aria-hidden="true" />
+                )}
+                {reason}
+              </button>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
   );
 }
 
@@ -521,10 +622,10 @@ export function BorrowerLedgerScreen() {
  */
 function EntryRowsPhone({
   groups,
-  onVoid,
+  onOpen,
 }: {
   groups: readonly Group[];
-  onVoid: (e: Entry) => void;
+  onOpen: (e: Entry) => void;
 }) {
   return (
     <div className="le-rows">
@@ -565,6 +666,9 @@ function EntryRowsPhone({
                         Voided{r.reason ? ` · ${r.reason}` : ""}
                       </span>
                     )}
+                    {e.noteEditedAt && !voided && (
+                      <span className="le-flag is-edited">Note edited</span>
+                    )}
                     {r.pending && !voided && (
                       <span className="le-flag is-pending">Not backed up</span>
                     )}
@@ -582,8 +686,8 @@ function EntryRowsPhone({
                     <button
                       type="button"
                       className="le-row"
-                      onClick={() => onVoid(e)}
-                      title="Tap to void this entry"
+                      onClick={() => onOpen(e)}
+                      title="Add a note or void this entry"
                     >
                       {body}
                     </button>

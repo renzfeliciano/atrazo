@@ -1,6 +1,7 @@
 import { type CreditPolicy } from "../domain/account";
 import { type Customer } from "../domain/customer";
 import { type Entry } from "../domain/entry";
+import { type EntryNote } from "../domain/entry-note";
 import { type LedgerSettings } from "../domain/ledger-settings";
 import { type CustomerId, type EntryId } from "../domain/ids";
 
@@ -14,11 +15,13 @@ export interface CustomerRepository {
   save(customer: Customer): Promise<void>;
 }
 
+/** Entries as the app shows them: each read carries the entry's newest note (entry-note.ts). */
 export interface EntryRepository {
   get(id: EntryId): Promise<Entry | undefined>;
   listByCustomer(customerId: CustomerId): Promise<Entry[]>;
   listAll(): Promise<Entry[]>;
   add(entry: Entry): Promise<void>;
+  addNote(note: EntryNote): Promise<void>;
   /** Only for undoing an entry that never left this phone. Backed-up entries are voided instead. */
   removeUnsynced(id: EntryId): Promise<void>;
 }
@@ -27,6 +30,7 @@ export interface EntryRepository {
 export type LedgerChange =
   | { readonly type: "customer.saved"; readonly customer: Customer }
   | { readonly type: "entry.added"; readonly entry: Entry }
+  | { readonly type: "entry.noted"; readonly note: EntryNote }
   | { readonly type: "settings.saved"; readonly settings: LedgerSettings };
 
 /** Outbox key for the single ledger-settings record. */
@@ -34,6 +38,8 @@ export const SETTINGS_ENTITY_ID = "ledger-settings";
 
 export function changeEntityId(change: LedgerChange): string {
   if (change.type === "entry.added") return change.entry.id;
+  // Its own id, not the entry's: undoing an unsent entry must never pick up a note change.
+  if (change.type === "entry.noted") return change.note.id;
   if (change.type === "customer.saved") return change.customer.id;
   return SETTINGS_ENTITY_ID;
 }

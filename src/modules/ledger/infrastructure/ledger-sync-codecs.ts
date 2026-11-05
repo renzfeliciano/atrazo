@@ -8,6 +8,7 @@ import {
 } from "@/modules/sync/domain/bundle";
 import { type Customer } from "../domain/customer";
 import { type Entry } from "../domain/entry";
+import { type EntryNote } from "../domain/entry-note";
 import { type LedgerSettings } from "../domain/ledger-settings";
 import { SETTINGS_KEY } from "./indexeddb-ledger";
 import { type CustomerId, type EntryId } from "../domain/ids";
@@ -92,6 +93,30 @@ export const entryAddedV1: RecordCodec<z.infer<typeof EntryV1>, ApplyContext> = 
   },
 };
 
+const EntryNoteV1 = z.strictObject({
+  id: z.uuid(),
+  entryId: z.uuid(),
+  customerId: z.uuid(),
+  note: z.string().max(120).nullable(),
+  recordedAt: date,
+});
+
+/** A note added to an entry later. Notes are append-only: the newest per entry is shown. */
+export const entryNotedV1: RecordCodec<z.infer<typeof EntryNoteV1>, ApplyContext> = {
+  type: "entry.noted",
+  version: 1,
+  schema: EntryNoteV1,
+  async apply(d, { db }) {
+    if (await db.entryNotes.get(d.id)) return;
+    const note: EntryNote = {
+      ...d,
+      entryId: d.entryId as EntryId,
+      customerId: d.customerId as CustomerId,
+    };
+    await db.entryNotes.add(note);
+  },
+};
+
 const SettingsV1 = z.strictObject({
   name: z.string().min(1).max(60),
   defaultLimit: z.number().int().nonnegative(),
@@ -127,6 +152,7 @@ export function registerLedgerCodecs(
   return registry
     .register(customerSavedV1)
     .register(entryAddedV1)
+    .register(entryNotedV1)
     .register(settingsSavedV1)
     .register(legacySettingsSavedV1);
 }
@@ -137,8 +163,24 @@ export function ledgerChangeToWire(change: LedgerChange): WireRecord {
     case "customer.saved":
       return { t: "customer.saved", v: 1, d: change.customer };
     case "entry.added":
-      return { t: "entry.added", v: 1, d: change.entry };
+      return { t: "entry.added", v: 1, d: entryAsWritten(change.entry) };
+    case "entry.noted":
+      return { t: "entry.noted", v: 1, d: change.note };
     case "settings.saved":
       return { t: "ledger.settings", v: 1, d: change.settings };
   }
+}
+
+/** The entry exactly as it was written: a later note is its own record, never part of this one. */
+function entryAsWritten(e: Entry): Entry {
+  return {
+    id: e.id,
+    customerId: e.customerId,
+    kind: e.kind,
+    amount: e.amount,
+    note: e.note,
+    voidsEntryId: e.voidsEntryId,
+    occurredAt: e.occurredAt,
+    recordedAt: e.recordedAt,
+  };
 }
