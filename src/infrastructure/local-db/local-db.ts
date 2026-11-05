@@ -64,7 +64,14 @@ export class LocalDb extends Dexie {
 
   /** Erases everything on this phone (sign-out, or a phone signed out from another device). */
   async wipe(): Promise<void> {
-    const tables = [this.customers, this.entries, this.outbox, this.settings, this.device, this.deferred];
+    const tables = [
+      this.customers,
+      this.entries,
+      this.outbox,
+      this.settings,
+      this.device,
+      this.deferred,
+    ];
     await this.transaction("rw", tables, async () => {
       await Promise.all(tables.map((t) => t.clear()));
     });

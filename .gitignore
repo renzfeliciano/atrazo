@@ -47,6 +47,11 @@ next-env.d.ts
 /playwright-report
 /test-results
 /blob-report
+/e2e/.auth
 
 # local development database (DATABASE_URL=pglite)
 /.data
+
+# Playwright MCP scratch output
+/.playwright-mcp
+/.next-*

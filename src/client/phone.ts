@@ -5,11 +5,18 @@ import { ledgerCommands } from "@/modules/ledger/application/commands";
 import { type LedgerChange } from "@/modules/ledger/application/ports";
 import { ledgerQueries } from "@/modules/ledger/application/queries";
 import { indexedDbLedger } from "@/modules/ledger/infrastructure/indexeddb-ledger";
-import { type ApplyContext, ledgerChangeToWire, registerLedgerCodecs } from "@/modules/ledger/infrastructure/ledger-sync-codecs";
+import {
+  type ApplyContext,
+  ledgerChangeToWire,
+  registerLedgerCodecs,
+} from "@/modules/ledger/infrastructure/ledger-sync-codecs";
 import { CodecRegistry } from "@/modules/sync/domain/bundle";
 import { syncEngine, type SyncEngine } from "@/modules/sync/application/sync-engine";
 import { httpSyncApi, type FetchLike } from "@/modules/sync/infrastructure/http-sync-api";
-import { indexedDbInbox, indexedDbSyncOutbox } from "@/modules/sync/infrastructure/indexeddb-sync-stores";
+import {
+  indexedDbInbox,
+  indexedDbSyncOutbox,
+} from "@/modules/sync/infrastructure/indexeddb-sync-stores";
 import { webBundleCodec } from "@/modules/sync/infrastructure/web-bundle-codec";
 import { storeAccess } from "@/modules/vault/application/store-access";
 import { httpIdentityApi, indexedDbKeyStore } from "@/modules/vault/infrastructure/device-adapters";
@@ -30,7 +37,10 @@ export function createPhone(opts: PhoneOptions = {}) {
   const clock = opts.clock ?? systemClock;
   const ledgerDeps = indexedDbLedger(db, clock);
   const registry = registerLedgerCodecs(new CodecRegistry<ApplyContext>());
-  const access = storeAccess({ api: httpIdentityApi(opts.fetch, opts.baseUrl), keys: indexedDbKeyStore(db) });
+  const access = storeAccess({
+    api: httpIdentityApi(opts.fetch, opts.baseUrl),
+    keys: indexedDbKeyStore(db),
+  });
 
   /** Built on demand: sync needs the store's data key, which exists only after start/open. */
   async function engine(): Promise<SyncEngine> {

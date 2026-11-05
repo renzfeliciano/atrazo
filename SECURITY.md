@@ -34,6 +34,35 @@ We aim to acknowledge reports within 3 business days.
 | Information leakage in errors and logs | Stable error codes and safe messages; no stack traces in responses; logs contain ids and codes only, with no personal data or raw IPs. |
 | Vulnerable dependencies | `pnpm audit` (high and critical) runs in CI on every push. |
 
+## Browser hardening
+
+Every response (pages, assets and API) carries these headers, defined and unit-tested in
+`src/server/security/http-headers.ts`:
+
+| Header | Value and purpose |
+|---|---|
+| `Content-Security-Policy` | `default-src 'self'`; `connect-src`, `img-src` (plus `data:`/`blob:`) and `form-action` limited to `'self'`, so an injected script cannot send data anywhere; `object-src`, `frame-src`, `base-uri` and `frame-ancestors` set to `'none'`; `upgrade-insecure-requests`. `'unsafe-eval'` and the hot-reload socket are allowed in development only. |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` (production only) |
+| `X-Frame-Options` | `DENY` (legacy clickjacking guard alongside `frame-ancestors`) |
+| `X-Content-Type-Options` | `nosniff` |
+| `Referrer-Policy` | `no-referrer`, so URLs (which contain client ids) never leak to other sites |
+| `Permissions-Policy` | camera, microphone, location, payment, USB, Bluetooth, serial, HID, screen capture and Topics all disabled |
+| `Cross-Origin-Opener-Policy` / `-Resource-Policy` | `same-origin` |
+
+**Why inline scripts are allowed.** Every page is prerendered and served as a static file, which
+keeps hosting free and lets the app work offline. Per-request CSP nonces would force a server render
+on every visit, and Next.js streams page data in inline scripts, so `script-src` includes
+`'unsafe-inline'`. The policy compensates by blocking every way out for data (see above). Atrazo
+renders no HTML from user input and loads no third-party scripts.
+
+## Data retention
+
+A daily job (`/api/cron/purge`, scheduled in `vercel.json`) deletes stores that no phone has opened
+for 365 days, with their phones and encrypted backups, and drops rate-limit windows older than
+48 hours. It only runs with a `CRON_SECRET` configured. The token is compared in constant time, and
+without the secret the endpoint returns 404. "Delete store" in Settings removes a store and all its
+backups immediately.
+
 ## Known limits
 
 - **Lost code and lost phones.** If every phone and the recovery code are lost, the records cannot be recovered by anyone. The app requires the owner to confirm they saved the code.

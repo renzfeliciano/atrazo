@@ -33,14 +33,32 @@ export interface StoreKeys {
   readonly kek: CryptoKey;
 }
 
-async function hkdf(ikm: CryptoKey, label: string, bytes: number): Promise<Uint8Array<ArrayBuffer>> {
-  const bits = await subtle.deriveBits({ name: "HKDF", hash: "SHA-256", salt: SALT, info: utf8(`${VERSION}/${label}`) }, ikm, bytes * 8);
+async function hkdf(
+  ikm: CryptoKey,
+  label: string,
+  bytes: number,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const bits = await subtle.deriveBits(
+    { name: "HKDF", hash: "SHA-256", salt: SALT, info: utf8(`${VERSION}/${label}`) },
+    ikm,
+    bytes * 8,
+  );
   return new Uint8Array(bits);
 }
 
 export async function deriveStoreKeys(code: RecoveryCode): Promise<StoreKeys> {
-  const ikm = await subtle.importKey("raw", recoveryCodeBytes(code) as Uint8Array<ArrayBuffer>, "HKDF", false, ["deriveBits"]);
-  const [lookup, authSecret, kekBytes] = await Promise.all([hkdf(ikm, "lookup", 32), hkdf(ikm, "auth", 32), hkdf(ikm, "kek", 32)]);
+  const ikm = await subtle.importKey(
+    "raw",
+    recoveryCodeBytes(code) as Uint8Array<ArrayBuffer>,
+    "HKDF",
+    false,
+    ["deriveBits"],
+  );
+  const [lookup, authSecret, kekBytes] = await Promise.all([
+    hkdf(ikm, "lookup", 32),
+    hkdf(ikm, "auth", 32),
+    hkdf(ikm, "kek", 32),
+  ]);
   const kek = await subtle.importKey("raw", kekBytes, "AES-KW", false, ["wrapKey", "unwrapKey"]);
   kekBytes.fill(0);
   return { lookup: toBase64Url(lookup), authSecret: toBase64Url(authSecret), kek };
@@ -63,7 +81,10 @@ export async function wrapDataKey(dataKey: CryptoKey, kek: CryptoKey): Promise<s
 
 export async function unwrapDataKey(wrapped: string, kek: CryptoKey): Promise<CryptoKey> {
   try {
-    return await subtle.unwrapKey("raw", fromBase64Url(wrapped), kek, "AES-KW", DATA_KEY, true, ["encrypt", "decrypt"]);
+    return await subtle.unwrapKey("raw", fromBase64Url(wrapped), kek, "AES-KW", DATA_KEY, true, [
+      "encrypt",
+      "decrypt",
+    ]);
   } catch {
     // AES-KW has a built-in integrity check: a wrong code cannot produce a key.
     throw new VaultError("WRONG_CODE", "The recovery code does not unlock this store");
@@ -88,7 +109,11 @@ export async function seal(dataKey: CryptoKey, payload: unknown, context: string
   const json = JSON.stringify(payload);
   const padded = json + " ".repeat((BUCKET - (utf8(json).length % BUCKET)) % BUCKET);
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = await subtle.encrypt({ name: "AES-GCM", iv, additionalData: utf8(`${VERSION}|${context}`) }, dataKey, utf8(padded));
+  const ct = await subtle.encrypt(
+    { name: "AES-GCM", iv, additionalData: utf8(`${VERSION}|${context}`) },
+    dataKey,
+    utf8(padded),
+  );
   return { iv: toBase64Url(iv), ciphertext: toBase64Url(new Uint8Array(ct)) };
 }
 
@@ -96,7 +121,11 @@ export async function open(dataKey: CryptoKey, sealed: Sealed, context: string):
   let plain: ArrayBuffer;
   try {
     plain = await subtle.decrypt(
-      { name: "AES-GCM", iv: fromBase64Url(sealed.iv), additionalData: utf8(`${VERSION}|${context}`) },
+      {
+        name: "AES-GCM",
+        iv: fromBase64Url(sealed.iv),
+        additionalData: utf8(`${VERSION}|${context}`),
+      },
       dataKey,
       fromBase64Url(sealed.ciphertext),
     );
@@ -109,21 +138,37 @@ export async function open(dataKey: CryptoKey, sealed: Sealed, context: string):
 /** Binary payloads (compressed bundles) are padded to 256-byte buckets: [u32 length][bytes][zeros]. */
 const BYTES_BUCKET = 256;
 
-export async function sealBytes(dataKey: CryptoKey, bytes: Uint8Array, context: string): Promise<Sealed> {
+export async function sealBytes(
+  dataKey: CryptoKey,
+  bytes: Uint8Array,
+  context: string,
+): Promise<Sealed> {
   const total = Math.ceil((bytes.length + 4) / BYTES_BUCKET) * BYTES_BUCKET;
   const framed = new Uint8Array(total);
   new DataView(framed.buffer).setUint32(0, bytes.length);
   framed.set(bytes, 4);
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ct = await subtle.encrypt({ name: "AES-GCM", iv, additionalData: utf8(`${VERSION}|${context}`) }, dataKey, framed);
+  const ct = await subtle.encrypt(
+    { name: "AES-GCM", iv, additionalData: utf8(`${VERSION}|${context}`) },
+    dataKey,
+    framed,
+  );
   return { iv: toBase64Url(iv), ciphertext: toBase64Url(new Uint8Array(ct)) };
 }
 
-export async function openBytes(dataKey: CryptoKey, sealed: Sealed, context: string): Promise<Uint8Array<ArrayBuffer>> {
+export async function openBytes(
+  dataKey: CryptoKey,
+  sealed: Sealed,
+  context: string,
+): Promise<Uint8Array<ArrayBuffer>> {
   let plain: ArrayBuffer;
   try {
     plain = await subtle.decrypt(
-      { name: "AES-GCM", iv: fromBase64Url(sealed.iv), additionalData: utf8(`${VERSION}|${context}`) },
+      {
+        name: "AES-GCM",
+        iv: fromBase64Url(sealed.iv),
+        additionalData: utf8(`${VERSION}|${context}`),
+      },
       dataKey,
       fromBase64Url(sealed.ciphertext),
     );
@@ -132,7 +177,8 @@ export async function openBytes(dataKey: CryptoKey, sealed: Sealed, context: str
   }
   const framed = new Uint8Array(plain);
   const length = new DataView(plain).getUint32(0);
-  if (length > framed.length - 4) throw new VaultError("TAMPERED", "A backed-up record has an invalid length");
+  if (length > framed.length - 4)
+    throw new VaultError("TAMPERED", "A backed-up record has an invalid length");
   return framed.slice(4, 4 + length);
 }
 

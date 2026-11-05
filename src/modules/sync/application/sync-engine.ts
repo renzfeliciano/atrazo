@@ -1,5 +1,11 @@
 import { MAX_CIPHERTEXT_CHARS } from "../api/contracts";
-import { type BundleCodec, type Inbox, type SealedBundle, type SyncApi, type SyncOutbox } from "./client-ports";
+import {
+  type BundleCodec,
+  type Inbox,
+  type SealedBundle,
+  type SyncApi,
+  type SyncOutbox,
+} from "./client-ports";
 
 /** At most this many changes per bundle; bundles are halved further if they would not fit. */
 export const BUNDLE_MAX_RECORDS = 200;
@@ -72,7 +78,8 @@ export function syncEngine(deps: {
     for (;;) {
       const page = await api.pull(cursor, PULL_PAGE);
       const records = [];
-      for (const c of page.changes) records.push(...(await codec.open({ id: c.id, iv: c.iv, ciphertext: c.ciphertext })));
+      for (const c of page.changes)
+        records.push(...(await codec.open({ id: c.id, iv: c.iv, ciphertext: c.ciphertext })));
       const r = await inbox.applyPage(records, page.cursor);
       total.applied += r.applied;
       total.deferred += r.deferred;

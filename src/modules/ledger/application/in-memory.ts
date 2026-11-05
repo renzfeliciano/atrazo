@@ -2,7 +2,8 @@ import { type CreditPolicy, DEFAULT_POLICY } from "../domain/account";
 import { type Customer } from "../domain/customer";
 import { type Entry } from "../domain/entry";
 import { type CustomerId, type EntryId } from "../domain/ids";
-import { type ChangeOutbox, type LedgerChange, type LedgerDeps } from "./ports";
+import { DEFAULT_SETTINGS, type StoreSettings } from "../domain/store-settings";
+import { changeEntityId, type ChangeOutbox, type LedgerChange, type LedgerDeps } from "./ports";
 
 /**
  * In-memory adapters for the ledger ports. Used by use-case tests; the real IndexedDB adapters
@@ -12,13 +13,14 @@ export function inMemoryLedger(opts: { now?: () => Date; policy?: CreditPolicy }
   const customers = new Map<CustomerId, Customer>();
   const entries = new Map<EntryId, Entry>();
   const queue: { entityId: string; change: LedgerChange; sent: boolean }[] = [];
+  let storeSettings: StoreSettings = { ...DEFAULT_SETTINGS, ...(opts.policy ?? DEFAULT_POLICY) };
   let n = 0;
   const nextId = (prefix: string) => `${prefix}-0000-7000-8000-${String(++n).padStart(12, "0")}`;
 
   const outbox: ChangeOutbox & { readonly queue: typeof queue; markAllSent(): void } = {
     queue,
     async enqueue(change) {
-      const entityId = change.type === "entry.added" ? change.entry.id : change.customer.id;
+      const entityId = changeEntityId(change);
       queue.push({ entityId, change, sent: false });
     },
     async isPending(entityId) {
@@ -56,7 +58,14 @@ export function inMemoryLedger(opts: { now?: () => Date; policy?: CreditPolicy }
       removeUnsynced: async (id) => void entries.delete(id),
     },
     outbox,
-    settings: { getPolicy: async () => opts.policy ?? DEFAULT_POLICY },
+    settings: {
+      getPolicy: async () => ({
+        defaultLimit: storeSettings.defaultLimit,
+        overdueAfterDays: storeSettings.overdueAfterDays,
+      }),
+      get: async () => storeSettings,
+      save: async (s) => void (storeSettings = s),
+    },
     uow: { run: (work) => work() },
     ids: {
       customerId: () => nextId("00000000") as CustomerId,

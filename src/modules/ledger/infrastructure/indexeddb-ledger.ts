@@ -1,18 +1,33 @@
 import { v7 as uuidv7 } from "uuid";
-import { type Cents } from "@/core/money";
 import { type Clock, systemClock } from "@/core/time";
 import { type LocalDb } from "@/infrastructure/local-db/local-db";
-import { type CreditPolicy, DEFAULT_POLICY } from "../domain/account";
+import { type CreditPolicy } from "../domain/account";
+import { DEFAULT_SETTINGS, type StoreSettings } from "../domain/store-settings";
 import { type CustomerId, type EntryId } from "../domain/ids";
-import { type ChangeOutbox, type LedgerChange, type LedgerDeps } from "../application/ports";
+import {
+  changeEntityId,
+  type ChangeOutbox,
+  type LedgerChange,
+  type LedgerDeps,
+} from "../application/ports";
 
-export const POLICY_KEY = "creditPolicy";
+export const SETTINGS_KEY = "store";
 
 /** Ledger ports backed by the phone's IndexedDB. */
-export function indexedDbLedger(db: LocalDb, clock: Clock = systemClock): LedgerDeps & { outbox: ChangeOutbox & { markSent(seqs: number[]): Promise<void> } } {
+export function indexedDbLedger(
+  db: LocalDb,
+  clock: Clock = systemClock,
+): LedgerDeps & { outbox: ChangeOutbox & { markSent(seqs: number[]): Promise<void> } } {
+  async function readSettings(): Promise<StoreSettings> {
+    return (
+      ((await db.settings.get(SETTINGS_KEY))?.value as StoreSettings | undefined) ??
+      DEFAULT_SETTINGS
+    );
+  }
+
   const outbox = {
     async enqueue(change: LedgerChange) {
-      const entityId = change.type === "entry.added" ? change.entry.id : change.customer.id;
+      const entityId = changeEntityId(change);
       await db.outbox.add({ entityId, change, createdAt: clock.now() });
     },
     async isPending(entityId: string) {
@@ -23,7 +38,13 @@ export function indexedDbLedger(db: LocalDb, clock: Clock = systemClock): Ledger
     },
     async discard(entityId: string) {
       // Only changes not yet sealed into an uploading bundle can be withdrawn.
-      return (await db.outbox.where("entityId").equals(entityId).filter((r) => !r.bundleId).delete()) > 0;
+      return (
+        (await db.outbox
+          .where("entityId")
+          .equals(entityId)
+          .filter((r) => !r.bundleId)
+          .delete()) > 0
+      );
     },
     async markSent(seqs: number[]) {
       await db.outbox.bulkDelete(seqs);
@@ -46,13 +67,11 @@ export function indexedDbLedger(db: LocalDb, clock: Clock = systemClock): Ledger
     outbox,
     settings: {
       async getPolicy(): Promise<CreditPolicy> {
-        const row = await db.settings.get(POLICY_KEY);
-        const v = row?.value as Partial<CreditPolicy> | undefined;
-        return {
-          defaultLimit: (v?.defaultLimit ?? DEFAULT_POLICY.defaultLimit) as Cents,
-          overdueAfterDays: v?.overdueAfterDays ?? DEFAULT_POLICY.overdueAfterDays,
-        };
+        const s = await readSettings();
+        return { defaultLimit: s.defaultLimit, overdueAfterDays: s.overdueAfterDays };
       },
+      get: readSettings,
+      save: async (s) => void (await db.settings.put({ key: SETTINGS_KEY, value: s })),
     },
     uow: {
       // One IndexedDB transaction over every table a ledger write can touch.

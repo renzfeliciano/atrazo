@@ -1,6 +1,4 @@
-import { serverContainer } from "@/server/production";
-import { apiHandlers } from "@/server/routes";
+import { api } from "@/server/next-api";
 
-const api = apiHandlers(serverContainer);
 export const POST = api.createStore;
 export const DELETE = api.deleteStore;

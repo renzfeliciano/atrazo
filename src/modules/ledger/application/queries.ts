@@ -1,9 +1,16 @@
 import { add, type Cents, negate, ZERO } from "@/core/money";
 import { calendarDaysBetween } from "@/core/time";
-import { type AccountSummary, buildLedger, effectiveEntries, type LedgerRow, summarizeAccount } from "../domain/account";
+import {
+  type AccountSummary,
+  buildLedger,
+  effectiveEntries,
+  type LedgerRow,
+  summarizeAccount,
+} from "../domain/account";
 import { type Customer, sameName } from "../domain/customer";
 import { type Entry } from "../domain/entry";
 import { type CustomerId } from "../domain/ids";
+import { type ActivityFeed, activityFeed } from "./activity";
 import { type LedgerDeps } from "./ports";
 
 export interface CustomerOverview {
@@ -65,13 +72,25 @@ export function weekTotals(entries: readonly Entry[], now: Date): WeekTotals {
 }
 
 /** Read-side use cases. They only read, so the UI can re-run them whenever local data changes. */
-export function ledgerQueries(deps: Pick<LedgerDeps, "customers" | "entries" | "outbox" | "settings" | "clock">) {
+export function ledgerQueries(
+  deps: Pick<LedgerDeps, "customers" | "entries" | "outbox" | "settings" | "clock">,
+) {
   const { customers, entries, outbox, settings, clock } = deps;
 
   return {
+    /** Store-wide feed for the Activity tab: the last `days` store days, newest first. */
+    async activity(days = 7): Promise<ActivityFeed> {
+      const [all, list] = await Promise.all([customers.list(), entries.listAll()]);
+      return activityFeed(list, all, clock.now(), days);
+    },
+
     async dashboard(): Promise<Dashboard> {
       const now = clock.now();
-      const [all, allEntries, policy] = await Promise.all([customers.list(), entries.listAll(), settings.getPolicy()]);
+      const [all, allEntries, policy] = await Promise.all([
+        customers.list(),
+        entries.listAll(),
+        settings.getPolicy(),
+      ]);
       const byCustomer = groupByCustomer(allEntries);
       const visible = all.filter((c) => !c.hiddenAt);
       const overviews = visible.map((c) => ({
@@ -91,7 +110,9 @@ export function ledgerQueries(deps: Pick<LedgerDeps, "customers" | "entries" | "
         totalOwed,
         owingCount: overviews.filter((o) => o.account.balance > 0).length,
         customers: overviews,
-        toCollect: overviews.filter((o) => o.account.isOverdue).sort((a, b) => b.account.daysUnpaid - a.account.daysUnpaid),
+        toCollect: overviews
+          .filter((o) => o.account.isOverdue)
+          .sort((a, b) => b.account.daysUnpaid - a.account.daysUnpaid),
         overdueTotal,
         week: weekTotals(
           allEntries.filter((e) => visibleIds.has(e.customerId)),
@@ -103,7 +124,11 @@ export function ledgerQueries(deps: Pick<LedgerDeps, "customers" | "entries" | "
     async customerLedger(id: CustomerId): Promise<CustomerLedger | undefined> {
       const c = await customers.get(id);
       if (!c) return undefined;
-      const [list, policy, pending] = await Promise.all([entries.listByCustomer(id), settings.getPolicy(), outbox.pendingIds()]);
+      const [list, policy, pending] = await Promise.all([
+        entries.listByCustomer(id),
+        settings.getPolicy(),
+        outbox.pendingIds(),
+      ]);
       const counted = effectiveEntries(list);
       return {
         customer: c,
@@ -116,6 +141,8 @@ export function ledgerQueries(deps: Pick<LedgerDeps, "customers" | "entries" | "
         },
       };
     },
+
+    settings: () => settings.get(),
 
     /** Visible customers with the same name, for the "already exists" warning. */
     async findSameName(name: string): Promise<Customer[]> {

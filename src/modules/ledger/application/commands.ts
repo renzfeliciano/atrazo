@@ -7,6 +7,11 @@ import { type Customer, type CustomerDraft } from "../domain/customer";
 import * as entry from "../domain/entry";
 import { type Entry } from "../domain/entry";
 import { type CustomerId, type EntryId } from "../domain/ids";
+import {
+  type StoreSettings,
+  type StoreSettingsDraft,
+  validateStoreSettings,
+} from "../domain/store-settings";
 import { type LedgerDeps } from "./ports";
 
 export interface RecordEntryInput {
@@ -37,7 +42,12 @@ export function ledgerCommands(deps: LedgerDeps) {
   const { customers, entries, outbox, settings, uow, ids, clock } = deps;
 
   async function accountOf(c: Customer, now: Date): Promise<AccountSummary> {
-    return summarizeAccount(await entries.listByCustomer(c.id), await settings.getPolicy(), c.creditLimit, now);
+    return summarizeAccount(
+      await entries.listByCustomer(c.id),
+      await settings.getPolicy(),
+      c.creditLimit,
+      now,
+    );
   }
 
   async function addEntry(e: Entry): Promise<void> {
@@ -46,6 +56,17 @@ export function ledgerCommands(deps: LedgerDeps) {
   }
 
   return {
+    /** Store name and credit rules; synced so every phone of the store agrees. */
+    async saveSettings(draft: StoreSettingsDraft): Promise<Result<StoreSettings, AppError>> {
+      return uow.run(async () => {
+        const next = validateStoreSettings(draft, await settings.get(), clock.now());
+        if (!next.ok) return next;
+        await settings.save(next.value);
+        await outbox.enqueue({ type: "settings.saved", settings: next.value });
+        return next;
+      });
+    },
+
     async createCustomer(input: CreateCustomerInput): Promise<Result<Customer, AppError>> {
       const now = clock.now();
       const created = customer.createCustomer(ids.customerId(), input, now);
@@ -54,10 +75,24 @@ export function ledgerCommands(deps: LedgerDeps) {
       let opening: Entry | null = null;
       if (input.startingBalance != null && input.startingBalance !== 0) {
         const r = entry.recordEntry(
-          { id: ids.entryId(), customerId: created.value.id, kind: "utang", amount: input.startingBalance, note: "Starting balance", occurredAt: now },
+          {
+            id: ids.entryId(),
+            customerId: created.value.id,
+            kind: "utang",
+            amount: input.startingBalance,
+            note: "Starting balance",
+            occurredAt: now,
+          },
           now,
         );
-        if (!r.ok) return err(new AppError(ErrorCode.Validation, r.error.message, r.error.issues.map((i) => ({ ...i, field: "startingBalance" }))));
+        if (!r.ok)
+          return err(
+            new AppError(
+              ErrorCode.Validation,
+              r.error.message,
+              r.error.issues.map((i) => ({ ...i, field: "startingBalance" })),
+            ),
+          );
         opening = r.value;
       }
 
@@ -69,7 +104,10 @@ export function ledgerCommands(deps: LedgerDeps) {
       return created;
     },
 
-    async updateCustomer(id: CustomerId, draft: CustomerDraft): Promise<Result<Customer, AppError>> {
+    async updateCustomer(
+      id: CustomerId,
+      draft: CustomerDraft,
+    ): Promise<Result<Customer, AppError>> {
       return uow.run(async () => {
         const current = await customers.get(id);
         if (!current) return notFound("Customer");
@@ -86,7 +124,9 @@ export function ledgerCommands(deps: LedgerDeps) {
         const current = await customers.get(id);
         if (!current) return notFound("Customer");
         const now = clock.now();
-        const next = hidden ? customer.hideCustomer(current, now) : customer.restoreCustomer(current, now);
+        const next = hidden
+          ? customer.hideCustomer(current, now)
+          : customer.restoreCustomer(current, now);
         if (next !== current) {
           await customers.save(next);
           await outbox.enqueue({ type: "customer.saved", customer: next });
@@ -101,7 +141,14 @@ export function ledgerCommands(deps: LedgerDeps) {
         if (!c || c.hiddenAt) return notFound("Customer");
         const now = clock.now();
         const r = entry.recordEntry(
-          { id: ids.entryId(), customerId: c.id, kind: input.kind, amount: input.amount, note: input.note ?? null, occurredAt: input.occurredAt ?? now },
+          {
+            id: ids.entryId(),
+            customerId: c.id,
+            kind: input.kind,
+            amount: input.amount,
+            note: input.note ?? null,
+            occurredAt: input.occurredAt ?? now,
+          },
           now,
         );
         if (!r.ok) return r;
@@ -114,7 +161,12 @@ export function ledgerCommands(deps: LedgerDeps) {
       return uow.run(async () => {
         const target = await entries.get(id);
         if (!target) return notFound("Entry");
-        const v = entry.voidEntry(target, await entries.listByCustomer(target.customerId), { id: ids.entryId(), reason: reason ?? null }, clock.now());
+        const v = entry.voidEntry(
+          target,
+          await entries.listByCustomer(target.customerId),
+          { id: ids.entryId(), reason: reason ?? null },
+          clock.now(),
+        );
         if (!v.ok) return v;
         await addEntry(v.value);
         return v;
@@ -133,7 +185,12 @@ export function ledgerCommands(deps: LedgerDeps) {
           await entries.removeUnsynced(id);
           return ok("removed" as const);
         }
-        const v = entry.voidEntry(target, await entries.listByCustomer(target.customerId), { id: ids.entryId(), reason: "Undone" }, clock.now());
+        const v = entry.voidEntry(
+          target,
+          await entries.listByCustomer(target.customerId),
+          { id: ids.entryId(), reason: "Undone" },
+          clock.now(),
+        );
         if (!v.ok) return v;
         await addEntry(v.value);
         return ok("voided" as const);

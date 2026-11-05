@@ -23,12 +23,19 @@ export function serverContainer(): Promise<Container> {
 async function create(): Promise<Container> {
   const e = env();
   let db: Database;
-  if (e.DATABASE_URL === "pglite") {
-    if (e.NODE_ENV === "production") throw new Error("DATABASE_URL=pglite is for local development only.");
+  if (e.DATABASE_URL === "pglite" || e.DATABASE_URL.startsWith("pglite:")) {
+    if (e.NODE_ENV === "production")
+      throw new Error("DATABASE_URL=pglite is for local development only.");
     const { localDevDatabase } = await import("./db/local-dev-db");
-    db = await localDevDatabase();
+    db = await localDevDatabase(e.DATABASE_URL);
   } else {
     db = drizzle(neon(e.DATABASE_URL)) as unknown as Database;
   }
-  return buildContainer(db, e.NEXT_PUBLIC_APP_URL, undefined, e.MIN_CLIENT_VERSION);
+  const container = buildContainer(db, e.NEXT_PUBLIC_APP_URL, undefined, e.MIN_CLIENT_VERSION);
+  // Development only: let a phone on the same Wi-Fi (or a listed HTTPS tunnel) use the API.
+  if (e.NODE_ENV === "development") {
+    const { extraDevOrigins } = await import("./config/dev-origins");
+    return { ...container, extraOrigins: extraDevOrigins(e.NEXT_PUBLIC_APP_URL) };
+  }
+  return container;
 }

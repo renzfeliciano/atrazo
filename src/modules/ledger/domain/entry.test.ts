@@ -5,7 +5,13 @@ import { recordEntry, voidEntry } from "./entry";
 import { day, e, eid, NENA } from "./test-fixtures";
 
 const now = day("2026-11-05");
-const draft = { id: eid(), customerId: NENA, kind: "utang" as const, amount: 15_000 as Cents, occurredAt: now };
+const draft = {
+  id: eid(),
+  customerId: NENA,
+  kind: "utang" as const,
+  amount: 15_000 as Cents,
+  occurredAt: now,
+};
 
 describe("recordEntry", () => {
   it("signs amounts by kind", () => {
@@ -48,7 +54,12 @@ describe("voidEntry", () => {
   it("cancels exactly the original amount", () => {
     const original = e("2026-11-03", "utang", 100);
     const r = voidEntry(original, [original], { id: eid(), reason: "Entered twice" }, now);
-    expect(r.ok && r.value).toMatchObject({ kind: "void", amount: -10_000, voidsEntryId: original.id, note: "Entered twice" });
+    expect(r.ok && r.value).toMatchObject({
+      kind: "void",
+      amount: -10_000,
+      voidsEntryId: original.id,
+      note: "Entered twice",
+    });
   });
 
   it("refuses to void twice or to void a void", () => {

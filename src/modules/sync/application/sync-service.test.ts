@@ -1,7 +1,11 @@
 import { v7 as uuidv7 } from "uuid";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { ErrorCode } from "@/core/errors";
-import { type DeviceId, type DeviceSession, type StoreId } from "@/modules/identity/domain/identity";
+import {
+  type DeviceId,
+  type DeviceSession,
+  type StoreId,
+} from "@/modules/identity/domain/identity";
 import { postgresIdentityRepository } from "@/modules/identity/infrastructure/postgres-identity-repository";
 import { createTestDatabase } from "@/server/db/test-db";
 import { postgresRateLimiter } from "@/server/security/postgres-rate-limiter";
@@ -14,7 +18,8 @@ beforeAll(async () => void (tdb = await createTestDatabase()));
 afterAll(() => tdb.close());
 beforeEach(() => tdb.reset());
 
-const svc = () => syncService({ log: postgresChangeLog(tdb.db), limiter: postgresRateLimiter(tdb.db) });
+const svc = () =>
+  syncService({ log: postgresChangeLog(tdb.db), limiter: postgresRateLimiter(tdb.db) });
 
 async function newStore(): Promise<DeviceSession> {
   const storeId = uuidv7() as StoreId;
@@ -29,7 +34,8 @@ async function newStore(): Promise<DeviceSession> {
 }
 
 const change = (id = uuidv7()) => ({ id, iv: "AAAAAAAAAAAAAAAA", ciphertext: "B".repeat(64) });
-const pull = (s: DeviceSession, after = "0", limit = 200) => svc().pull(s, PullQuery.parse({ after, limit }));
+const pull = (s: DeviceSession, after = "0", limit = 200) =>
+  svc().pull(s, PullQuery.parse({ after, limit }));
 
 describe("encrypted change log (Postgres)", () => {
   it("is idempotent: re-sending a batch after a dropped connection stores nothing twice", async () => {

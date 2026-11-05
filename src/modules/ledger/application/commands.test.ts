@@ -23,7 +23,11 @@ const adapters: [string, (now: () => Date) => Harness][] = [
     "in-memory",
     (now) => {
       const m = inMemoryLedger({ now });
-      return { deps: m.deps, markAllSent: async () => m.outbox.markAllSent(), close: async () => {} };
+      return {
+        deps: m.deps,
+        markAllSent: async () => m.outbox.markAllSent(),
+        close: async () => {},
+      };
     },
   ],
   [
@@ -33,7 +37,8 @@ const adapters: [string, (now: () => Date) => Harness][] = [
       const deps = indexedDbLedger(db, { now });
       return {
         deps,
-        markAllSent: async () => deps.outbox.markSent((await db.outbox.toArray()).map((r) => r.seq!)),
+        markAllSent: async () =>
+          deps.outbox.markSent((await db.outbox.toArray()).map((r) => r.seq!)),
         close: async () => {
           db.close();
           await db.delete();
@@ -54,7 +59,11 @@ describe.each(adapters)("ledger use cases (%s)", (_name, make) => {
   afterEach(() => h?.close());
 
   async function nena(cmd: ReturnType<typeof setup>["cmd"]) {
-    const r = await cmd.createCustomer({ name: "Aling Nena Santos", phone: "0917 123 4567", creditLimit: P(3000) });
+    const r = await cmd.createCustomer({
+      name: "Aling Nena Santos",
+      phone: "0917 123 4567",
+      creditLimit: P(3000),
+    });
     if (!r.ok) throw r.error;
     return r.value;
   }
@@ -73,7 +82,11 @@ describe.each(adapters)("ledger use cases (%s)", (_name, make) => {
     if (!r.ok) throw r.error;
     const ledger = await q.customerLedger(r.value.id);
     expect(ledger?.account.balance).toBe(P(980));
-    expect(ledger?.rows[0]).toMatchObject({ type: "entry", pending: true, entry: { note: "Starting balance" } });
+    expect(ledger?.rows[0]).toMatchObject({
+      type: "entry",
+      pending: true,
+      entry: { note: "Starting balance" },
+    });
   });
 
   it("does not write anything when validation fails", async () => {
@@ -87,7 +100,12 @@ describe.each(adapters)("ledger use cases (%s)", (_name, make) => {
     const { cmd } = setup();
     const c = await nena(cmd);
     await cmd.recordEntry({ customerId: c.id, kind: "utang", amount: P(2150) });
-    const r = await cmd.recordEntry({ customerId: c.id, kind: "utang", amount: P(150), note: "Load" });
+    const r = await cmd.recordEntry({
+      customerId: c.id,
+      kind: "utang",
+      amount: P(150),
+      note: "Load",
+    });
     expect(r.ok && r.value.account.balance).toBe(P(2300));
     const b = await cmd.recordEntry({ customerId: c.id, kind: "bayad", amount: P(500) });
     expect(b.ok && b.value.entry.amount).toBe(-P(500));
@@ -96,7 +114,11 @@ describe.each(adapters)("ledger use cases (%s)", (_name, make) => {
 
   it("refuses entries for unknown or hidden customers", async () => {
     const { cmd } = setup();
-    const missing = await cmd.recordEntry({ customerId: "00000000-0000-7000-8000-999999999999" as CustomerId, kind: "utang", amount: P(1) });
+    const missing = await cmd.recordEntry({
+      customerId: "00000000-0000-7000-8000-999999999999" as CustomerId,
+      kind: "utang",
+      amount: P(1),
+    });
     expect(!missing.ok && missing.error.code).toBe(ErrorCode.NotFound);
     const c = await nena(cmd);
     await cmd.setHidden(c.id, true);

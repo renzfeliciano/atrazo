@@ -9,7 +9,10 @@ export interface CreditPolicy {
   readonly overdueAfterDays: number;
 }
 
-export const DEFAULT_POLICY: CreditPolicy = { defaultLimit: 100_000 as Cents, overdueAfterDays: 30 };
+export const DEFAULT_POLICY: CreditPolicy = {
+  defaultLimit: 100_000 as Cents,
+  overdueAfterDays: 30,
+};
 
 export interface AccountSummary {
   readonly balance: Cents;
@@ -57,7 +60,7 @@ export function summarizeAccount(
     const before = balance;
     balance = add(balance, e.amount);
     if (e.amount > 0) utang = add(utang, e.amount);
-    else bayad = add(bayad, (-e.amount) as Cents);
+    else bayad = add(bayad, -e.amount as Cents);
     if (e.kind === "bayad") lastBayadAt = e.occurredAt;
 
     if (balance > 0 && openSince === null) openSince = e.occurredAt;
@@ -87,13 +90,28 @@ export function summarizeAccount(
     isOverLimit: overLimitBy > 0,
     overLimitBy,
     isPaidAhead: balance < 0,
-    limitUsedPercent: balance <= 0 || limit <= 0 ? (balance > 0 ? 100 : 0) : Math.min(100, Math.round((balance / limit) * 100)),
+    limitUsedPercent:
+      balance <= 0 || limit <= 0
+        ? balance > 0
+          ? 100
+          : 0
+        : Math.min(100, Math.round((balance / limit) * 100)),
   };
 }
 
 export type LedgerRow =
-  | { readonly type: "entry"; readonly entry: Entry; readonly balanceAfter: Cents; readonly pending: boolean }
-  | { readonly type: "voided"; readonly entry: Entry; readonly reason: string | null; readonly pending: boolean }
+  | {
+      readonly type: "entry";
+      readonly entry: Entry;
+      readonly balanceAfter: Cents;
+      readonly pending: boolean;
+    }
+  | {
+      readonly type: "voided";
+      readonly entry: Entry;
+      readonly reason: string | null;
+      readonly pending: boolean;
+    }
   | { readonly type: "settled"; readonly at: Date };
 
 /**
@@ -101,7 +119,10 @@ export type LedgerRow =
  * struck through (their void rows are folded into them), and a "fully paid" marker each time the
  * balance came back to zero.
  */
-export function buildLedger(entries: readonly Entry[], isPending: (id: EntryId) => boolean = () => false): LedgerRow[] {
+export function buildLedger(
+  entries: readonly Entry[],
+  isPending: (id: EntryId) => boolean = () => false,
+): LedgerRow[] {
   const voids = new Map<EntryId, Entry>();
   for (const e of entries) if (e.kind === "void" && e.voidsEntryId) voids.set(e.voidsEntryId, e);
 
@@ -110,7 +131,12 @@ export function buildLedger(entries: readonly Entry[], isPending: (id: EntryId) 
   for (const e of [...entries].filter((x) => x.kind !== "void").sort(compareChronological)) {
     const v = voids.get(e.id);
     if (v) {
-      rows.push({ type: "voided", entry: e, reason: v.note, pending: isPending(e.id) || isPending(v.id) });
+      rows.push({
+        type: "voided",
+        entry: e,
+        reason: v.note,
+        pending: isPending(e.id) || isPending(v.id),
+      });
       continue;
     }
     const before = balance;

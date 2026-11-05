@@ -61,17 +61,20 @@ export function validateCustomerDraft(draft: CustomerDraft): Result<ValidCustome
   const issues: FieldIssue[] = [];
   const name = cleanText(draft.name);
   if (!name) issues.push({ field: "name", message: "Enter the client's name" });
-  else if (name.length > NAME_MAX) issues.push({ field: "name", message: `Use ${NAME_MAX} characters or fewer` });
+  else if (name.length > NAME_MAX)
+    issues.push({ field: "name", message: `Use ${NAME_MAX} characters or fewer` });
 
   let phone: string | null = null;
   const rawPhone = cleanText(draft.phone);
   if (rawPhone) {
     phone = normalizePhilippineMobile(rawPhone);
-    if (!phone) issues.push({ field: "phone", message: "Enter a PH mobile number, like 0917 123 4567" });
+    if (!phone)
+      issues.push({ field: "phone", message: "Enter a PH mobile number, like 0917 123 4567" });
   }
 
   const note = cleanText(draft.note);
-  if (note && note.length > NOTE_MAX) issues.push({ field: "note", message: `Use ${NOTE_MAX} characters or fewer` });
+  if (note && note.length > NOTE_MAX)
+    issues.push({ field: "note", message: `Use ${NOTE_MAX} characters or fewer` });
 
   const limit = draft.creditLimit ?? null;
   if (limit !== null && (!Number.isSafeInteger(limit) || limit < 0 || limit > MAX_ENTRY_CENTS)) {
@@ -84,13 +87,21 @@ export function validateCustomerDraft(draft: CustomerDraft): Result<ValidCustome
   return ok({ name, phone, note, creditLimit: limit });
 }
 
-export function createCustomer(id: CustomerId, draft: CustomerDraft, now: Date): Result<Customer, AppError> {
+export function createCustomer(
+  id: CustomerId,
+  draft: CustomerDraft,
+  now: Date,
+): Result<Customer, AppError> {
   const v = validateCustomerDraft(draft);
   if (!v.ok) return v;
   return ok({ id, ...v.value, createdAt: now, updatedAt: now, hiddenAt: null });
 }
 
-export function updateCustomer(current: Customer, draft: CustomerDraft, now: Date): Result<Customer, AppError> {
+export function updateCustomer(
+  current: Customer,
+  draft: CustomerDraft,
+  now: Date,
+): Result<Customer, AppError> {
   const v = validateCustomerDraft(draft);
   if (!v.ok) return v;
   return ok({ ...current, ...v.value, updatedAt: now });

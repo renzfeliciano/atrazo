@@ -7,7 +7,10 @@ import { rateLimits } from "@/server/db/schema";
  * Fixed-window rate limiter on Postgres: one atomic upsert per hit, no extra service needed
  * (keeps Atrazo on free tiers). Keys must already be hashed: no raw IPs are stored.
  */
-export function postgresRateLimiter(db: Database, clock: { now(): Date } = { now: () => new Date() }): RateLimiter {
+export function postgresRateLimiter(
+  db: Database,
+  clock: { now(): Date } = { now: () => new Date() },
+): RateLimiter {
   return {
     async hit(key, limit, windowSeconds) {
       const nowMs = clock.now().getTime();
@@ -24,7 +27,9 @@ export function postgresRateLimiter(db: Database, clock: { now(): Date } = { now
 
       // Occasionally clear windows older than a day, so the table stays tiny.
       if (Math.random() < 0.01) {
-        await db.execute(sql`delete from ${rateLimits} where ${rateLimits.windowStart} < now() - interval '1 day'`);
+        await db.execute(
+          sql`delete from ${rateLimits} where ${rateLimits.windowStart} < now() - interval '1 day'`,
+        );
       }
 
       const retryAfterSeconds = Math.ceil((Date.parse(windowStart) + windowMs - nowMs) / 1000);

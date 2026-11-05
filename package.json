@@ -15,7 +15,8 @@
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:check": "drizzle-kit check"
+    "db:check": "drizzle-kit check",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.15",
+    "@playwright/test": "1.64.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

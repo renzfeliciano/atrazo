@@ -40,17 +40,33 @@ export interface EntryDraft {
 
 export function recordEntry(draft: EntryDraft, now: Date): Result<Entry, AppError> {
   if (!Number.isSafeInteger(draft.amount) || draft.amount <= 0) {
-    return err(new AppError(ErrorCode.Validation, "Amount must be more than zero", [{ field: "amount", message: "Enter an amount" }]));
+    return err(
+      new AppError(ErrorCode.Validation, "Amount must be more than zero", [
+        { field: "amount", message: "Enter an amount" },
+      ]),
+    );
   }
   if (draft.amount > MAX_ENTRY_CENTS) {
-    return err(new AppError(ErrorCode.Validation, "Amount is too large", [{ field: "amount", message: "That amount is too large" }]));
+    return err(
+      new AppError(ErrorCode.Validation, "Amount is too large", [
+        { field: "amount", message: "That amount is too large" },
+      ]),
+    );
   }
   const note = cleanText(draft.note);
   if (note && note.length > ENTRY_NOTE_MAX) {
-    return err(new AppError(ErrorCode.Validation, "Note is too long", [{ field: "note", message: `Use ${ENTRY_NOTE_MAX} characters or fewer` }]));
+    return err(
+      new AppError(ErrorCode.Validation, "Note is too long", [
+        { field: "note", message: `Use ${ENTRY_NOTE_MAX} characters or fewer` },
+      ]),
+    );
   }
   if (draft.occurredAt.getTime() > now.getTime() + FUTURE_TOLERANCE_MS) {
-    return err(new AppError(ErrorCode.Validation, "Date is in the future", [{ field: "occurredAt", message: "Pick today or an earlier date" }]));
+    return err(
+      new AppError(ErrorCode.Validation, "Date is in the future", [
+        { field: "occurredAt", message: "Pick today or an earlier date" },
+      ]),
+    );
   }
   return ok({
     id: draft.id,

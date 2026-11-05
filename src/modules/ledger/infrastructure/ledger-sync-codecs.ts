@@ -1,9 +1,15 @@
 import { z } from "zod";
 import { type Cents } from "@/core/money";
 import { type LocalDb } from "@/infrastructure/local-db/local-db";
-import { type CodecRegistry, type RecordCodec, type WireRecord } from "@/modules/sync/domain/bundle";
+import {
+  type CodecRegistry,
+  type RecordCodec,
+  type WireRecord,
+} from "@/modules/sync/domain/bundle";
 import { type Customer } from "../domain/customer";
 import { type Entry } from "../domain/entry";
+import { type StoreSettings } from "../domain/store-settings";
+import { SETTINGS_KEY } from "./indexeddb-ledger";
 import { type CustomerId, type EntryId } from "../domain/ids";
 import { type LedgerChange } from "../application/ports";
 
@@ -20,7 +26,10 @@ const date = z.iso.datetime().transform((s) => new Date(s));
 const CustomerV1 = z.strictObject({
   id: z.uuid(),
   name: z.string().min(1).max(80),
-  phone: z.string().regex(/^\+639\d{9}$/).nullable(),
+  phone: z
+    .string()
+    .regex(/^\+639\d{9}$/)
+    .nullable(),
   note: z.string().max(200).nullable(),
   creditLimit: z.number().int().nonnegative().nullable(),
   createdAt: date,
@@ -32,7 +41,10 @@ const EntryV1 = z.strictObject({
   id: z.uuid(),
   customerId: z.uuid(),
   kind: z.enum(["utang", "bayad", "void"]),
-  amount: z.number().int().refine((n) => n !== 0, "amount cannot be zero"),
+  amount: z
+    .number()
+    .int()
+    .refine((n) => n !== 0, "amount cannot be zero"),
   note: z.string().max(120).nullable(),
   voidsEntryId: z.uuid().nullable(),
   occurredAt: date,
@@ -44,13 +56,18 @@ export const customerSavedV1: RecordCodec<z.infer<typeof CustomerV1>, ApplyConte
   version: 1,
   schema: CustomerV1,
   async apply(d, { db }) {
-    const incoming: Customer = { ...d, id: d.id as CustomerId, creditLimit: d.creditLimit as Cents | null };
+    const incoming: Customer = {
+      ...d,
+      id: d.id as CustomerId,
+      creditLimit: d.creditLimit as Cents | null,
+    };
     const current = await db.customers.get(incoming.id);
     // Last write wins by updatedAt; exact ties break on content so every phone picks the same winner.
     if (
       !current ||
       incoming.updatedAt.getTime() > current.updatedAt.getTime() ||
-      (incoming.updatedAt.getTime() === current.updatedAt.getTime() && JSON.stringify(incoming) > JSON.stringify(current))
+      (incoming.updatedAt.getTime() === current.updatedAt.getTime() &&
+        JSON.stringify(incoming) > JSON.stringify(current))
     ) {
       await db.customers.put(incoming);
     }
@@ -75,13 +92,40 @@ export const entryAddedV1: RecordCodec<z.infer<typeof EntryV1>, ApplyContext> = 
   },
 };
 
-export function registerLedgerCodecs(registry: CodecRegistry<ApplyContext>): CodecRegistry<ApplyContext> {
-  return registry.register(customerSavedV1).register(entryAddedV1);
+const SettingsV1 = z.strictObject({
+  name: z.string().min(1).max(60),
+  defaultLimit: z.number().int().nonnegative(),
+  overdueAfterDays: z.number().int().min(1).max(365),
+  updatedAt: date,
+});
+
+export const settingsSavedV1: RecordCodec<z.infer<typeof SettingsV1>, ApplyContext> = {
+  type: "store.settings",
+  version: 1,
+  schema: SettingsV1,
+  async apply(d, { db }) {
+    const incoming: StoreSettings = { ...d, defaultLimit: d.defaultLimit as Cents };
+    const current = (await db.settings.get(SETTINGS_KEY))?.value as StoreSettings | undefined;
+    if (!current || incoming.updatedAt.getTime() >= current.updatedAt.getTime()) {
+      await db.settings.put({ key: SETTINGS_KEY, value: incoming });
+    }
+  },
+};
+
+export function registerLedgerCodecs(
+  registry: CodecRegistry<ApplyContext>,
+): CodecRegistry<ApplyContext> {
+  return registry.register(customerSavedV1).register(entryAddedV1).register(settingsSavedV1);
 }
 
 /** Outbox change → wire record (current versions only). */
 export function ledgerChangeToWire(change: LedgerChange): WireRecord {
-  return change.type === "customer.saved"
-    ? { t: "customer.saved", v: 1, d: change.customer }
-    : { t: "entry.added", v: 1, d: change.entry };
+  switch (change.type) {
+    case "customer.saved":
+      return { t: "customer.saved", v: 1, d: change.customer };
+    case "entry.added":
+      return { t: "entry.added", v: 1, d: change.entry };
+    case "settings.saved":
+      return { t: "store.settings", v: 1, d: change.settings };
+  }
 }

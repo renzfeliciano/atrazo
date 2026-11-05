@@ -21,7 +21,13 @@ export function postgresChangeLog(db: Database): ChangeLogRepository {
 
     async after(storeId, after, limit) {
       const rows = await db
-        .select({ seq: changes.seq, id: changes.id, iv: changes.iv, ciphertext: changes.ciphertext, deviceId: changes.deviceId })
+        .select({
+          seq: changes.seq,
+          id: changes.id,
+          iv: changes.iv,
+          ciphertext: changes.ciphertext,
+          deviceId: changes.deviceId,
+        })
         .from(changes)
         .where(and(eq(changes.storeId, storeId), gt(changes.seq, after)))
         .orderBy(asc(changes.seq))

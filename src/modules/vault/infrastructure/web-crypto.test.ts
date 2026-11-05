@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { fromBase64Url, toBase64Url } from "@/core/encoding";
 import { generateRecoveryCode, parseRecoveryCode } from "../domain/recovery-code";
-import { authVerifier, deriveStoreKeys, generateDataKey, open, seal, unwrapDataKey, VaultError, wrapDataKey } from "./web-crypto";
+import {
+  authVerifier,
+  deriveStoreKeys,
+  generateDataKey,
+  open,
+  seal,
+  unwrapDataKey,
+  VaultError,
+  wrapDataKey,
+} from "./web-crypto";
 
 const newCode = () => generateRecoveryCode((a) => crypto.getRandomValues(a));
 
@@ -41,7 +50,9 @@ describe("data key wrapping", () => {
     const sealed = await seal(dataKey, { hello: "Nena" }, "s|r");
     expect(await open(sameCode, sealed, "s|r")).toEqual({ hello: "Nena" });
 
-    await expect(unwrapDataKey(wrapped, (await deriveStoreKeys(newCode())).kek)).rejects.toMatchObject({ reason: "WRONG_CODE" });
+    await expect(
+      unwrapDataKey(wrapped, (await deriveStoreKeys(newCode())).kek),
+    ).rejects.toMatchObject({ reason: "WRONG_CODE" });
   });
 
   it("supports a new recovery code without re-encrypting records", async () => {
@@ -68,7 +79,9 @@ describe("sealed records", () => {
     const s = await seal(k, { amount: 15000 }, "s|r");
     const bytes = fromBase64Url(s.ciphertext);
     bytes[0]! ^= 1;
-    await expect(open(k, { ...s, ciphertext: toBase64Url(bytes) }, "s|r")).rejects.toBeInstanceOf(VaultError);
+    await expect(open(k, { ...s, ciphertext: toBase64Url(bytes) }, "s|r")).rejects.toBeInstanceOf(
+      VaultError,
+    );
   });
 
   it("cannot be moved to another record or store", async () => {
@@ -88,7 +101,12 @@ describe("sealed records", () => {
   it("do not contain the plaintext", async () => {
     const k = await generateDataKey();
     const s = await seal(k, { name: "Aling Nena Santos" }, "c");
-    expect(atob(s.ciphertext.replace(/-/g, "+").replace(/_/g, "/") + "==".slice(0, (4 - (s.ciphertext.length % 4)) % 4))).not.toContain("Nena");
+    expect(
+      atob(
+        s.ciphertext.replace(/-/g, "+").replace(/_/g, "/") +
+          "==".slice(0, (4 - (s.ciphertext.length % 4)) % 4),
+      ),
+    ).not.toContain("Nena");
   });
 });
 

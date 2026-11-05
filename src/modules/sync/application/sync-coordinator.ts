@@ -9,7 +9,15 @@
  * - on failure: exponential backoff, honouring Retry-After
  * - 401 / 410 / 426: stop and let the app ask for the code, wipe, or update
  */
-export type SyncState = "idle" | "waiting" | "syncing" | "offline" | "error" | "signed_out" | "revoked" | "update_required";
+export type SyncState =
+  | "idle"
+  | "waiting"
+  | "syncing"
+  | "offline"
+  | "error"
+  | "signed_out"
+  | "revoked"
+  | "update_required";
 
 export interface SyncFailure {
   readonly status: number;
@@ -34,10 +42,18 @@ export interface CoordinatorOptions {
   maxBackoffMs?: number;
 }
 
-export const DEFAULTS = { debounceMs: 2 * 60_000, periodicMs: 15 * 60_000, baseBackoffMs: 30_000, maxBackoffMs: 30 * 60_000 };
+export const DEFAULTS = {
+  debounceMs: 2 * 60_000,
+  periodicMs: 15 * 60_000,
+  baseBackoffMs: 30_000,
+  maxBackoffMs: 30 * 60_000,
+};
 
 export function syncCoordinator(opts: CoordinatorOptions) {
-  const timers: Timers = opts.timers ?? { setTimeout: (f, ms) => setTimeout(f, ms), clearTimeout: (h) => clearTimeout(h as ReturnType<typeof setTimeout>) };
+  const timers: Timers = opts.timers ?? {
+    setTimeout: (f, ms) => setTimeout(f, ms),
+    clearTimeout: (h) => clearTimeout(h as ReturnType<typeof setTimeout>),
+  };
   const debounceMs = opts.debounceMs ?? DEFAULTS.debounceMs;
   const periodicMs = opts.periodicMs ?? DEFAULTS.periodicMs;
   const baseBackoffMs = opts.baseBackoffMs ?? DEFAULTS.baseBackoffMs;
@@ -56,7 +72,8 @@ export function syncCoordinator(opts: CoordinatorOptions) {
       opts.onState?.(s);
     }
   };
-  const terminal = () => state === "signed_out" || state === "revoked" || state === "update_required";
+  const terminal = () =>
+    state === "signed_out" || state === "revoked" || state === "update_required";
 
   function schedule(ms: number) {
     if (stopped || terminal()) return;

@@ -1,5 +1,16 @@
 import { sql } from "drizzle-orm";
-import { bigserial, check, index, integer, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  bigserial,
+  check,
+  index,
+  integer,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 /**
  * The server stores no personal data. A store is a random id plus a one-way fingerprint of its

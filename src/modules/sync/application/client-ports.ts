@@ -40,7 +40,10 @@ export interface SyncApi {
 /** Applies decoded records and advances the cursor in one atomic local transaction. */
 export interface Inbox {
   cursor(): Promise<string>;
-  applyPage(records: readonly WireRecord[], nextCursor: string): Promise<{ applied: number; deferred: number }>;
+  applyPage(
+    records: readonly WireRecord[],
+    nextCursor: string,
+  ): Promise<{ applied: number; deferred: number }>;
 }
 
 export interface SyncIdentity {

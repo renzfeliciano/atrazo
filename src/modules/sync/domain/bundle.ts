@@ -19,7 +19,9 @@ export interface WireRecord {
 
 const WireBundle = z.object({
   f: z.number().int().positive(),
-  r: z.array(z.object({ t: z.string().min(1).max(64), v: z.number().int().positive(), d: z.unknown() })),
+  r: z.array(
+    z.object({ t: z.string().min(1).max(64), v: z.number().int().positive(), d: z.unknown() }),
+  ),
 });
 
 export function bundlePayload(records: readonly WireRecord[]): string {

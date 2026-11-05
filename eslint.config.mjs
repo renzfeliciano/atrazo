@@ -65,7 +65,7 @@ const eslintConfig = defineConfig([
       ],
     },
   },
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts", "design/**", "public/sw.js"]),
+  globalIgnores([".next/**", ".next-*/**", ".playwright-mcp/**", ".data/**", "out/**", "build/**", "next-env.d.ts", "design/**", "public/sw.js"]),
 ]);
 
 export default eslintConfig;

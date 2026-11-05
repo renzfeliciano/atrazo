@@ -106,6 +106,22 @@ automatically with the same SQL as production. Delete `./.data` to start fresh. 
 > **Why 6060?** Browsers block port 6000 as an unsafe port (`ERR_UNSAFE_PORT`), so the dev server uses 6060.
 > To use another port, change the `dev` script and `NEXT_PUBLIC_APP_URL` together: the API rejects requests from any other origin.
 
+### Test on your phone
+
+Atrazo encrypts on the device with Web Crypto, which browsers allow only on HTTPS or `localhost`. To use the
+dev server from a real phone on the same Wi-Fi:
+
+1. Run `pnpm dev`. Next prints a **Network** address, for example `http://192.168.1.4:6060`. This computer's
+   Wi-Fi addresses are trusted automatically in development (`src/server/config/dev-origins.ts`).
+2. On the phone, open Chrome and go to `chrome://flags/#unsafely-treat-insecure-origin-as-secure`. Enable it,
+   add `http://192.168.1.4:6060` (your address), and tap **Relaunch**.
+3. Open that address on the phone. Allow port 6060 through the computer's firewall if it doesn't load.
+
+Prefer real HTTPS (or Safari on iPhone)? Start a tunnel, such as `cloudflared tunnel --url http://localhost:6060`,
+and add its URL to `.env.local` as `DEV_ALLOWED_ORIGINS=https://….trycloudflare.com`, then restart `pnpm dev`.
+
+None of this applies in production: there the API trusts only `NEXT_PUBLIC_APP_URL`.
+
 ### Health check
 
 ```bash
@@ -123,6 +139,7 @@ curl http://localhost:6060/api/health     # {"ok":true}
 | `pnpm typecheck` | Generate route types, then `tsc --noEmit` |
 | `pnpm lint` | ESLint, zero warnings allowed, including architecture boundaries |
 | `pnpm test` / `pnpm test:watch` | Vitest: unit, use case, Postgres integration, API and two-phone sync |
+| `pnpm test:e2e` | Playwright end-to-end tests in a real browser (starts its own server on port 6080) |
 | `pnpm format` / `pnpm format:check` | Prettier |
 | `pnpm db:generate` | Create a SQL migration from `src/server/db/schema.ts` |
 | `pnpm db:migrate` | Apply migrations to the database in `DATABASE_URL_UNPOOLED` |
@@ -184,7 +201,7 @@ pnpm test
 | Integration | repositories, rate limiter, encrypted change log | **real Postgres** (PGlite) with the production migrations |
 | API | auth, CSRF, validation, payload limits, store isolation, versioning | route handlers over PGlite |
 | Two phones | backup on one phone, restore and two-way sync on another | every real layer except the browser |
-| End to end | browser flows, offline and restore | Playwright (arrives with the screens) |
+| End to end | onboarding, ledger, statement, backup and restore, legal pages, settings, security headers | Playwright, real browser against its own dev server and a fresh local database (`pnpm test:e2e`) |
 
 No test needs a network connection, a cloud account or secrets, so CI runs the full suite on every push.
 

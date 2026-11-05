@@ -41,11 +41,18 @@ export function postgresIdentityRepository(db: Database): IdentityRepository {
 
     async findDeviceByTokenHash(tokenHash) {
       const [row] = await db
-        .select({ deviceId: devices.id, storeId: devices.storeId, lastSeenAt: devices.lastSeenAt, revokedAt: devices.revokedAt })
+        .select({
+          deviceId: devices.id,
+          storeId: devices.storeId,
+          lastSeenAt: devices.lastSeenAt,
+          revokedAt: devices.revokedAt,
+        })
         .from(devices)
         .where(eq(devices.tokenHash, tokenHash))
         .limit(1);
-      return row ? { ...row, deviceId: row.deviceId as DeviceId, storeId: row.storeId as StoreId } : undefined;
+      return row
+        ? { ...row, deviceId: row.deviceId as DeviceId, storeId: row.storeId as StoreId }
+        : undefined;
     },
 
     async touchDevice(deviceId, at) {
@@ -54,7 +61,13 @@ export function postgresIdentityRepository(db: Database): IdentityRepository {
 
     async listDevices(storeId) {
       const rows = await db
-        .select({ id: devices.id, name: devices.name, createdAt: devices.createdAt, lastSeenAt: devices.lastSeenAt, revokedAt: devices.revokedAt })
+        .select({
+          id: devices.id,
+          name: devices.name,
+          createdAt: devices.createdAt,
+          lastSeenAt: devices.lastSeenAt,
+          revokedAt: devices.revokedAt,
+        })
         .from(devices)
         .where(eq(devices.storeId, storeId))
         .orderBy(asc(devices.createdAt));

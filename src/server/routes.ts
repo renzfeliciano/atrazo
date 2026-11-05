@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { AppError, ErrorCode } from "@/core/errors";
-import { CreateStoreRequest, OpenStoreRequest, RotateCodeRequest } from "@/modules/identity/api/contracts";
+import {
+  CreateStoreRequest,
+  OpenStoreRequest,
+  RotateCodeRequest,
+} from "@/modules/identity/api/contracts";
 import { type DeviceId } from "@/modules/identity/domain/identity";
 import { PullQuery, PushRequest } from "@/modules/sync/api/contracts";
 import { type Container } from "./container";
@@ -15,7 +19,12 @@ export function apiHandlers(getContainer: () => Container | Promise<Container>) 
   const get = async () => getContainer();
   const deps = async () => {
     const c = await get();
-    return { appUrl: c.appUrl, auth: c.identity, minClientVersion: c.minClientVersion };
+    return {
+      appUrl: c.appUrl,
+      auth: c.identity,
+      minClientVersion: c.minClientVersion,
+      extraOrigins: c.extraOrigins,
+    };
   };
   const unwrap = <T>(r: { ok: true; value: T } | { ok: false; error: AppError }): T => {
     if (!r.ok) throw r.error;
@@ -24,10 +33,18 @@ export function apiHandlers(getContainer: () => Container | Promise<Container>) 
 
   return {
     /** POST /api/v1/stores: "Start my store". */
-    createStore: apiRoute(deps, { name: "stores.create", auth: "none", body: CreateStoreRequest }, async ({ body, clientKey }) => {
-      const s = unwrap(await (await get()).identity.createStore(body, { clientKey }));
-      return { status: 201, body: { storeId: s.storeId, deviceId: s.deviceId, wrappedKey: s.wrappedKey }, setCookie: sessionCookie(s.token) };
-    }),
+    createStore: apiRoute(
+      deps,
+      { name: "stores.create", auth: "none", body: CreateStoreRequest },
+      async ({ body, clientKey }) => {
+        const s = unwrap(await (await get()).identity.createStore(body, { clientKey }));
+        return {
+          status: 201,
+          body: { storeId: s.storeId, deviceId: s.deviceId, wrappedKey: s.wrappedKey },
+          setCookie: sessionCookie(s.token),
+        };
+      },
+    ),
 
     /** DELETE /api/v1/stores: "Delete store" removes every backup and phone. */
     deleteStore: apiRoute(deps, { name: "stores.delete", auth: "device" }, async ({ session }) => {
@@ -36,16 +53,28 @@ export function apiHandlers(getContainer: () => Container | Promise<Container>) 
     }),
 
     /** PUT /api/v1/stores/code: "Make a new recovery code". */
-    rotateCode: apiRoute(deps, { name: "stores.rotate_code", auth: "device", body: RotateCodeRequest }, async ({ body, session }) => {
-      unwrap(await (await get()).identity.rotateCode(session!, body));
-      return { status: 204 };
-    }),
+    rotateCode: apiRoute(
+      deps,
+      { name: "stores.rotate_code", auth: "device", body: RotateCodeRequest },
+      async ({ body, session }) => {
+        unwrap(await (await get()).identity.rotateCode(session!, body));
+        return { status: 204 };
+      },
+    ),
 
     /** POST /api/v1/session: open a store on this phone with its recovery code. */
-    openSession: apiRoute(deps, { name: "session.open", auth: "none", body: OpenStoreRequest }, async ({ body, clientKey }) => {
-      const s = unwrap(await (await get()).identity.openStore(body, { clientKey }));
-      return { status: 201, body: { storeId: s.storeId, deviceId: s.deviceId, wrappedKey: s.wrappedKey }, setCookie: sessionCookie(s.token) };
-    }),
+    openSession: apiRoute(
+      deps,
+      { name: "session.open", auth: "none", body: OpenStoreRequest },
+      async ({ body, clientKey }) => {
+        const s = unwrap(await (await get()).identity.openStore(body, { clientKey }));
+        return {
+          status: 201,
+          body: { storeId: s.storeId, deviceId: s.deviceId, wrappedKey: s.wrappedKey },
+          setCookie: sessionCookie(s.token),
+        };
+      },
+    ),
 
     /** DELETE /api/v1/session: sign this phone out (its session stops working everywhere). */
     closeSession: apiRoute(deps, { name: "session.close", auth: "device" }, async ({ session }) => {
@@ -71,22 +100,34 @@ export function apiHandlers(getContainer: () => Container | Promise<Container>) 
     }),
 
     /** DELETE /api/v1/devices/{id}: sign out a lost phone. */
-    revokeDevice: apiRoute(deps, { name: "devices.revoke", auth: "device" }, async ({ req, session }) => {
-      const id = z.uuid().safeParse(new URL(req.url).pathname.split("/").at(-1));
-      if (!id.success) throw new AppError(ErrorCode.Validation, "Invalid phone id");
-      unwrap(await (await get()).identity.revokeDevice(session!, id.data as DeviceId));
-      return { status: 204 };
-    }),
+    revokeDevice: apiRoute(
+      deps,
+      { name: "devices.revoke", auth: "device" },
+      async ({ req, session }) => {
+        const id = z.uuid().safeParse(new URL(req.url).pathname.split("/").at(-1));
+        if (!id.success) throw new AppError(ErrorCode.Validation, "Invalid phone id");
+        unwrap(await (await get()).identity.revokeDevice(session!, id.data as DeviceId));
+        return { status: 204 };
+      },
+    ),
 
     /** POST /api/v1/sync: upload encrypted changes. */
-    push: apiRoute(deps, { name: "sync.push", auth: "device", body: PushRequest, maxBody: 4 * 1024 * 1024 }, async ({ body, session }) => {
-      return { body: unwrap(await (await get()).sync.push(session!, body)) };
-    }),
+    push: apiRoute(
+      deps,
+      { name: "sync.push", auth: "device", body: PushRequest, maxBody: 4 * 1024 * 1024 },
+      async ({ body, session }) => {
+        return { body: unwrap(await (await get()).sync.push(session!, body)) };
+      },
+    ),
 
     /** GET /api/v1/sync?after=&limit=: download encrypted changes after a cursor. */
-    pull: apiRoute(deps, { name: "sync.pull", auth: "device", query: PullQuery }, async ({ query, session }) => {
-      return { body: await (await get()).sync.pull(session!, query) };
-    }),
+    pull: apiRoute(
+      deps,
+      { name: "sync.pull", auth: "device", query: PullQuery },
+      async ({ query, session }) => {
+        return { body: await (await get()).sync.pull(session!, query) };
+      },
+    ),
   };
 }
 

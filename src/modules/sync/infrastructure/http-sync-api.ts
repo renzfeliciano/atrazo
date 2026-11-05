@@ -28,13 +28,20 @@ export async function toSyncError(res: Response): Promise<SyncHttpError> {
   return new SyncHttpError(res.status, code, Number.isFinite(retry) && retry > 0 ? retry : null);
 }
 
-export function httpSyncApi(fetchFn: FetchLike = (i, init) => fetch(i, init), baseUrl = ""): SyncApi {
+export function httpSyncApi(
+  fetchFn: FetchLike = (i, init) => fetch(i, init),
+  baseUrl = "",
+): SyncApi {
   const headers = { [CLIENT_VERSION_HEADER]: APP_VERSION };
 
   async function call(path: string, init: RequestInit): Promise<Response> {
     let res: Response;
     try {
-      res = await fetchFn(baseUrl + API_BASE + path, { credentials: "same-origin", ...init, headers: { ...headers, ...(init.headers as Record<string, string>) } });
+      res = await fetchFn(baseUrl + API_BASE + path, {
+        credentials: "same-origin",
+        ...init,
+        headers: { ...headers, ...(init.headers as Record<string, string>) },
+      });
     } catch {
       throw new SyncHttpError(0, "NETWORK", null);
     }
@@ -53,7 +60,9 @@ export function httpSyncApi(fetchFn: FetchLike = (i, init) => fetch(i, init), ba
       });
     },
     async pull(after, limit) {
-      const res = await call(`/sync?after=${encodeURIComponent(after)}&limit=${limit}`, { method: "GET" });
+      const res = await call(`/sync?after=${encodeURIComponent(after)}&limit=${limit}`, {
+        method: "GET",
+      });
       return PullResponse.parse(await res.json());
     },
   };

@@ -21,8 +21,14 @@ export interface DeviceAuthRecord {
 
 /** Every operation is a single atomic statement, so it is safe on a transaction-less HTTP driver. */
 export interface IdentityRepository {
-  createStore(storeId: StoreId, credentials: StoreCredentials, device: NewDevice): Promise<"created" | "lookup_taken">;
-  findStoreByLookup(codeLookup: string): Promise<{ id: StoreId; authVerifier: string; wrappedKey: string } | undefined>;
+  createStore(
+    storeId: StoreId,
+    credentials: StoreCredentials,
+    device: NewDevice,
+  ): Promise<"created" | "lookup_taken">;
+  findStoreByLookup(
+    codeLookup: string,
+  ): Promise<{ id: StoreId; authVerifier: string; wrappedKey: string } | undefined>;
   /** Fails (returns false) if the store no longer exists. */
   addDevice(storeId: StoreId, device: NewDevice): Promise<boolean>;
   findDeviceByTokenHash(tokenHash: string): Promise<DeviceAuthRecord | undefined>;
@@ -30,7 +36,10 @@ export interface IdentityRepository {
   listDevices(storeId: StoreId): Promise<Device[]>;
   /** Scoped by store: a phone can never revoke another store's phone. */
   revokeDevice(storeId: StoreId, deviceId: DeviceId, at: Date): Promise<boolean>;
-  updateCredentials(storeId: StoreId, credentials: StoreCredentials): Promise<"updated" | "lookup_taken">;
+  updateCredentials(
+    storeId: StoreId,
+    credentials: StoreCredentials,
+  ): Promise<"updated" | "lookup_taken">;
   deleteStore(storeId: StoreId): Promise<void>;
 }
 
@@ -46,5 +55,9 @@ export interface SecretTools {
 
 export interface RateLimiter {
   /** Counts one hit against `key`; `allowed` is false once `limit` is exceeded within the window. */
-  hit(key: string, limit: number, windowSeconds: number): Promise<{ allowed: boolean; retryAfterSeconds: number }>;
+  hit(
+    key: string,
+    limit: number,
+    windowSeconds: number,
+  ): Promise<{ allowed: boolean; retryAfterSeconds: number }>;
 }

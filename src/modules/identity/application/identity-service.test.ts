@@ -4,8 +4,19 @@ import { type Database, rowsOf } from "@/server/db/database";
 import { createTestDatabase } from "@/server/db/test-db";
 import { nodeSecrets } from "@/server/security/node-secrets";
 import { postgresRateLimiter } from "@/server/security/postgres-rate-limiter";
-import { generateRecoveryCode, parseRecoveryCode, type RecoveryCode } from "@/modules/vault/domain/recovery-code";
-import { deriveStoreKeys, generateDataKey, open, seal, unwrapDataKey, wrapDataKey } from "@/modules/vault/infrastructure/web-crypto";
+import {
+  generateRecoveryCode,
+  parseRecoveryCode,
+  type RecoveryCode,
+} from "@/modules/vault/domain/recovery-code";
+import {
+  deriveStoreKeys,
+  generateDataKey,
+  open,
+  seal,
+  unwrapDataKey,
+  wrapDataKey,
+} from "@/modules/vault/infrastructure/web-crypto";
 import { type DeviceId } from "../domain/identity";
 import { postgresIdentityRepository } from "../infrastructure/postgres-identity-repository";
 import { identityService, LIMITS } from "./identity-service";
@@ -14,7 +25,12 @@ let tdb: Awaited<ReturnType<typeof createTestDatabase>>;
 let db: Database;
 let now: Date;
 const service = () =>
-  identityService({ repo: postgresIdentityRepository(db), secrets: nodeSecrets, limiter: postgresRateLimiter(db, { now: () => now }), clock: { now: () => now } });
+  identityService({
+    repo: postgresIdentityRepository(db),
+    secrets: nodeSecrets,
+    limiter: postgresRateLimiter(db, { now: () => now }),
+    clock: { now: () => now },
+  });
 
 beforeAll(async () => {
   tdb = await createTestDatabase();
@@ -34,7 +50,12 @@ async function startStore(code: RecoveryCode = newCode(), deviceName = "Samsung 
   const keys = await deriveStoreKeys(code);
   const dataKey = await generateDataKey();
   const r = await service().createStore(
-    { lookup: keys.lookup, authSecret: keys.authSecret, wrappedKey: await wrapDataKey(dataKey, keys.kek), deviceName },
+    {
+      lookup: keys.lookup,
+      authSecret: keys.authSecret,
+      wrappedKey: await wrapDataKey(dataKey, keys.kek),
+      deviceName,
+    },
     meta(),
   );
   if (!r.ok) throw r.error;
@@ -43,7 +64,10 @@ async function startStore(code: RecoveryCode = newCode(), deviceName = "Samsung 
 
 async function openWith(code: RecoveryCode, deviceName = "Redmi 13C", client = "client-b") {
   const keys = await deriveStoreKeys(code);
-  return service().openStore({ lookup: keys.lookup, authSecret: keys.authSecret, deviceName }, meta(client));
+  return service().openStore(
+    { lookup: keys.lookup, authSecret: keys.authSecret, deviceName },
+    meta(client),
+  );
 }
 
 describe("identity service (Postgres)", () => {
@@ -76,7 +100,9 @@ describe("identity service (Postgres)", () => {
 
     const keys = await deriveStoreKeys(code);
     const unwrapped = await unwrapDataKey(second.value.wrappedKey, keys.kek);
-    expect(await open(unwrapped, sealed, `${session.storeId}|r1`)).toEqual({ name: "Aling Nena Santos" });
+    expect(await open(unwrapped, sealed, `${session.storeId}|r1`)).toEqual({
+      name: "Aling Nena Santos",
+    });
   });
 
   it("gives the same answer for a wrong code and an unknown store (no store enumeration)", async () => {
@@ -86,7 +112,14 @@ describe("identity service (Postgres)", () => {
 
     const { code } = await startStore();
     const keys = await deriveStoreKeys(code);
-    const forged = await service().openStore({ lookup: keys.lookup, authSecret: (await deriveStoreKeys(newCode())).authSecret, deviceName: "x" }, meta("c"));
+    const forged = await service().openStore(
+      {
+        lookup: keys.lookup,
+        authSecret: (await deriveStoreKeys(newCode())).authSecret,
+        deviceName: "x",
+      },
+      meta("c"),
+    );
     expect(!forged.ok && forged.error.message).toBe(!wrong.ok && wrong.error.message);
   });
 
@@ -136,7 +169,9 @@ describe("identity service (Postgres)", () => {
     const r = await service().revokeDevice(authA.value, b.session.deviceId as DeviceId);
     expect(!r.ok && r.error.code).toBe(ErrorCode.NotFound);
     expect((await service().authenticate(b.session.token)).ok).toBe(true);
-    expect((await service().listDevices(authA.value)).map((d) => d.id)).toEqual([a.session.deviceId]);
+    expect((await service().listDevices(authA.value)).map((d) => d.id)).toEqual([
+      a.session.deviceId,
+    ]);
   });
 
   it("makes a new recovery code: old code stops working, open phones stay open, data key unchanged", async () => {
@@ -146,14 +181,20 @@ describe("identity service (Postgres)", () => {
 
     const newer = newCode();
     const keys = await deriveStoreKeys(newer);
-    const rotated = await service().rotateCode(auth.value, { lookup: keys.lookup, authSecret: keys.authSecret, wrappedKey: await wrapDataKey(dataKey, keys.kek) });
+    const rotated = await service().rotateCode(auth.value, {
+      lookup: keys.lookup,
+      authSecret: keys.authSecret,
+      wrappedKey: await wrapDataKey(dataKey, keys.kek),
+    });
     expect(rotated.ok).toBe(true);
 
     expect((await openWith(oldCode)).ok).toBe(false);
     const viaNew = await openWith(newer);
     if (!viaNew.ok) throw viaNew.error;
     const sealed = await seal(dataKey, { v: 1 }, "ctx");
-    expect(await open(await unwrapDataKey(viaNew.value.wrappedKey, keys.kek), sealed, "ctx")).toEqual({ v: 1 });
+    expect(
+      await open(await unwrapDataKey(viaNew.value.wrappedKey, keys.kek), sealed, "ctx"),
+    ).toEqual({ v: 1 });
     expect((await service().authenticate(session.token)).ok).toBe(true);
   });
 
@@ -168,7 +209,8 @@ describe("identity service (Postgres)", () => {
 
   it("updates last-seen at most every five minutes", async () => {
     const { session } = await startStore();
-    const seen = async () => rowsOf<{ last_seen_at: Date }>(await db.execute(`select last_seen_at from devices`))[0]!;
+    const seen = async () =>
+      rowsOf<{ last_seen_at: Date }>(await db.execute(`select last_seen_at from devices`))[0]!;
     const first = (await seen()).last_seen_at;
     now = new Date(Date.now() + 60_000);
     await service().authenticate(session.token);

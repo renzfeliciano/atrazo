@@ -21,7 +21,10 @@ export const DEVICE_NAME_MAX = 60;
 
 /** Trims and collapses whitespace, strips control characters, caps the length. */
 export function cleanDeviceName(raw: string): string | null {
-  const t = raw.replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim();
+  const t = raw
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
   return t ? t.slice(0, DEVICE_NAME_MAX) : null;
 }
 

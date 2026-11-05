@@ -43,10 +43,13 @@ describe("recovery code", () => {
     expect(parseRecoveryCode("OOOOO-IIIII-LLLLL-00000-11111")).toBe("0000011111111110000011111");
   });
 
-  it.each(["", "7KQ2M-XD9PA-R4TWE-H6NBZ", "7KQ2M-XD9PA-R4TWE-H6NBZ-3FJC8X", "7KQ2M-XD9PA-R4TWE-H6NBZ-3FJCU", "7KQ2M-XD9PA-R4TWE-H6NBZ-3FJC#"])(
-    "rejects %j",
-    (bad) => expect(parseRecoveryCode(bad)).toBeNull(),
-  );
+  it.each([
+    "",
+    "7KQ2M-XD9PA-R4TWE-H6NBZ",
+    "7KQ2M-XD9PA-R4TWE-H6NBZ-3FJC8X",
+    "7KQ2M-XD9PA-R4TWE-H6NBZ-3FJCU",
+    "7KQ2M-XD9PA-R4TWE-H6NBZ-3FJC#",
+  ])("rejects %j", (bad) => expect(parseRecoveryCode(bad)).toBeNull());
 
   it("refuses to turn an unparsed code into key material", () => {
     const code = generateRecoveryCode(rng);

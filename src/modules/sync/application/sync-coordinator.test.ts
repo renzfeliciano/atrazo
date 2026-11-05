@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { type SyncFailure, syncCoordinator, type SyncState } from "./sync-coordinator";
 
-const fail = (status: number, code: string, retryAfterSeconds: number | null = null) => Object.assign(new Error(code), { failure: { status, code, retryAfterSeconds } });
+const fail = (status: number, code: string, retryAfterSeconds: number | null = null) =>
+  Object.assign(new Error(code), { failure: { status, code, retryAfterSeconds } });
 const classify = (e: unknown): SyncFailure => (e as { failure: SyncFailure }).failure;
 
 describe("sync coordinator", () => {
@@ -10,7 +11,15 @@ describe("sync coordinator", () => {
 
   function setup(run = vi.fn(async () => {})) {
     const states: SyncState[] = [];
-    const c = syncCoordinator({ run, classify, onState: (s) => states.push(s), debounceMs: 120_000, periodicMs: 900_000, baseBackoffMs: 30_000, maxBackoffMs: 1_800_000 });
+    const c = syncCoordinator({
+      run,
+      classify,
+      onState: (s) => states.push(s),
+      debounceMs: 120_000,
+      periodicMs: 900_000,
+      baseBackoffMs: 30_000,
+      maxBackoffMs: 1_800_000,
+    });
     return { c, run, states };
   }
 
@@ -60,7 +69,10 @@ describe("sync coordinator", () => {
   });
 
   it("honours Retry-After from a rate limit", async () => {
-    const run = vi.fn().mockRejectedValueOnce(fail(429, "RATE_LIMITED", 600)).mockResolvedValue(undefined);
+    const run = vi
+      .fn()
+      .mockRejectedValueOnce(fail(429, "RATE_LIMITED", 600))
+      .mockResolvedValue(undefined);
     const { c } = setup(run);
     await c.syncNow();
     await vi.advanceTimersByTimeAsync(599_000);

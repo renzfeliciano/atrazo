@@ -14,7 +14,8 @@ export const APP_VERSION: string = process.env.NEXT_PUBLIC_APP_VERSION ?? "0.0.0
 
 /** Compares "major.minor.patch" versions; anything unparsable sorts as 0.0.0. */
 export function compareVersions(a: string, b: string): number {
-  const parse = (v: string) => (/^(\d+)\.(\d+)\.(\d+)/.exec(v) ?? [0, 0, 0, 0]).slice(1).map(Number);
+  const parse = (v: string) =>
+    (/^(\d+)\.(\d+)\.(\d+)/.exec(v) ?? [0, 0, 0, 0]).slice(1).map(Number);
   const [x, y] = [parse(a), parse(b)];
   for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i]! - y[i]!;
   return 0;

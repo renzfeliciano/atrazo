@@ -19,7 +19,11 @@ describe("summarizeAccount", () => {
   });
 
   it("restarts days-unpaid after the client is fully paid (old debt never makes them overdue)", () => {
-    const entries = [e("2026-06-01", "utang", 500), e("2026-06-20", "bayad", 500), e("2026-11-01", "utang", 200)];
+    const entries = [
+      e("2026-06-01", "utang", 500),
+      e("2026-06-20", "bayad", 500),
+      e("2026-11-01", "utang", 200),
+    ];
     const s = summarizeAccount(entries, DEFAULT_POLICY, null, NOV5);
     expect(s.openSince).toEqual(day("2026-11-01"));
     expect(s.daysUnpaid).toBe(4);
@@ -27,14 +31,23 @@ describe("summarizeAccount", () => {
   });
 
   it("keeps counting from the first unpaid utang while a balance remains", () => {
-    const entries = [e("2026-09-02", "utang", 1450), e("2026-10-01", "bayad", 200), e("2026-10-15", "utang", 200)];
+    const entries = [
+      e("2026-09-02", "utang", 1450),
+      e("2026-10-01", "bayad", 200),
+      e("2026-10-15", "utang", 200),
+    ];
     const s = summarizeAccount(entries, DEFAULT_POLICY, null, NOV5);
     expect(s.daysUnpaid).toBe(64);
     expect(s.isOverdue).toBe(true);
   });
 
   it("flags over limit with the amount over", () => {
-    const s = summarizeAccount([e("2026-11-01", "utang", 1850)], DEFAULT_POLICY, 150_000 as Cents, NOV5);
+    const s = summarizeAccount(
+      [e("2026-11-01", "utang", 1850)],
+      DEFAULT_POLICY,
+      150_000 as Cents,
+      NOV5,
+    );
     expect(s.isOverLimit).toBe(true);
     expect(s.overLimitBy).toBe(35_000);
     expect(s.limitUsedPercent).toBe(100);
@@ -47,7 +60,12 @@ describe("summarizeAccount", () => {
   });
 
   it("reports paid-ahead balances", () => {
-    const s = summarizeAccount([e("2026-11-01", "utang", 100), e("2026-11-02", "bayad", 150)], DEFAULT_POLICY, null, NOV5);
+    const s = summarizeAccount(
+      [e("2026-11-01", "utang", 100), e("2026-11-02", "bayad", 150)],
+      DEFAULT_POLICY,
+      null,
+      NOV5,
+    );
     expect(s.balance).toBe(-5_000);
     expect(s.isPaidAhead).toBe(true);
     expect(s.daysUnpaid).toBe(0);
@@ -56,7 +74,11 @@ describe("summarizeAccount", () => {
 
   it("ignores voided entries entirely, including for days-unpaid", () => {
     const wrong = e("2026-08-01", "utang", 900);
-    const entries = [wrong, e("2026-08-02", "void", -900, { voidsEntryId: wrong.id }), e("2026-11-03", "utang", 50)];
+    const entries = [
+      wrong,
+      e("2026-08-02", "void", -900, { voidsEntryId: wrong.id }),
+      e("2026-11-03", "utang", 50),
+    ];
     const s = summarizeAccount(entries, DEFAULT_POLICY, null, NOV5);
     expect(s.balance).toBe(5_000);
     expect(s.openSince).toEqual(day("2026-11-03"));
@@ -64,7 +86,13 @@ describe("summarizeAccount", () => {
 
   it("is a clean zero for a client with no entries", () => {
     const s = summarizeAccount([], DEFAULT_POLICY, null, NOV5);
-    expect(s).toMatchObject({ balance: 0, daysUnpaid: 0, openSince: null, lastEntryAt: null, isOverdue: false });
+    expect(s).toMatchObject({
+      balance: 0,
+      daysUnpaid: 0,
+      openSince: null,
+      lastEntryAt: null,
+      isOverdue: false,
+    });
   });
 
   it("does not depend on the order entries are stored in", () => {
@@ -77,7 +105,11 @@ describe("buildLedger", () => {
   it("lists newest first with running balances, folded voids and a fully-paid marker", () => {
     const rows = buildLedger(nenaLedger());
     const summary = rows.map((r) =>
-      r.type === "entry" ? `${r.entry.note}:${r.balanceAfter}` : r.type === "voided" ? `void:${r.entry.note}:${r.reason}` : "settled",
+      r.type === "entry"
+        ? `${r.entry.note}:${r.balanceAfter}`
+        : r.type === "voided"
+          ? `void:${r.entry.note}:${r.reason}`
+          : "settled",
     );
     expect(summary).toEqual([
       "Load:230000",

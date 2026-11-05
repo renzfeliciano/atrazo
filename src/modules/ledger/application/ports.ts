@@ -1,6 +1,7 @@
 import { type CreditPolicy } from "../domain/account";
 import { type Customer } from "../domain/customer";
 import { type Entry } from "../domain/entry";
+import { type StoreSettings } from "../domain/store-settings";
 import { type CustomerId, type EntryId } from "../domain/ids";
 
 /**
@@ -25,7 +26,17 @@ export interface EntryRepository {
 /** A change waiting to be encrypted and backed up. The sync module drains this outbox. */
 export type LedgerChange =
   | { readonly type: "customer.saved"; readonly customer: Customer }
-  | { readonly type: "entry.added"; readonly entry: Entry };
+  | { readonly type: "entry.added"; readonly entry: Entry }
+  | { readonly type: "settings.saved"; readonly settings: StoreSettings };
+
+/** Outbox key for the single store-settings record. */
+export const SETTINGS_ENTITY_ID = "store-settings";
+
+export function changeEntityId(change: LedgerChange): string {
+  if (change.type === "entry.added") return change.entry.id;
+  if (change.type === "customer.saved") return change.customer.id;
+  return SETTINGS_ENTITY_ID;
+}
 
 export interface ChangeOutbox {
   enqueue(change: LedgerChange): Promise<void>;
@@ -38,6 +49,8 @@ export interface ChangeOutbox {
 
 export interface SettingsRepository {
   getPolicy(): Promise<CreditPolicy>;
+  get(): Promise<StoreSettings>;
+  save(settings: StoreSettings): Promise<void>;
 }
 
 /** Runs the callback atomically: all writes inside commit together or not at all. */

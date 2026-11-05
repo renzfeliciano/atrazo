@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Atrazo: the pencil "A" on the yellow tile, as in the app bar. Generated from src/ui/brand.tsx. -->
+  <rect width="64" height="64" rx="14" fill="#FFC72C"/>
+  <svg x="7" y="7" width="50" height="50" viewBox="2 3 60 58">
+    <defs><clipPath id="a"><path clip-rule="evenodd" d="M32 6 L60 58 L4 58 Z M32 26.4 L38.2 38 L25.8 38 Z M22 45 L42 45 L49 58 L15 58 Z"/></clipPath></defs>
+    <g clip-path="url(#a)">
+      <rect width="64" height="64" fill="#1C2024"/>
+      <path d="M0 0H64V31 Q60 27.5 56 31 Q52 27.5 48 31 Q44 27.5 40 31 Q36 27.5 32 31 Q28 27.5 24 31 Q20 27.5 16 31 Q12 27.5 8 31 Q4 27.5 0 31Z" fill="#F3D9B1"/>
+      <path d="M0 0H64V17H0Z" fill="#1C2024"/>
+    </g>
+  </svg>
+</svg>

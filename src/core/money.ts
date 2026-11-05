@@ -10,7 +10,8 @@ export const MAX_ENTRY_CENTS = 1_000_000_000 as Cents;
 export const ZERO = 0 as Cents;
 
 export function cents(value: number): Cents {
-  if (!Number.isSafeInteger(value)) throw new RangeError(`Cents must be a safe integer, got ${value}`);
+  if (!Number.isSafeInteger(value))
+    throw new RangeError(`Cents must be a safe integer, got ${value}`);
   return value as Cents;
 }
 
@@ -34,7 +35,10 @@ export function fromPesos(pesos: number): Cents {
 }
 
 const MINUS = "−";
-const grouping = new Intl.NumberFormat("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const grouping = new Intl.NumberFormat("en-PH", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 const wholeGrouping = new Intl.NumberFormat("en-PH", { maximumFractionDigits: 0 });
 
 export type SignDisplay = "auto" | "always" | "never";
@@ -42,10 +46,15 @@ export type SignDisplay = "auto" | "always" | "never";
 /** "₱2,300.00", "+₱150.00", "−₱500.00" (true minus sign, not a hyphen). */
 export function formatPeso(
   amount: Cents,
-  { sign = "auto", symbol = true, whole = false }: { sign?: SignDisplay; symbol?: boolean; whole?: boolean } = {},
+  {
+    sign = "auto",
+    symbol = true,
+    whole = false,
+  }: { sign?: SignDisplay; symbol?: boolean; whole?: boolean } = {},
 ): string {
   const abs = Math.abs(amount) / 100;
-  const body = (symbol ? "₱" : "") + (whole ? wholeGrouping : grouping).format(whole ? Math.round(abs) : abs);
+  const body =
+    (symbol ? "₱" : "") + (whole ? wholeGrouping : grouping).format(whole ? Math.round(abs) : abs);
   if (sign === "never" || amount === 0) return body;
   if (amount < 0) return MINUS + body;
   return sign === "always" ? "+" + body : body;

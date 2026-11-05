@@ -16,7 +16,9 @@ import { clearedSessionCookie, readSessionToken } from "./session-cookie";
  *  - no-store caching and a request id on every response
  */
 export interface Authenticator {
-  authenticate(token: string | undefined): Promise<{ ok: true; value: DeviceSession } | { ok: false; error: AppError }>;
+  authenticate(
+    token: string | undefined,
+  ): Promise<{ ok: true; value: DeviceSession } | { ok: false; error: AppError }>;
 }
 
 export interface RouteContext<B, Q> {
@@ -52,25 +54,45 @@ const JSON_HEADERS = {
   "x-content-type-options": "nosniff",
 };
 
-export function problem(error: AppError, requestId: string, extraHeaders: Record<string, string> = {}): Response {
-  return new Response(JSON.stringify({ error: { code: error.code, message: error.message, issues: error.issues } }), {
-    status: httpStatusFor[error.code],
-    headers: { ...JSON_HEADERS, "x-request-id": requestId, ...extraHeaders },
-  });
+export function problem(
+  error: AppError,
+  requestId: string,
+  extraHeaders: Record<string, string> = {},
+): Response {
+  return new Response(
+    JSON.stringify({ error: { code: error.code, message: error.message, issues: error.issues } }),
+    {
+      status: httpStatusFor[error.code],
+      headers: { ...JSON_HEADERS, "x-request-id": requestId, ...extraHeaders },
+    },
+  );
 }
 
 /** Rate-limit key: SHA-256 of the client IP plus today's date, so it cannot track anyone across days. */
 export function clientKeyOf(req: Request, now = new Date()): string {
-  const ip = req.headers.get("x-real-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  return createHash("sha256").update(`${now.toISOString().slice(0, 10)}|${ip}`).digest("base64url");
+  const ip =
+    req.headers.get("x-real-ip") ??
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    "unknown";
+  return createHash("sha256")
+    .update(`${now.toISOString().slice(0, 10)}|${ip}`)
+    .digest("base64url");
 }
 
-export function isSameOrigin(req: Request, appUrl: string): boolean {
+/**
+ * Writes must come from Atrazo's own pages. `extraOrigins` is empty in production; in development
+ * it holds this computer's Wi-Fi addresses (and any DEV_ALLOWED_ORIGINS) so a real phone can test.
+ */
+export function isSameOrigin(
+  req: Request,
+  appUrl: string,
+  extraOrigins: readonly string[] = [],
+): boolean {
   const site = req.headers.get("sec-fetch-site");
   if (site && site !== "same-origin") return false;
   const origin = req.headers.get("origin");
   if (!origin) return site === "same-origin";
-  return origin === new URL(appUrl).origin;
+  return origin === new URL(appUrl).origin || extraOrigins.includes(origin);
 }
 
 async function readBody(req: Request, maxBytes: number): Promise<unknown> {
@@ -80,7 +102,8 @@ async function readBody(req: Request, maxBytes: number): Promise<unknown> {
     throw new AppError(ErrorCode.Validation, "Send JSON");
   }
   const text = await req.text();
-  if (new TextEncoder().encode(text).length > maxBytes) throw new AppError(ErrorCode.PayloadTooLarge, "Request is too large");
+  if (new TextEncoder().encode(text).length > maxBytes)
+    throw new AppError(ErrorCode.PayloadTooLarge, "Request is too large");
   try {
     return JSON.parse(text) as unknown;
   } catch {
@@ -94,33 +117,57 @@ function validate<S extends z.ZodType>(schema: S, input: unknown): z.infer<S> {
     throw new AppError(
       ErrorCode.Validation,
       "Request is invalid",
-      r.error.issues.slice(0, 20).map((i) => ({ field: i.path.join(".") || "(root)", message: i.message })),
+      r.error.issues
+        .slice(0, 20)
+        .map((i) => ({ field: i.path.join(".") || "(root)", message: i.message })),
     );
   }
   return r.data;
 }
 
-export function apiRoute<BS extends z.ZodType | undefined = undefined, QS extends z.ZodType | undefined = undefined>(
-  deps: () => Promise<{ appUrl: string; auth: Authenticator; minClientVersion?: string | undefined }>,
+/** First line of the error and of its cause (e.g. the Postgres reason behind a failed query). Development only. */
+function describeForDevelopment(e: unknown): string {
+  const first = (x: unknown) =>
+    x instanceof Error ? (x.message.split("\n")[0] ?? "") : String(x ?? "none");
+  const cause = e instanceof Error ? e.cause : undefined;
+  return `${first(e)} | cause: ${first(cause)}`.slice(0, 500);
+}
+
+export function apiRoute<
+  BS extends z.ZodType | undefined = undefined,
+  QS extends z.ZodType | undefined = undefined,
+>(
+  deps: () => Promise<{
+    appUrl: string;
+    auth: Authenticator;
+    minClientVersion?: string | undefined;
+    /** Development only (see config/dev-origins.ts); empty in production. */
+    extraOrigins?: readonly string[];
+  }>,
   options: Options<BS, QS>,
   handler: (ctx: RouteContext<Infer<BS>, Infer<QS>>) => Promise<RouteResult>,
 ) {
   return async (req: Request): Promise<Response> => {
-    // Reading the request first tells Next.js this route is request-time only, so the build never
-    // prerenders it (and never runs a database query while deploying).
     const method = req.method;
     const requestId = crypto.randomUUID();
     const started = Date.now();
     let status = 500;
     let interrupted = true;
     try {
-      const { appUrl, auth, minClientVersion } = await deps();
-      if (method !== "GET" && method !== "HEAD" && !isSameOrigin(req, appUrl)) {
+      const { appUrl, auth, minClientVersion, extraOrigins } = await deps();
+      if (method !== "GET" && method !== "HEAD" && !isSameOrigin(req, appUrl, extraOrigins)) {
         throw new AppError(ErrorCode.Forbidden, "Cross-site request blocked");
       }
       const clientVersion = req.headers.get(CLIENT_VERSION_HEADER);
-      if (clientVersion && minClientVersion && compareVersions(clientVersion, minClientVersion) < 0) {
-        throw new AppError(ErrorCode.UpgradeRequired, "Update Atrazo to keep backing up. Your entries are safe on this phone.");
+      if (
+        clientVersion &&
+        minClientVersion &&
+        compareVersions(clientVersion, minClientVersion) < 0
+      ) {
+        throw new AppError(
+          ErrorCode.UpgradeRequired,
+          "Update Atrazo to keep backing up. Your entries are safe on this phone.",
+        );
       }
 
       let session: DeviceSession | null = null;
@@ -129,21 +176,42 @@ export function apiRoute<BS extends z.ZodType | undefined = undefined, QS extend
         if (!r.ok) {
           interrupted = false;
           status = httpStatusFor[r.error.code];
-          const headers: Record<string, string> = r.error.code === ErrorCode.DeviceRevoked ? { "set-cookie": clearedSessionCookie() } : {};
+          const headers: Record<string, string> =
+            r.error.code === ErrorCode.DeviceRevoked
+              ? { "set-cookie": clearedSessionCookie() }
+              : {};
           return problem(r.error, requestId, headers);
         }
         session = r.value;
       }
 
-      const body = (options.body ? validate(options.body, await readBody(req, options.maxBody ?? 8 * 1024)) : undefined) as Infer<BS>;
-      const query = (options.query ? validate(options.query, Object.fromEntries(new URL(req.url).searchParams)) : undefined) as Infer<QS>;
+      const body = (
+        options.body
+          ? validate(options.body, await readBody(req, options.maxBody ?? 8 * 1024))
+          : undefined
+      ) as Infer<BS>;
+      const query = (
+        options.query
+          ? validate(options.query, Object.fromEntries(new URL(req.url).searchParams))
+          : undefined
+      ) as Infer<QS>;
 
-      const result = await handler({ req, body, query, session, clientKey: clientKeyOf(req), requestId });
+      const result = await handler({
+        req,
+        body,
+        query,
+        session,
+        clientKey: clientKeyOf(req),
+        requestId,
+      });
       interrupted = false;
       status = result.status ?? 200;
       const headers: Record<string, string> = { ...JSON_HEADERS, "x-request-id": requestId };
       if (result.setCookie) headers["set-cookie"] = result.setCookie;
-      return new Response(result.body === undefined ? null : JSON.stringify(result.body), { status, headers });
+      return new Response(result.body === undefined ? null : JSON.stringify(result.body), {
+        status,
+        headers,
+      });
     } catch (e) {
       // Next.js control-flow signals (prerender bail-out, redirects) are not errors: let them through.
       unstable_rethrow(e);
@@ -157,11 +225,24 @@ export function apiRoute<BS extends z.ZodType | undefined = undefined, QS extend
         requestId,
         error: e instanceof Error ? e.name : "unknown",
         // Messages can echo input, so they are logged only in development.
-        detail: process.env.NODE_ENV === "development" && e instanceof Error ? e.message.slice(0, 500) : undefined,
+        detail: process.env.NODE_ENV === "development" ? describeForDevelopment(e) : undefined,
       });
-      return problem(new AppError(ErrorCode.Internal, "Something went wrong. Your entries are safe on this phone."), requestId);
+      return problem(
+        new AppError(
+          ErrorCode.Internal,
+          "Something went wrong. Your entries are safe on this phone.",
+        ),
+        requestId,
+      );
     } finally {
-      if (!interrupted) log.info("api.request", { route: options.name, method, status, ms: Date.now() - started, requestId });
+      if (!interrupted)
+        log.info("api.request", {
+          route: options.name,
+          method,
+          status,
+          ms: Date.now() - started,
+          requestId,
+        });
     }
   };
 }
