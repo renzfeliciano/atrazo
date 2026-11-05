@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Atrazo · Activity</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="atrazo.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" data-theme="{{theme}}">
+
+<header class="bar">
+<div class="bar-title">
+<h1>Activity</h1>
+<span class="bar-sub">Every utang and bayad, newest first</span>
+</div>
+<button type="button" class="btn btn-ink btn-sm" style="margin-right: 8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Oct 30 – Nov 5<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 10 5 5 5-5"></path></svg></button>
+</header>
+
+<main class="vscroll">
+<div class="hero" style="height: 40px"></div>
+<section class="card-raised" aria-label="This week" style="position: relative; margin: -32px 12px 0; overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 11px 14px 9px">
+<span style="font-size: 13px; font-weight: 600; color: var(--muted)">This week</span>
+<span class="tag mono">40 entries</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line-soft)">
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 10px 12px 14px">
+<span style="font-size: 12px; color: var(--muted)">Utang given</span>
+<span class="mono disp" style="font-size: 18px">+₱2,960</span>
+<span class="mono" style="font-size: 11.5px; color: var(--muted)">31 entries</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 10px 12px 12px; border-left: 1px solid var(--line-soft)">
+<span style="font-size: 12px; color: var(--muted)">Bayad received</span>
+<span class="mono disp" style="font-size: 18px; color: var(--info)">−₱2,140</span>
+<span class="mono" style="font-size: 11.5px; color: var(--muted)">9 entries</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 10px 12px 12px; border-left: 1px solid var(--line-soft); background: var(--surface-2)">
+<span style="font-size: 12px; color: var(--muted)">Net change</span>
+<span class="mono disp" style="font-size: 18px">+₱820</span>
+<span style="font-size: 11.5px; color: var(--muted)">owed went up</span>
+</div>
+</div>
+</section>
+
+<div class="tabs" role="tablist" aria-label="Show entries" style="margin-top: 8px">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+<button type="button" role="tab" class="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}">{{t.label}}<span class="n">{{t.n}}</span></button>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 12px; padding: 12px 12px 4px">
+<sc-for list="{{days}}" as="day" hint-placeholder-count="3">
+<section class="card" aria-label="{{day.label}}" style="overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 40px; padding: 0 14px; background: var(--surface-2); border-bottom: 1px solid var(--line)">
+<h2 style="font-size: 13.5px; font-weight: 700">{{day.label}}</h2>
+<span class="mono" style="display: inline-flex; gap: 8px; font-size: 12.5px; font-weight: 600"><span>{{day.plus}}</span><span style="color: var(--info)">{{day.minus}}</span></span>
+</div>
+<ul>
+<sc-for list="{{day.rows}}" as="r" hint-placeholder-count="3">
+<li style="border-top: 1px solid var(--line-soft)">
+<a href="Ledger.dc.html" aria-label="{{r.aria}}" style="display: flex; align-items: flex-start; gap: 12px; min-height: 60px; padding: 10px 14px; color: var(--text); text-decoration: none">
+<span class="mono" style="flex: none; width: 58px; padding-top: 1px; font-size: 12px; color: var(--muted)">{{r.time}}</span>
+<span class="row-main">
+<span class="row-title" style="font-size: 14.5px">{{r.who}}</span>
+<span class="row-sub" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.note}}</span>
+<sc-if value="{{r.hasTag}}" hint-placeholder-val="{{ false }}"><span style="margin-top: 3px"><span class="tag {{r.tagCls}}">{{r.tag}}</span></span></sc-if>
+</span>
+<span class="mono" style="flex: none; font-size: 15px; font-weight: 700; color: {{r.color}}; text-decoration: {{r.deco}}">{{r.amount}}</span>
+</a>
+</li>
+</sc-for>
+</ul>
+</section>
+</sc-for>
+<button type="button" class="btn btn-secondary btn-block">Show earlier days</button>
+</div>
+<div style="height: 20px"></div>
+</main>
+
+<dc-import name="Nav" active="activity" hint-size="390px,76px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const tab = st.tab || 'all';
+    const num = (v) => Math.abs(v).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const raw = [
+      { d: 'Today · Thu, Nov 5', who: 'Aling Nena Santos', kind: 'utang', amt: 150, time: '9:42 AM', note: 'Load', pending: true },
+      { d: 'Today · Thu, Nov 5', who: 'Marites Cruz', kind: 'utang', amt: 240, time: '8:15 AM', note: 'Load ₱200, kape' },
+      { d: 'Today · Thu, Nov 5', who: 'Tito Ramon Garcia', kind: 'bayad', amt: 300, time: '7:50 AM', note: 'GCash' },
+      { d: 'Wed, Nov 4', who: 'Carla Villanueva', kind: 'utang', amt: 185, time: '6:40 PM', note: 'Sardinas, itlog' },
+      { d: 'Wed, Nov 4', who: 'Bong Ramos', kind: 'bayad', amt: 500, time: '5:10 PM', note: 'Cash' },
+      { d: 'Wed, Nov 4', who: 'Inday Flores', kind: 'utang', amt: 95.5, time: '11:20 AM', note: 'Shampoo sachet ×5' },
+      { d: 'Tue, Nov 3', who: 'Aling Nena Santos', kind: 'utang', amt: 350, time: '4:15 PM', note: 'Bigas 2kg, mantika' },
+      { d: 'Tue, Nov 3', who: 'Aling Nena Santos', kind: 'void', amt: 100, time: '4:12 PM', note: 'Softdrinks' },
+      { d: 'Tue, Nov 3', who: 'Mang Jose Reyes', kind: 'bayad', amt: 640, time: '3:00 PM', note: 'Cash' },
+      { d: 'Tue, Nov 3', who: 'Ate Liza Mendoza', kind: 'utang', amt: 120, time: '9:05 AM', note: 'Pandesal, kape' }
+    ];
+    const show = (e) => tab === 'all' || (tab === 'utang' ? e.kind !== 'bayad' : e.kind === 'bayad');
+    const labels = [...new Set(raw.map((e) => e.d))];
+    const days = labels.map((label) => {
+      const items = raw.filter((e) => e.d === label);
+      const plus = items.filter((e) => e.kind === 'utang').reduce((s, e) => s + e.amt, 0);
+      const minus = items.filter((e) => e.kind === 'bayad').reduce((s, e) => s + e.amt, 0);
+      return {
+        label, plus: '+₱' + num(plus), minus: '−₱' + num(minus),
+        rows: items.filter(show).map((e) => {
+          const isVoid = e.kind === 'void', isBayad = e.kind === 'bayad';
+          return {
+            who: e.who, time: e.time,
+            note: (isBayad ? 'Bayad' : 'Utang') + (e.note ? ' · ' + e.note : ''),
+            hasTag: isVoid || !!e.pending,
+            tag: isVoid ? 'Voided · entered twice' : 'Not backed up yet',
+            tagCls: isVoid ? 'tag-outline' : 'tag-warn',
+            amount: (isBayad ? '−' : '+') + num(e.amt),
+            color: isVoid ? 'var(--faint)' : (isBayad ? 'var(--info)' : 'var(--text)'),
+            deco: isVoid ? 'line-through' : 'none',
+            aria: e.time + ', ' + e.who + ', ' + (isBayad ? 'bayad ' : 'utang ') + num(e.amt) + (isVoid ? ', voided' : '')
+          };
+        })
+      };
+    }).filter((d) => d.rows.length > 0);
+    const weekCounts = { all: 40, utang: 31, bayad: 9 };
+    const count = (id) => weekCounts[id];
+    const tabs = [['all', 'All'], ['utang', 'Utang'], ['bayad', 'Bayad']].map(([id, label]) => ({
+      label, n: count(id), sel: tab === id ? 'true' : 'false', pick: () => this.setState({ tab: id })
+    }));
+    return { theme: this.props.theme ?? 'light', days, tabs };
+  }
+}
+</script>
+</body>
+</html>

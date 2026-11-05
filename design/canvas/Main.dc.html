@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Atrazo · Dashboard</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="atrazo.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" data-theme="{{theme}}">
+
+<header class="bar">
+<span class="logo" aria-hidden="true"><svg width="28" height="28" viewBox="2 3 60 58"><defs><clipPath id="atzA7"><path clip-rule="evenodd" d="M32 6 L60 58 L4 58 Z M32 26.4 L38.2 38 L25.8 38 Z M22 45 L42 45 L49 58 L15 58 Z"></path></clipPath></defs><g clip-path="url(#atzA7)"><rect width="64" height="64" fill="#1C2024"></rect><path d="M0 0H64V31 Q60 27.5 56 31 Q52 27.5 48 31 Q44 27.5 40 31 Q36 27.5 32 31 Q28 27.5 24 31 Q20 27.5 16 31 Q12 27.5 8 31 Q4 27.5 0 31Z" fill="#F3D9B1"></path><path d="M0 0H64V17H0Z" fill="#1C2024"></path></g></svg></span>
+<div class="bar-title">
+<h1>Tindahan ni Aling Rosa</h1>
+<sc-if value="{{synced}}" hint-placeholder-val="{{ true }}"><span class="bar-sub" role="status"><span class="live" aria-hidden="true"></span>All entries backed up · 9:44 AM</span></sc-if>
+<sc-if value="{{offline}}" hint-placeholder-val="{{ false }}"><span class="bar-sub" role="status" style="color: #FFC72C"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M2 8.8a15 15 0 0 1 4.2-2.6M10.7 5.1A15 15 0 0 1 22 8.8M5 12.5a10 10 0 0 1 5.2-2.6M16.8 11a10 10 0 0 1 2.2 1.5M8.5 16.4a5 5 0 0 1 7 0M12 20h.01M3 3l18 18"></path></svg>Offline · 3 entries saved on this phone</span></sc-if>
+</div>
+<a href="Notifications.dc.html" class="icon-btn" aria-label="Notifications, 3 unread" style="color: #FFFFFF">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+<span class="count-badge mono">3</span>
+</a>
+</header>
+
+<main class="vscroll">
+<section class="hero" aria-labelledby="total-l" style="padding: 6px 16px 66px">
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span id="total-l" style="font-size: 13px; color: #9AA3AD">Total owed to you</span>
+<span class="disp mono" style="font-size: 38px; line-height: 1">₱12,450.00</span>
+</div>
+<span class="tag mono" style="background: rgba(255,255,255,.1); color: #E6E9ED">23 clients</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 16px; border-top: 1px solid rgba(255,255,255,.12)">
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 10px 0 0">
+<span style="font-size: 12px; color: #9AA3AD">Utang this week</span>
+<span class="mono" style="font-size: 16px; font-weight: 700">+₱2,960</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 10px 0 12px; border-left: 1px solid rgba(255,255,255,.12)">
+<span style="font-size: 12px; color: #9AA3AD">Bayad this week</span>
+<span class="mono" style="font-size: 16px; font-weight: 700; color: #7CC3E6">−₱2,140</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 2px; padding: 10px 0 0 12px; border-left: 1px solid rgba(255,255,255,.12)">
+<span style="font-size: 12px; color: #9AA3AD">Overdue 30+</span>
+<span class="mono" style="font-size: 16px; font-weight: 700; color: #FFB199">₱4,630</span>
+</div>
+</div>
+</section>
+
+<section class="card-raised" aria-labelledby="collect-h" style="position: relative; margin: -50px 12px 0; overflow: hidden">
+<div class="card-head">
+<div style="display: flex; flex-direction: column; gap: 1px">
+<h2 id="collect-h">Singilin today</h2>
+<span style="font-size: 12.5px; color: var(--muted)">Longest unpaid first</span>
+</div>
+<span class="tag tag-danger"><span class="pip"></span>5 overdue</span>
+</div>
+<ul>
+<sc-for list="{{collect}}" as="c" hint-placeholder-count="3">
+<li class="row">
+<a href="Ledger.dc.html" class="row-main" style="text-decoration: none; color: var(--text)">
+<span class="row-title">{{c.n}}</span>
+<span style="font-size: 12.5px; color: var(--danger); font-weight: 600">{{c.days}} days unpaid</span>
+</a>
+<span class="mono" style="flex: none; font-size: 15px; font-weight: 700">{{c.amount}}</span>
+<a href="sms:" class="btn btn-secondary btn-sm" aria-label="Send {{c.n}} a reminder"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path></svg>Remind</a>
+</li>
+</sc-for>
+</ul>
+<button type="button" onClick="{{showOverdue}}" style="display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 44px; border: 0; border-top: 1px solid var(--line-soft); background: var(--surface-2); color: var(--info); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer">See all 5 overdue<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></button>
+</section>
+
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 18px 12px 10px">
+<div style="display: flex; gap: 8px">
+<label for="client-search" class="sr">Search clients</label>
+<div class="input-wrap" style="flex: 1">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="position: absolute; left: 12px; color: var(--muted)"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+<input id="client-search" class="input" type="search" placeholder="Search 24 clients" value="{{q}}" onChange="{{onSearch}}" style="height: 44px; padding-left: 38px">
+</div>
+<a href="ClientForm.dc.html" class="btn btn-secondary" aria-label="Add a client" style="width: 44px; padding: 0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"></circle><path d="M2 21a7 7 0 0 1 14 0M19 8v6M16 11h6"></path></svg></a>
+</div>
+<div role="group" aria-label="Filter clients" class="hscroll" style="display: flex; gap: 6px">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="4">
+<button type="button" class="chip" aria-pressed="{{f.pressed}}" onClick="{{f.pick}}">{{f.label}}<span class="n">{{f.count}}</span></button>
+</sc-for>
+</div>
+</div>
+
+<section class="card" aria-label="Clients" style="margin: 0 12px; overflow: hidden">
+<div style="display: flex; align-items: center; justify-content: space-between; height: 38px; padding: 0 6px 0 14px; background: var(--surface-2); border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 600; color: var(--muted)">
+<span role="status">{{shown}} clients</span>
+<button type="button" onClick="{{cycleSort}}" style="display: inline-flex; align-items: center; gap: 5px; height: 34px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent; color: var(--text); font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer">{{sortLabel}}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5M7 9l5-5 5 5"></path></svg></button>
+</div>
+<ul>
+<sc-for list="{{clients}}" as="c" hint-placeholder-count="8">
+<li style="border-top: 1px solid var(--line-soft)">
+<a href="Ledger.dc.html" aria-label="{{c.aria}}" style="display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; color: var(--text); text-decoration: none">
+<span style="display: flex; align-items: flex-start; gap: 12px">
+<span class="row-main">
+<span class="row-title">{{c.n}}</span>
+<span style="display: flex; align-items: center; gap: 6px; min-height: 21px">
+<sc-if value="{{c.overdue}}" hint-placeholder-val="{{ false }}"><span class="tag tag-danger">{{c.days}}d unpaid</span></sc-if>
+<sc-if value="{{c.over}}" hint-placeholder-val="{{ false }}"><span class="tag tag-danger"><span class="pip"></span>Over limit</span></sc-if>
+<sc-if value="{{c.ahead}}" hint-placeholder-val="{{ false }}"><span class="tag tag-info">Paid ahead</span></sc-if>
+<sc-if value="{{c.plain}}" hint-placeholder-val="{{ true }}"><span class="row-sub">{{c.last}}</span></sc-if>
+</span>
+</span>
+<span style="flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 3px">
+<span class="mono" style="font-size: 15.5px; font-weight: 700; color: {{c.amountColor}}">{{c.amount}}</span>
+<span class="mono" style="font-size: 11.5px; color: var(--muted)">{{c.limitText}}</span>
+</span>
+</span>
+<span class="meter {{c.meterClass}}" aria-hidden="true"><span style="width: {{c.pct}}"></span></span>
+</a>
+</li>
+</sc-for>
+<sc-if value="{{noResults}}" hint-placeholder-val="{{ false }}">
+<li style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 18px 14px; border-top: 1px solid var(--line-soft)">
+<span style="font-size: 15px">No client matches “{{q}}”.</span>
+<a href="ClientForm.dc.html" class="btn btn-secondary btn-sm">Add “{{q}}” as a new client</a>
+</li>
+</sc-if>
+</ul>
+</section>
+<div style="height: 24px"></div>
+</main>
+
+<dc-import name="Nav" active="home" hint-size="390px,76px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"syncState":{"editor":"enum","options":["synced","offline"],"default":"synced"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const filter = st.filter || 'all';
+    const sortIdx = st.sortIdx || 0;
+    const qRaw = st.q || '';
+    const q = qRaw.trim().toLowerCase();
+    const money = (v) => '₱' + Math.abs(v).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const whole = (v) => '₱' + Math.abs(v).toLocaleString('en-PH', { maximumFractionDigits: 0 });
+    const raw = [
+      ['Aling Nena Santos', 2300, 0, 3000], ['Mang Jose Reyes', 1850, 12, 1500], ['Kuya Ben Dela Cruz', 1450, 64, 1500],
+      ['Ate Liza Mendoza', 1120, 33, 1500], ['Tito Ramon Garcia', 980.5, 2, 1500], ['Lorna Castillo', 980, 47, 1000],
+      ['Carla Villanueva', 760, 5, 1000], ['Pedring Navarro', 665, 36, 1000], ['Dodong Aquino', 415, 41, 500],
+      ['Bong Ramos', 320, 3, 1000], ['Inday Flores', 275.5, 8, 1000], ['Marites Cruz', 240, 1, 1000],
+      ['Nonoy Salazar', 210, 14, 1000], ['Precy Lim', 185, 6, 1000], ['Rey Domingo', 160, 4, 1000],
+      ['Susan Tan', 150, 11, 1000], ['Toto Villareal', 120, 9, 1000], ['Vilma Ocampo', 95, 2, 1000],
+      ['Weng Pascual', 60, 17, 1000], ['Yolly Manalo', 44, 20, 1000], ['Zeny Aguilar', 40, 7, 1000],
+      ['Ading Perez', 20, 3, 1000], ['Celso Rivera', 10, 25, 1000], ['Joy Bautista', -50, 1, 1000]
+    ];
+    const all = raw.map(([n, bal, days, limit]) => ({ n, bal, days, limit, over: bal > limit, overdue: bal > 0 && days >= 30, ahead: bal < 0 }));
+    const count = (fn) => all.filter(fn).length;
+    const fns = { all: () => true, overdue: (c) => c.overdue, over: (c) => c.over, ahead: (c) => c.ahead };
+    const filters = [
+      { id: 'all', label: 'All', count: all.length }, { id: 'overdue', label: 'Overdue', count: count(fns.overdue) },
+      { id: 'over', label: 'Over limit', count: count(fns.over) }, { id: 'ahead', label: 'Paid ahead', count: count(fns.ahead) }
+    ].map((f) => ({ ...f, pressed: f.id === filter ? 'true' : 'false', pick: () => this.setState({ filter: f.id }) }));
+    const sorts = [
+      { label: 'Highest balance', fn: (a, b) => b.bal - a.bal },
+      { label: 'Longest unpaid', fn: (a, b) => (b.bal > 0) - (a.bal > 0) || b.days - a.days },
+      { label: 'Most recent', fn: (a, b) => a.days - b.days },
+      { label: 'Name A–Z', fn: (a, b) => a.n.localeCompare(b.n) }
+    ];
+    const sort = sorts[sortIdx % sorts.length];
+    const list = all.filter(fns[filter]).filter((c) => !q || c.n.toLowerCase().includes(q)).sort(sort.fn);
+    const clients = list.map((c) => {
+      const pctNum = c.ahead ? 0 : Math.min(100, Math.round((c.bal / c.limit) * 100));
+      return {
+        ...c,
+        plain: !c.overdue && !c.over && !c.ahead,
+        last: c.days === 0 ? 'Last entry today' : (c.days === 1 ? 'Last entry yesterday' : 'Last entry ' + c.days + ' days ago'),
+        amount: c.ahead ? '(' + money(c.bal) + ')' : money(c.bal),
+        amountColor: c.ahead ? 'var(--info)' : 'var(--text)',
+        limitText: c.ahead ? 'paid ahead' : 'of ' + whole(c.limit),
+        pct: pctNum + '%',
+        meterClass: pctNum >= 90 ? 'is-danger' : '',
+        aria: c.n + (c.ahead ? ', paid ' + money(c.bal) + ' ahead' : ', owes ' + money(c.bal) + ' of ' + whole(c.limit) + ' limit') + (c.overdue ? ', ' + c.days + ' days unpaid' : '') + (c.over ? ', over limit' : '')
+      };
+    });
+    const collect = all.filter((c) => c.overdue).sort((x, y) => y.days - x.days).slice(0, 3).map((c) => ({ ...c, amount: money(c.bal) }));
+    const sync = this.props.syncState ?? 'synced';
+    return {
+      theme: this.props.theme ?? 'light',
+      filters, clients, collect, q: qRaw, shown: clients.length, noResults: clients.length === 0,
+      onSearch: (e) => this.setState({ q: e.target.value }),
+      sortLabel: sort.label,
+      cycleSort: () => this.setState({ sortIdx: (sortIdx + 1) % sorts.length }),
+      showOverdue: () => this.setState({ filter: 'overdue', sortIdx: 1 }),
+      synced: sync === 'synced', offline: sync === 'offline'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Atrazo · Client ledger</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="atrazo.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" data-theme="{{theme}}">
+
+<header class="bar" style="padding-left: 4px">
+<a href="Main.dc.html" class="icon-btn" aria-label="Back to clients" style="color: #FFFFFF"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a>
+<div class="bar-title">
+<h1>Aling Nena Santos</h1>
+<span class="bar-sub"><span class="mono">0917 123 4567</span> · client since Sep 12</span>
+</div>
+<a href="ClientForm.dc.html" class="icon-btn" aria-label="Edit client" style="color: #FFFFFF"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg></a>
+</header>
+
+<main class="vscroll">
+<div class="hero" style="height: 44px"></div>
+<section class="card-raised" aria-label="Balance" style="position: relative; margin: -36px 12px 0; overflow: hidden">
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 14px 14px 12px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<span style="font-size: 13px; color: var(--muted)">Balance</span>
+<span class="tag tag-success"><span class="pip"></span>Within limit</span>
+</div>
+<span class="disp mono" style="font-size: 36px; line-height: 1">₱2,300.00</span>
+<div style="display: flex; align-items: center; gap: 10px">
+<span class="meter" aria-hidden="true" style="flex: 1"><span style="width: 77%"></span></span>
+<span class="mono" style="font-size: 12.5px; color: var(--muted)">₱700.00 left of ₱3,000</span>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line-soft); background: var(--surface-2)">
+<div style="display: flex; flex-direction: column; gap: 1px; padding: 9px 12px 10px 14px"><span style="font-size: 11.5px; color: var(--muted)">Utang since paid</span><span class="mono" style="font-size: 14px; font-weight: 700">₱2,800.00</span></div>
+<div style="display: flex; flex-direction: column; gap: 1px; padding: 9px 12px 10px; border-left: 1px solid var(--line-soft)"><span style="font-size: 11.5px; color: var(--muted)">Bayad since paid</span><span class="mono" style="font-size: 14px; font-weight: 700; color: var(--info)">₱500.00</span></div>
+<div style="display: flex; flex-direction: column; gap: 1px; padding: 9px 12px 10px; border-left: 1px solid var(--line-soft)"><span style="font-size: 11.5px; color: var(--muted)">Last bayad</span><span style="font-size: 14px; font-weight: 700">8 days ago</span></div>
+</div>
+</section>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 12px 12px 4px">
+<a href="tel:09171234567" class="btn btn-secondary btn-sm"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"></path></svg>Call</a>
+<a href="sms:09171234567" class="btn btn-secondary btn-sm"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path></svg>Remind</a>
+<a href="Statement.dc.html" class="btn btn-secondary btn-sm"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6M8 13h8M8 17h5"></path></svg>Statement</a>
+</div>
+
+<section class="card" aria-label="Entries" style="margin: 8px 12px 0; overflow: hidden">
+<div class="tabs" role="tablist" aria-label="Show entries">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+<button type="button" role="tab" class="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}">{{t.label}}<span class="n">{{t.n}}</span></button>
+</sc-for>
+</div>
+<table class="tbl">
+<thead><tr><th scope="col" style="width: 64px">Date</th><th scope="col">Details</th><th scope="col" class="num" style="width: 82px">Amount ₱</th><th scope="col" class="num" style="width: 86px">Balance ₱</th></tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="9">
+<sc-if value="{{r.isGroup}}" hint-placeholder-val="{{ false }}">
+<tr class="grp"><td colspan="2">{{r.label}}</td><td colspan="2" class="num mono">{{r.net}}</td></tr>
+</sc-if>
+<sc-if value="{{r.isPaid}}" hint-placeholder-val="{{ false }}">
+<tr><td colspan="4" style="padding: 8px 12px; background: var(--success-tint); color: var(--on-success-tint); font-size: 12.5px; font-weight: 700"><span style="display: inline-flex; align-items: center; gap: 6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg>Fully paid · Sep 30 · balance ₱0.00</span></td></tr>
+</sc-if>
+<sc-if value="{{r.isEntry}}" hint-placeholder-val="{{ true }}">
+<tr class="{{r.cls}}">
+<td><span style="display: flex; flex-direction: column"><span style="font-weight: 600; white-space: nowrap">{{r.d}}</span><span style="font-size: 11.5px; color: var(--muted)">{{r.wd}}</span></span></td>
+<td><span style="display: flex; flex-direction: column; gap: 3px; align-items: flex-start"><span>{{r.note}}</span><sc-if value="{{r.hasTag}}" hint-placeholder-val="{{ false }}"><span class="tag {{r.tagCls}}">{{r.tag}}</span></sc-if></span></td>
+<td class="num"><span class="amt mono" style="font-weight: 700; color: {{r.color}}">{{r.amt}}</span></td>
+<td class="num mono" style="color: var(--muted)">{{r.bal}}</td>
+</tr>
+</sc-if>
+</sc-for>
+</tbody>
+</table>
+</section>
+<p style="padding: 12px 16px 24px; font-size: 12px; color: var(--muted)">Entries are never deleted. A mistake is voided and stays visible, so the balance can always be traced.</p>
+</main>
+
+<sc-if value="{{showToast}}" hint-placeholder-val="{{ true }}">
+<div class="toast-wrap" role="status" aria-live="polite">
+<div class="toast">
+<span class="toast-icon {{toastIconCls}}" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg></span>
+<span class="toast-body">
+<span class="toast-title">{{toastTitle}}</span>
+<span class="toast-sub mono">{{toastSub}}</span>
+</span>
+<button type="button" class="toast-act" onClick="{{dismiss}}">Undo</button>
+<button type="button" class="toast-close" aria-label="Dismiss" onClick="{{dismiss}}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+<span class="toast-timer" aria-hidden="true"></span>
+</div>
+</div>
+</sc-if>
+
+<div style="flex: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 10px 12px 18px; background: var(--surface); border-top: 1px solid var(--line)">
+<a href="QuickAdd.dc.html" class="btn btn-lg btn-primary"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Utang</a>
+<a href="QuickAdd.dc.html" class="btn btn-lg btn-info"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path></svg>Bayad</a>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"toast":{"editor":"enum","options":["utang","bayad","none"],"default":"utang"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  componentDidMount() { this.startTimer(); }
+  componentWillUnmount() { clearTimeout(this.t); }
+  startTimer() { clearTimeout(this.t); this.t = setTimeout(() => this.setState({ toastGone: true }), 3000); }
+  renderVals() {
+    const st = this.state || {};
+    const tab = st.tab || 'all';
+    const E = (d, wd, kind, note, amt, bal, extra) => ({ isEntry: true, d, wd, kind, note, amtNum: amt, bal, ...(extra || {}) });
+    const data = [
+      { isGroup: true, label: 'November', net: 'net +500.00' },
+      E('Nov 5', 'Thu', 'utang', 'Load', 150, '2,300.00', { tag: 'Not backed up yet', tagCls: 'tag-warn' }),
+      E('Nov 3', 'Tue', 'utang', 'Bigas 2kg, mantika', 350, '2,150.00'),
+      E('Nov 3', 'Tue', 'void', 'Softdrinks', 100, '—', { tag: 'Voided · entered twice', tagCls: 'tag-outline' }),
+      { isGroup: true, label: 'October', net: 'net +1,800.00' },
+      E('Oct 28', 'Wed', 'bayad', 'Bayad, cash', -500, '1,800.00'),
+      E('Oct 20', 'Tue', 'utang', 'LPG refill', 1500, '2,300.00'),
+      E('Oct 2', 'Fri', 'utang', 'Grocery', 800, '800.00'),
+      { isPaid: true },
+      { isGroup: true, label: 'September', net: 'net 0.00' },
+      E('Sep 30', 'Wed', 'bayad', 'Bayad, GCash', -650, '0.00'),
+      E('Sep 12', 'Sat', 'utang', 'Bigas 5kg', 650, '650.00')
+    ];
+    const entries = data.filter((r) => r.isEntry);
+    const fmt = (n) => (n < 0 ? '−' : '+') + Math.abs(n).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+    const rows = data
+      .filter((r) => !r.isEntry || tab === 'all' || r.kind === tab)
+      .filter((r) => tab === 'all' || r.isEntry)
+      .map((r) => r.isEntry ? {
+        ...r, isGroup: false, isPaid: false,
+        amt: fmt(r.amtNum),
+        color: r.kind === 'bayad' ? 'var(--info)' : (r.kind === 'void' ? 'var(--faint)' : 'var(--text)'),
+        cls: r.kind === 'void' ? 'void' : '',
+        hasTag: !!r.tag
+      } : { ...r, isEntry: false, isGroup: !!r.isGroup, isPaid: !!r.isPaid });
+    const count = (k) => entries.filter((e) => k === 'all' || e.kind === k).length;
+    const tabs = [['all', 'All'], ['utang', 'Utang'], ['bayad', 'Bayad']].map(([id, label]) => ({
+      label, n: count(id), sel: tab === id ? 'true' : 'false', pick: () => this.setState({ tab: id })
+    }));
+    const kind = this.props.toast ?? 'utang';
+    return {
+      theme: this.props.theme ?? 'light',
+      rows, tabs,
+      showToast: kind !== 'none' && !st.toastGone,
+      dismiss: () => { clearTimeout(this.t); this.setState({ toastGone: true }); },
+      toastIconCls: kind === 'bayad' ? 'bayad' : '',
+      toastTitle: kind === 'bayad' ? 'Bayad saved · Aling Nena' : 'Utang saved · Aling Nena',
+      toastSub: kind === 'bayad' ? '−₱500.00 · balance ₱1,800.00' : '+₱150.00 · balance ₱2,300.00'
+    };
+  }
+}
+</script>
+</body>
+</html>

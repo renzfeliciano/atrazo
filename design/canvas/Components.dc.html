@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Atrazo · UI kit</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="atrazo.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.kit-h{font-size:13px;font-weight:700;color:var(--muted);margin:0 0 10px}
+.kit-sec{display:flex;flex-direction:column;padding:20px 24px;border-top:1px solid var(--line)}
+.kit-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.sw{display:flex;flex-direction:column;gap:6px;width:112px}
+.sw-chip{height:44px;border-radius:8px;border:1px solid var(--line)}
+.sw-name{font-size:12.5px;font-weight:600;color:var(--text)}
+.sw-role{font-size:11.5px;color:var(--muted);line-height:1.3}
+</style>
+</helmet>
+<div style="width: 1280px; box-sizing: border-box; padding: 40px; display: flex; flex-direction: column; gap: 24px; background: #DCE0E5; font-family: 'Archivo', system-ui, sans-serif; color: #1C2024">
+<div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-size: 32px; font-weight: 700; font-stretch: 115%; letter-spacing: -0.01em">Atrazo UI kit</h1>
+<p style="margin: 0; max-width: 720px; font-size: 15px; line-height: 1.5; color: #3A4149">One set of components for every screen, in light and dark. Yellow is the one main action per screen, graphite carries utang, cerulean carries bayad, and rust only appears when something needs attention.</p>
+</div>
+<span style="font-size: 13px; color: #59626D">atrazo.css · tokens + components</span>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; align-items: start">
+<sc-for list="{{themes}}" as="t" hint-placeholder-count="2">
+<div class="app" data-theme="{{t.id}}" style="width: auto; height: auto; border-radius: 14px; box-shadow: 0 1px 2px rgba(16,22,28,.08)">
+<div class="bar" style="padding: 14px 24px; border-radius: 14px 14px 0 0">
+<span class="logo" aria-hidden="true"><svg width="28" height="28" viewBox="2 3 60 58"><defs><clipPath id="atzA5"><path clip-rule="evenodd" d="M32 6 L60 58 L4 58 Z M32 26.4 L38.2 38 L25.8 38 Z M22 45 L42 45 L49 58 L15 58 Z"></path></clipPath></defs><g clip-path="url(#atzA5)"><rect width="64" height="64" fill="#1C2024"></rect><path d="M0 0H64V31 Q60 27.5 56 31 Q52 27.5 48 31 Q44 27.5 40 31 Q36 27.5 32 31 Q28 27.5 24 31 Q20 27.5 16 31 Q12 27.5 8 31 Q4 27.5 0 31Z" fill="#F3D9B1"></path><path d="M0 0H64V17H0Z" fill="#1C2024"></path></g></svg></span>
+<div class="bar-title"><h1>{{t.label}} theme</h1><span class="bar-sub">App bar · graphite with notebook rules</span></div>
+</div>
+
+<section class="kit-sec" style="border-top: 0">
+<h2 class="kit-h">Colour roles</h2>
+<div class="kit-row" style="align-items: flex-start">
+<div class="sw"><span class="sw-chip" style="background: var(--bg)"></span><span class="sw-name">Background</span><span class="sw-role">Screen behind cards</span></div>
+<div class="sw"><span class="sw-chip" style="background: var(--surface)"></span><span class="sw-name">Surface</span><span class="sw-role">Cards, sheets, nav</span></div>
+<div class="sw"><span class="sw-chip" style="background: var(--ink)"></span><span class="sw-name">Graphite</span><span class="sw-role">App bars, headers</span></div>
+<div class="sw"><span class="sw-chip" style="background: var(--brand)"></span><span class="sw-name">Pencil</span><span class="sw-role">One main action</span></div>
+<div class="sw"><span class="sw-chip" style="background: var(--text)"></span><span class="sw-name">Utang</span><span class="sw-role">Text and amounts owed</span></div>
+<div class="sw"><span class="sw-chip" style="background: var(--info)"></span><span class="sw-name">Bayad</span><span class="sw-role">Payments, links</span></div>
+<div class="sw"><span class="sw-chip" style="background: var(--danger)"></span><span class="sw-name">Rust</span><span class="sw-role">Overdue, over limit, errors</span></div>
+<div class="sw"><span class="sw-chip" style="background: var(--success)"></span><span class="sw-name">Leaf</span><span class="sw-role">Fully paid, backed up</span></div>
+</div>
+</section>
+
+<section class="kit-sec">
+<h2 class="kit-h">Buttons</h2>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div class="kit-row">
+<button type="button" class="btn btn-primary">+ Utang</button>
+<button type="button" class="btn btn-info">− Bayad</button>
+<button type="button" class="btn btn-secondary">Statement</button>
+<button type="button" class="btn btn-ghost">Cancel</button>
+<button type="button" class="btn btn-danger">Sign out phone</button>
+</div>
+<div class="kit-row">
+<button type="button" class="btn btn-primary btn-lg">Save utang · ₱150.00</button>
+<button type="button" class="btn btn-secondary btn-sm"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"></path></svg>Remind</button>
+</div>
+<div class="kit-row">
+<button type="button" class="btn" disabled>Enter an amount</button>
+<button type="button" class="btn btn-primary" aria-busy="true"><span class="spin" aria-hidden="true"></span>Saving…</button>
+<button type="button" class="btn btn-secondary" aria-busy="true"><span class="spin" aria-hidden="true"></span>Backing up</button>
+</div>
+</div>
+</section>
+
+<section class="kit-sec">
+<h2 class="kit-h">Status tags</h2>
+<div class="kit-row">
+<span class="tag tag-danger">64d unpaid</span>
+<span class="tag tag-danger"><span class="pip"></span>Over limit</span>
+<span class="tag tag-info">Paid ahead</span>
+<span class="tag tag-success"><span class="pip"></span>Fully paid</span>
+<span class="tag tag-warn">Not backed up yet</span>
+<span class="tag tag-outline">Voided</span>
+<span class="tag mono">23 clients</span>
+</div>
+</section>
+
+<section class="kit-sec">
+<h2 class="kit-h">Inline messages</h2>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div class="banner banner-warn" role="status"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M2 8.8a15 15 0 0 1 4.2-2.6M10.7 5.1A15 15 0 0 1 22 8.8M8.5 16.4a5 5 0 0 1 7 0M12 20h.01M3 3l18 18"></path></svg><span><strong>You're offline.</strong> 3 entries are saved on this phone and will back up when you're online.</span></div>
+<div class="banner banner-danger" role="alert"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg><span>This puts Mang Jose <strong class="mono">₱350.00</strong> over his limit. You can still save it.</span></div>
+<div class="banner banner-info"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg><span>Add Atrazo to your home screen so your phone never clears the records.</span><button type="button" class="banner-act">Install</button></div>
+<div class="banner banner-success" role="status"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg><span>Restored 24 clients and 1,240 entries on this phone.</span></div>
+</div>
+</section>
+
+<section class="kit-sec">
+<h2 class="kit-h">Toasts · close by themselves after 3 seconds</h2>
+<div style="display: flex; flex-direction: column; gap: 10px; max-width: 380px">
+<div class="toast" role="status" style="animation: none">
+<span class="toast-icon" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg></span>
+<span class="toast-body"><span class="toast-title">Utang saved · Aling Nena</span><span class="toast-sub mono">+₱150.00 · balance ₱2,300.00</span></span>
+<button type="button" class="toast-act">Undo</button>
+<button type="button" class="toast-close" aria-label="Dismiss"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+<span class="toast-timer" aria-hidden="true" style="animation: none; transform: scaleX(.62)"></span>
+</div>
+<div class="toast" role="status" style="animation: none">
+<span class="toast-icon bayad" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg></span>
+<span class="toast-body"><span class="toast-title">Bayad saved · Kuya Ben</span><span class="toast-sub mono">−₱500.00 · balance ₱950.00</span></span>
+<button type="button" class="toast-act">Undo</button>
+<button type="button" class="toast-close" aria-label="Dismiss"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+<span class="toast-timer" aria-hidden="true" style="animation: none; transform: scaleX(.3)"></span>
+</div>
+<div class="toast" role="alert" style="animation: none">
+<span class="toast-icon" aria-hidden="true" style="background: #B93815"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 7v6M12 17h.01"></path></svg></span>
+<span class="toast-body"><span class="toast-title">Couldn't back up</span><span class="toast-sub">Entries are safe on this phone.</span></span>
+<button type="button" class="toast-act">Retry</button>
+<button type="button" class="toast-close" aria-label="Dismiss"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg></button>
+</div>
+</div>
+</section>
+
+<section class="kit-sec">
+<h2 class="kit-h">Form fields</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<div class="field"><label class="label" for="k-lim-{{t.id}}">Credit limit</label><div class="input-wrap"><span class="pre">₱</span><input id="k-lim-{{t.id}}" class="input mono" value="1,000.00"></div><span class="help">Store default ₱1,000.00</span></div>
+<div class="field"><label class="label" for="k-name-{{t.id}}">Client name</label><input id="k-name-{{t.id}}" class="input input-error" value="" placeholder="e.g. Aling Nena Santos" aria-invalid="true"><span class="help-error"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg>Enter the client's name</span></div>
+</div>
+<div class="kit-row" style="margin-top: 14px; justify-content: space-between">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 14.5px; font-weight: 500">Overdue alerts</span><span class="help">When a balance passes 30 days</span></span>
+<button type="button" class="switch" role="switch" aria-checked="true" aria-label="Overdue alerts"></button>
+</div>
+</section>
+
+<section class="kit-sec">
+<h2 class="kit-h">Selection</h2>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div class="seg seg-entry" style="max-width: 360px"><button type="button" class="is-utang" aria-pressed="true">+ Utang</button><button type="button" class="is-bayad" aria-pressed="false">− Bayad</button></div>
+<div class="seg" style="max-width: 360px"><button type="button" aria-pressed="false">Light</button><button type="button" aria-pressed="true">Dark</button><button type="button" aria-pressed="false">System</button></div>
+<div class="kit-row"><button type="button" class="chip" aria-pressed="true">All<span class="n">24</span></button><button type="button" class="chip" aria-pressed="false">Overdue<span class="n">5</span></button><button type="button" class="chip" aria-pressed="false">Over limit<span class="n">1</span></button></div>
+<div class="card" style="overflow: hidden"><div class="tabs"><button type="button" class="tab" aria-selected="true">All<span class="n">8</span></button><button type="button" class="tab" aria-selected="false">Utang<span class="n">5</span></button><button type="button" class="tab" aria-selected="false">Bayad<span class="n">2</span></button></div></div>
+</div>
+</section>
+
+<section class="kit-sec">
+<h2 class="kit-h">Table</h2>
+<div class="card" style="overflow: hidden">
+<table class="tbl">
+<thead><tr><th scope="col" style="width: 72px">Date</th><th scope="col">Details</th><th scope="col" class="num" style="width: 96px">Amount ₱</th><th scope="col" class="num" style="width: 100px">Balance ₱</th></tr></thead>
+<tbody>
+<tr><td style="font-weight: 600">Nov 5</td><td>Load <span class="tag tag-warn">Not backed up yet</span></td><td class="num mono" style="font-weight: 700">+150.00</td><td class="num mono muted">2,300.00</td></tr>
+<tr class="void"><td style="font-weight: 600">Nov 3</td><td>Softdrinks <span class="tag tag-outline">Voided</span></td><td class="num"><span class="amt mono">+100.00</span></td><td class="num">—</td></tr>
+<tr><td style="font-weight: 600">Oct 28</td><td>Bayad, cash</td><td class="num mono bayad" style="font-weight: 700">−500.00</td><td class="num mono muted">1,800.00</td></tr>
+</tbody>
+<tfoot><tr><td colspan="2">Balance due</td><td colspan="2" class="num mono disp" style="font-size: 17px">₱2,300.00</td></tr></tfoot>
+</table>
+</div>
+</section>
+
+<section class="kit-sec">
+<h2 class="kit-h">Calculator keys</h2>
+<div class="pad" style="max-width: 360px">
+<button type="button" class="key key-fn">C</button><button type="button" class="key">7</button><button type="button" class="key key-op">×</button><button type="button" class="key key-eq">=</button>
+</div>
+</section>
+</div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":2260}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themes: [{ id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }] };
+  }
+}
+</script>
+</body>
+</html>

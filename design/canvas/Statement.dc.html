@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Atrazo · Statement of account</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="atrazo.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" data-theme="{{theme}}">
+
+<header class="bar" style="padding-left: 4px">
+<a href="Ledger.dc.html" class="icon-btn" aria-label="Back to Aling Nena Santos" style="color: #FFFFFF"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a>
+<div class="bar-title">
+<h1>Statement</h1>
+<span class="bar-sub">Aling Nena Santos</span>
+</div>
+<button type="button" class="icon-btn" aria-label="Share statement" style="color: #FFFFFF"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"></path></svg></button>
+</header>
+
+<main class="vscroll">
+<div style="padding: 12px 12px 0">
+<div class="seg" role="group" aria-label="Statement period">
+<sc-for list="{{periods}}" as="p" hint-placeholder-count="3">
+<button type="button" aria-pressed="{{p.pressed}}" onClick="{{p.pick}}" style="font-size: 13px">{{p.label}}</button>
+</sc-for>
+</div>
+</div>
+
+<article class="card-raised" aria-label="Statement of account" style="margin: 12px 12px 0; overflow: hidden">
+<div style="display: flex; align-items: center; gap: 10px; padding: 14px 14px 12px; border-bottom: 1px solid var(--line-soft)">
+<span class="logo" aria-hidden="true" style="width: 32px; height: 32px; border-radius: 8px"><svg width="24" height="24" viewBox="2 3 60 58"><defs><clipPath id="atzA10"><path clip-rule="evenodd" d="M32 6 L60 58 L4 58 Z M32 26.4 L38.2 38 L25.8 38 Z M22 45 L42 45 L49 58 L15 58 Z"></path></clipPath></defs><g clip-path="url(#atzA10)"><rect width="64" height="64" fill="#1C2024"></rect><path d="M0 0H64V31 Q60 27.5 56 31 Q52 27.5 48 31 Q44 27.5 40 31 Q36 27.5 32 31 Q28 27.5 24 31 Q20 27.5 16 31 Q12 27.5 8 31 Q4 27.5 0 31Z" fill="#F3D9B1"></path><path d="M0 0H64V17H0Z" fill="#1C2024"></path></g></svg></span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+<span style="font-size: 15px; font-weight: 700; font-stretch: 112%">Tindahan ni Aling Rosa</span>
+<span style="font-size: 12px; color: var(--muted)">Statement of account</span>
+</div>
+<span class="tag tag-outline mono">#ST-1105</span>
+</div>
+
+<dl style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; margin: 0; padding: 12px 14px; background: var(--surface-2); border-bottom: 1px solid var(--line)">
+<div style="display: flex; flex-direction: column; gap: 2px"><dt style="font-size: 11.5px; color: var(--muted)">Client</dt><dd style="margin: 0; font-size: 14px; font-weight: 600">Aling Nena Santos</dd></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><dt style="font-size: 11.5px; color: var(--muted)">Phone</dt><dd class="mono" style="margin: 0; font-size: 14px; font-weight: 600">0917 123 4567</dd></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><dt style="font-size: 11.5px; color: var(--muted)">Period</dt><dd style="margin: 0; font-size: 14px; font-weight: 600">{{periodText}}</dd></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><dt style="font-size: 11.5px; color: var(--muted)">Opening balance</dt><dd class="mono" style="margin: 0; font-size: 14px; font-weight: 600">₱{{opening}}</dd></div>
+</dl>
+
+<table class="tbl" style="font-size: 13px">
+<caption class="sr">Entries for {{periodText}}</caption>
+<colgroup><col style="width: 62px"><col><col style="width: 80px"><col style="width: 84px"></colgroup>
+<thead><tr><th scope="col" style="position: static">Date</th><th scope="col" style="position: static">Details</th><th scope="col" class="num" style="position: static">Amount ₱</th><th scope="col" class="num" style="position: static">Balance ₱</th></tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+<tr>
+<td style="font-weight: 600; white-space: nowrap">{{r.d}}</td>
+<td><span style="display: flex; flex-direction: column; gap: 1px"><span>{{r.note}}</span><span style="font-size: 11.5px; color: {{r.kindColor}}; font-weight: 600">{{r.kindLabel}}</span></span></td>
+<td class="num mono" style="font-weight: 700; color: {{r.color}}">{{r.amt}}</td>
+<td class="num mono" style="color: var(--muted)">{{r.bal}}</td>
+</tr>
+</sc-for>
+</tbody>
+<tfoot>
+<tr><td colspan="2" style="padding-top: 10px; font-weight: 600">Total utang</td><td colspan="2" class="num mono" style="padding-top: 10px">{{totUtang}}</td></tr>
+<tr><td colspan="2" style="border-top: 0; padding-top: 2px; font-weight: 600">Total bayad</td><td colspan="2" class="num mono" style="border-top: 0; padding-top: 2px; color: var(--info)">{{totBayad}}</td></tr>
+<tr><td colspan="2" style="border-top: 1px dashed var(--line-strong); padding-top: 10px; padding-bottom: 12px; font-size: 14px; font-weight: 700; vertical-align: middle">Balance due</td><td colspan="2" class="num" style="border-top: 1px dashed var(--line-strong); padding-top: 10px; padding-bottom: 12px; vertical-align: middle"><span class="disp mono" style="font-size: 24px">₱2,300.00</span></td></tr>
+</tfoot>
+</table>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px 12px; border-top: 1px solid var(--line-soft); background: var(--surface-2); font-size: 11.5px; color: var(--muted)">
+<span>Generated by Atrazo · Nov 5, 2026, 9:50 AM</span>
+<span class="mono">Page 1 of 1</span>
+</div>
+</article>
+
+<p style="padding: 12px 16px 24px; font-size: 12px; line-height: 1.5; color: var(--muted)">Voided entries are left out of the statement. The balance due matches Nena’s ledger as of the time shown.</p>
+</main>
+
+<div style="flex: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 10px 12px 18px; background: var(--surface); border-top: 1px solid var(--line)">
+<button type="button" class="btn btn-lg btn-secondary"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"></path></svg>Copy as text</button>
+<button type="button" class="btn btn-lg btn-primary"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-5-5L5 21"></path></svg>Send as image</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const period = st.period || 'paid';
+    const fmt2 = (n) => Math.abs(n).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const all = [
+      { d: 'Sep 12', note: 'Bigas 5kg', amt: 650 },
+      { d: 'Sep 30', note: 'Bayad, GCash', amt: -650 },
+      { d: 'Oct 2', note: 'Grocery', amt: 800 },
+      { d: 'Oct 20', note: 'LPG refill', amt: 1500 },
+      { d: 'Oct 28', note: 'Bayad, cash', amt: -500 },
+      { d: 'Nov 3', note: 'Bigas 2kg, mantika', amt: 350 },
+      { d: 'Nov 5', note: 'Load', amt: 150 }
+    ];
+    const cfg = {
+      paid: { from: 2, text: 'Oct 2 – Nov 5, 2026' },
+      month: { from: 5, text: 'Nov 1 – Nov 5, 2026' },
+      all: { from: 0, text: 'Sep 12 – Nov 5, 2026' }
+    }[period];
+    let bal = all.slice(0, cfg.from).reduce((a, e) => a + e.amt, 0);
+    const opening = bal;
+    let u = 0, b = 0;
+    const rows = all.slice(cfg.from).map((e) => {
+      bal += e.amt;
+      if (e.amt > 0) u += e.amt; else b -= e.amt;
+      const isB = e.amt < 0;
+      return {
+        d: e.d, note: e.note,
+        kindLabel: isB ? 'Bayad' : 'Utang',
+        kindColor: isB ? 'var(--info)' : 'var(--muted)',
+        amt: (isB ? '−' : '+') + fmt2(e.amt),
+        color: isB ? 'var(--info)' : 'var(--text)',
+        bal: fmt2(bal)
+      };
+    });
+    const periods = [['paid', 'Since fully paid'], ['month', 'This month'], ['all', 'All time']].map(([id, label]) => ({
+      label, pressed: period === id ? 'true' : 'false', pick: () => this.setState({ period: id })
+    }));
+    return {
+      theme: this.props.theme ?? 'light',
+      periods, rows,
+      periodText: cfg.text,
+      opening: fmt2(opening),
+      totUtang: '₱' + fmt2(u),
+      totBayad: '₱' + fmt2(b)
+    };
+  }
+}
+</script>
+</body>
+</html>

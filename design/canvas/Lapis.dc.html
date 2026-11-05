@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Lapis · Atrazo's hero</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}</style>
+</helmet>
+<svg width="{{size}}" height="{{size}}" viewBox="0 0 200 210" fill="none" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="{{label}}" style="display: block; overflow: visible">
+<sc-if value="{{grounded}}" hint-placeholder-val="{{ true }}"><ellipse cx="100" cy="200" rx="34" ry="4.5" fill="{{shadow}}"></ellipse></sc-if>
+<sc-if value="{{isFly}}" hint-placeholder-val="{{ false }}"><path d="M18 150 L52 128 M12 176 L46 154 M32 198 L60 180" stroke="{{speed}}" stroke-width="4"></path></sc-if>
+<g transform="{{tilt}}">
+<!-- Cape: cerulean, the Bayad colour (good news), darker lining at the edges. Gloves are white so hands read against it. -->
+<path d="{{cape}}" fill="#0B6E99" stroke="#1C2024" stroke-width="3"></path>
+<path d="{{lining}}" fill="#085679"></path>
+<!-- Pencil body -->
+<rect x="70" y="22" width="60" height="26" rx="9" fill="#E88A80" stroke="#1C2024" stroke-width="3"></rect>
+<rect x="70" y="46" width="60" height="18" fill="#AEB6BF" stroke="#1C2024" stroke-width="3"></rect>
+<path d="M71.5 55h57" stroke="#8A939D" stroke-width="2"></path>
+<rect x="70" y="64" width="60" height="84" fill="#FFC72C" stroke="#1C2024" stroke-width="3"></rect>
+<rect x="91" y="65.5" width="18" height="81" fill="#FFD45C"></rect>
+<rect x="111" y="65.5" width="17.5" height="81" fill="#F2B705"></rect>
+<path d="M70 148 L100 188 L130 148 Z" fill="#F3D9B1" stroke="#1C2024" stroke-width="3"></path>
+<path d="M91 176 L100 188 L109 176 Z" fill="#1C2024"></path>
+<!-- Domino mask with tied tails -->
+<path d="M131 94 Q146 88 153 97 M131 99 Q145 104 148 114" stroke="#1C2024" stroke-width="4"></path>
+<path d="M67 90 Q84 85 100 93 Q116 85 133 90 L133 104 Q116 100 100 105 Q84 100 67 104 Z" fill="#1C2024"></path>
+<sc-if value="{{eyesOpen}}" hint-placeholder-val="{{ true }}">
+<ellipse cx="87" cy="97" rx="7.5" ry="5.2" fill="#FFFFFF"></ellipse><ellipse cx="113" cy="97" rx="7.5" ry="5.2" fill="#FFFFFF"></ellipse>
+<circle cx="{{pupilL}}" cy="97.5" r="3.1" fill="#1C2024"></circle><circle cx="{{pupilR}}" cy="97.5" r="3.1" fill="#1C2024"></circle>
+</sc-if>
+<sc-if value="{{eyesHappy}}" hint-placeholder-val="{{ false }}"><path d="M81 99 Q87 92 93 99 M107 99 Q113 92 119 99" stroke="#FFFFFF" stroke-width="3"></path></sc-if>
+<sc-if value="{{eyesClosed}}" hint-placeholder-val="{{ false }}"><path d="M81 96 Q87 101 93 96 M107 96 Q113 101 119 96" stroke="#FFFFFF" stroke-width="3"></path></sc-if>
+<sc-if value="{{isWorried}}" hint-placeholder-val="{{ false }}"><path d="M80 82 L93 78 M120 82 L107 78" stroke="#1C2024" stroke-width="3"></path></sc-if>
+<!-- Mouth -->
+<path d="{{mouth}}" stroke="#1C2024" stroke-width="3" fill="{{mouthFill}}"></path>
+<!-- Chest emblem: the Atrazo A -->
+<circle cx="100" cy="133" r="13.5" fill="#FFFFFF" stroke="#1C2024" stroke-width="3"></circle>
+<path transform="translate(89.6 123.2) scale(0.325)" fill="#1C2024" fill-rule="evenodd" d="M32 6 L60 58 L4 58 Z M32 26.4 L38.2 38 L25.8 38 Z M22 45 L42 45 L49 58 L15 58 Z"></path>
+<!-- Arms and gloves -->
+<path d="{{arms}}" stroke="{{armColor}}" stroke-width="4"></path>
+<sc-for list="{{gloves}}" as="g" hint-placeholder-count="2">
+<circle cx="{{g.x}}" cy="{{g.y}}" r="6.5" fill="#FFFFFF" stroke="#1C2024" stroke-width="2.5"></circle>
+</sc-for>
+</g>
+<sc-if value="{{isCheer}}" hint-placeholder-val="{{ false }}"><path d="M30 34 l4 9 9 4 -9 4 -4 9 -4 -9 -9 -4 9 -4z M168 22 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" fill="#FFC72C" stroke="#1C2024" stroke-width="2"></path></sc-if>
+<sc-if value="{{isSleep}}" hint-placeholder-val="{{ false }}"><text x="142" y="44" font-family="Archivo, sans-serif" font-weight="800" font-size="22" fill="{{armColor}}">z</text><text x="160" y="24" font-family="Archivo, sans-serif" font-weight="800" font-size="15" fill="{{armColor}}">z</text></sc-if>
+<sc-if value="{{isWorried}}" hint-placeholder-val="{{ false }}"><text x="150" y="52" font-family="Archivo, sans-serif" font-weight="800" font-size="34" fill="#B93815">!</text></sc-if>
+</svg>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"pose":{"editor":"enum","options":["hero","wave","cheer","fly","sleep","worried"],"default":"hero"},"size":{"editor":"int","default":200,"min":40,"max":400},"onDark":{"editor":"boolean","default":false},"$preview":{"width":220,"height":220}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const pose = this.props.pose ?? 'hero';
+    const onDark = !!this.props.onDark;
+    const hang = 'M72 54 C58 86 50 132 48 172 Q66 165 82 174 Q100 167 118 174 Q134 165 152 172 C150 132 142 86 128 54 Z';
+    const hangLining = 'M72 56 C62 88 55 132 53 169 Q59 167 64 168 C65 132 69 96 76 62 Z M128 56 C138 88 145 132 147 169 Q141 167 136 168 C135 132 131 96 124 62 Z';
+    const flare = 'M72 54 C44 80 26 128 16 176 Q40 166 62 180 Q100 168 138 180 Q160 166 184 176 C174 128 156 80 128 54 Z';
+    const flareLining = 'M72 56 C50 84 34 128 24 172 Q34 169 42 171 C50 128 62 90 78 62 Z M128 56 C150 84 166 128 176 172 Q166 169 158 171 C150 128 138 90 122 62 Z';
+    const trail = 'M72 56 C58 104 66 150 50 208 Q76 198 92 210 Q112 192 134 202 C126 150 138 104 128 56 Z';
+    const P = {
+      hero:    { cape: hang, lining: hangLining, arms: 'M70 108 Q48 116 57 136 M130 108 Q152 116 143 136', gloves: [[59, 138], [141, 138]], mouth: 'M89 113 Q100 121 111 113', eyes: 'open', label: 'Lapis the pencil superhero, hands on hips, cape and mask, with the Atrazo A on the chest' },
+      wave:    { cape: hang, lining: hangLining, arms: 'M70 108 Q48 116 57 136 M130 104 Q148 92 151 70', gloves: [[59, 138], [152, 65]], mouth: 'M89 113 Q100 121 111 113', eyes: 'open', label: 'Lapis the pencil superhero, waving' },
+      cheer:   { cape: flare, lining: flareLining, arms: 'M70 104 Q52 88 50 64 M130 104 Q148 88 150 64', gloves: [[50, 59], [150, 59]], mouth: 'M88 111 Q100 115 112 111 Q108 125 100 125 Q92 125 88 111 Z', mouthFill: '#1C2024', eyes: 'happy', label: 'Lapis the pencil superhero, cheering with both fists up' },
+      fly:     { cape: trail, lining: '', arms: 'M130 104 Q150 82 148 54 M70 112 Q60 130 63 146', gloves: [[148, 49], [63, 149]], mouth: 'M89 113 Q100 121 111 113', eyes: 'open', tilt: 'rotate(32 100 110)', label: 'Lapis the pencil superhero, flying fist first' },
+      sleep:   { cape: hang, lining: hangLining, arms: 'M70 112 Q60 126 63 142 M130 112 Q140 126 137 142', gloves: [[63, 145], [137, 145]], mouth: 'M95 115 Q100 118 105 115', eyes: 'closed', label: 'Lapis the pencil superhero, asleep' },
+      worried: { cape: hang, lining: hangLining, arms: 'M70 108 Q56 112 60 124 M130 108 Q144 112 140 124', gloves: [[62, 126], [138, 126]], mouth: 'M96 116 a4 5 0 1 0 8 0 a4 5 0 1 0 -8 0', eyes: 'open', worried: true, label: 'Lapis the pencil superhero, looking concerned' }
+    };
+    const p = P[pose] || P.hero;
+    const size = this.props.size ?? 200;
+    return {
+      size, label: p.label,
+      cape: p.cape, lining: p.lining || 'M0 0',
+      arms: p.arms, gloves: p.gloves.map(([x, y]) => ({ x, y })),
+      mouth: p.mouth, mouthFill: p.mouthFill || 'none',
+      tilt: p.tilt || '',
+      eyesOpen: p.eyes === 'open', eyesHappy: p.eyes === 'happy', eyesClosed: p.eyes === 'closed',
+      pupilL: pose === 'worried' ? 86 : 88.5, pupilR: pose === 'worried' ? 112 : 114.5,
+      isWorried: !!p.worried, isCheer: pose === 'cheer', isSleep: pose === 'sleep', isFly: pose === 'fly',
+      grounded: pose !== 'fly',
+      armColor: onDark ? '#E6E9ED' : '#1C2024',
+      shadow: onDark ? 'rgba(0,0,0,.35)' : 'rgba(28,32,36,.12)',
+      speed: onDark ? '#59626D' : '#C4CAD1'
+    };
+  }
+}
+</script>
+</body>
+</html>

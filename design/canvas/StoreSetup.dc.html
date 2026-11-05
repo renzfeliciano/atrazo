@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Atrazo · Set up your store</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="atrazo.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.app .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:2px 16px 14px}
+.step{display:flex;flex-direction:column;gap:6px;font-size:11.5px;font-weight:600;color:var(--on-ink-3)}
+.step i{display:block;height:3px;border-radius:2px;background:rgba(255,255,255,.16)}
+.step.is-done i,.step.is-current i{background:#FFC72C}
+.step.is-current{color:#FFFFFF}
+.step.is-done{color:var(--on-ink-2)}
+.code-row{display:flex;align-items:center;gap:16px;height:50px;padding:0 16px;border-top:1px solid var(--line-soft)}
+.code-row:first-child{border-top:0}
+.check{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:10px 14px;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--surface);color:var(--text);font:inherit;font-size:15px;font-weight:600;text-align:left;cursor:pointer}
+.check[aria-checked=true]{border-color:var(--success);background:var(--success-tint)}
+.box{flex:none;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;border:2px solid var(--line-strong);background:var(--surface);color:#FFFFFF}
+.check[aria-checked=true] .box{border-color:var(--success);background:var(--success)}
+</style>
+</helmet>
+<div class="app" data-theme="{{theme}}">
+
+<header class="hero" style="flex: none">
+<div class="bar" style="background: transparent; padding-left: 4px">
+<sc-if value="{{isName}}" hint-placeholder-val="{{ false }}">
+<a href="SignIn.dc.html" class="icon-btn" aria-label="Back to welcome" style="color: #FFFFFF"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a>
+</sc-if>
+<sc-if value="{{notName}}" hint-placeholder-val="{{ true }}">
+<button type="button" class="icon-btn" aria-label="Back" onClick="{{back}}" style="color: #FFFFFF"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button>
+</sc-if>
+<div class="bar-title">
+<h1>Set up your store</h1>
+<span class="bar-sub">Step {{stepNum}} of 3</span>
+</div>
+</div>
+<ol class="steps" aria-label="Setup progress">
+<sc-for list="{{stepList}}" as="s" hint-placeholder-count="3">
+<li class="step {{s.cls}}" aria-current="{{s.cur}}"><i aria-hidden="true"></i>{{s.label}}</li>
+</sc-for>
+</ol>
+</header>
+
+<sc-if value="{{isName}}" hint-placeholder-val="{{ false }}">
+<main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; padding: 20px 16px 16px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 class="disp" style="font-size: 22px; line-height: 1.2">Name your store</h2>
+<p style="font-size: 14px; line-height: 1.5; color: var(--text-2)">It appears at the top of the app and on statements you send to clients.</p>
+</div>
+<div class="card" style="display: flex; flex-direction: column; gap: 16px; padding: 16px 14px">
+<div class="field">
+<label class="label" for="store-name">Store name</label>
+<input id="store-name" class="input" value="Tindahan ni Aling Rosa" autocomplete="organization">
+</div>
+<div class="field">
+<label class="label" for="store-limit">Default credit limit <span class="opt">· optional</span></label>
+<div class="input-wrap"><span class="pre">₱</span><input id="store-limit" class="input mono" inputmode="decimal" value="1,000.00"></div>
+<span class="help">New clients start with this limit. You can set a different one per client.</span>
+</div>
+</div>
+<section aria-label="Preview" style="display: flex; flex-direction: column; gap: 8px">
+<span class="section-label">Preview</span>
+<div class="card" style="overflow: hidden">
+<div class="bar" style="min-height: 56px; border-radius: 0">
+<span class="logo" aria-hidden="true" style="width: 32px; height: 32px"><svg width="24" height="24" viewBox="2 3 60 58"><defs><clipPath id="atzA11"><path clip-rule="evenodd" d="M32 6 L60 58 L4 58 Z M32 26.4 L38.2 38 L25.8 38 Z M22 45 L42 45 L49 58 L15 58 Z"></path></clipPath></defs><g clip-path="url(#atzA11)"><rect width="64" height="64" fill="#1C2024"></rect><path d="M0 0H64V31 Q60 27.5 56 31 Q52 27.5 48 31 Q44 27.5 40 31 Q36 27.5 32 31 Q28 27.5 24 31 Q20 27.5 16 31 Q12 27.5 8 31 Q4 27.5 0 31Z" fill="#F3D9B1"></path><path d="M0 0H64V17H0Z" fill="#1C2024"></path></g></svg></span>
+<div class="bar-title"><span style="font-size: 15.5px; font-weight: 700; font-stretch: 112%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Tindahan ni Aling Rosa</span><span class="bar-sub"><span class="live" aria-hidden="true"></span>Encrypted backups on</span></div>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: baseline; padding: 12px 14px">
+<span style="font-size: 13px; color: var(--muted)">Total owed to you</span>
+<span class="disp mono" style="font-size: 20px; color: var(--faint)">₱0.00</span>
+</div>
+</div>
+</section>
+<div class="banner banner-info">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10.5" rx="2"></rect><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"></path></svg>
+<span>No email or phone number needed. Next, Atrazo makes a recovery code that only you will have.</span>
+</div>
+<button type="button" class="btn btn-primary btn-lg btn-block" onClick="{{toCode}}" style="margin-top: auto">Continue</button>
+</main>
+</sc-if>
+
+<sc-if value="{{isCode}}" hint-placeholder-val="{{ true }}">
+<main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px 16px 16px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 class="disp" style="font-size: 22px; line-height: 1.2">Your recovery code</h2>
+<p style="font-size: 14px; line-height: 1.5; color: var(--text-2)">Use it to open your store on a new phone. It also unlocks your encrypted backups.</p>
+</div>
+<section class="card-raised" aria-label="Recovery code" style="overflow: hidden">
+<ol>
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="5">
+<li class="code-row">
+<span class="mono" style="width: 16px; font-size: 12.5px; font-weight: 600; color: var(--muted)">{{g.n}}</span>
+<span class="tape" style="font-size: 27px; font-weight: 600; letter-spacing: .2em">{{g.text}}</span>
+</li>
+</sc-for>
+</ol>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); background: var(--surface-2)">
+<button type="button" class="btn btn-secondary btn-sm" onClick="{{copy}}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2"></rect><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"></path></svg>{{copyLabel}}</button>
+<button type="button" class="btn btn-secondary btn-sm"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-5-5L5 21"></path></svg>Save as image</button>
+</div>
+</section>
+<div class="banner banner-warn" role="note">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4M12 17h.01"></path></svg>
+<span>This code is the only way to open your store on another phone. <strong>Atrazo can’t see it or recover it.</strong> Write it down and keep it somewhere safe.</span>
+</div>
+<button type="button" class="check" role="checkbox" aria-checked="{{wroteChecked}}" onClick="{{toggleWrote}}">
+<span class="box" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg></span>
+I wrote it down
+</button>
+<p style="font-size: 12.5px; line-height: 1.5; color: var(--muted)">Tip: write it on the inside cover of your old utang notebook, or keep a photo somewhere other than this phone.</p>
+<sc-if value="{{wrote}}" hint-placeholder-val="{{ false }}">
+<button type="button" class="btn btn-primary btn-lg btn-block" onClick="{{toConfirm}}" style="margin-top: auto">Continue</button>
+</sc-if>
+<sc-if value="{{notWrote}}" hint-placeholder-val="{{ true }}">
+<button type="button" class="btn btn-lg btn-block" disabled style="margin-top: auto">Continue</button>
+</sc-if>
+</main>
+</sc-if>
+
+<sc-if value="{{isConfirm}}" hint-placeholder-val="{{ false }}">
+<main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; padding: 20px 16px 16px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 class="disp" style="font-size: 22px; line-height: 1.2">Type the last group to confirm</h2>
+<p style="font-size: 14px; line-height: 1.5; color: var(--text-2)">This checks that what you wrote down matches. Look at line 5 of your code.</p>
+</div>
+<section class="card" style="display: flex; flex-direction: column; gap: 14px; padding: 16px 14px">
+<div class="tape" aria-hidden="true" style="display: flex; align-items: center; gap: 4px; font-size: 13.5px; color: var(--muted); white-space: nowrap">
+<span>7KQ2M</span><span>·</span><span>XD9PA</span><span>·</span><span>R4TWE</span><span>·</span><span>H6NBZ</span><span>·</span><span style="padding: 1px 6px; border-radius: 5px; background: var(--brand-tint); color: var(--on-brand-tint); font-weight: 600">?????</span>
+</div>
+<div class="field">
+<label class="label" for="last-group">Group 5</label>
+<input id="last-group" class="input tape {{inputCls}}" value="{{typed}}" onChange="{{onType}}" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="last-group-help" style="height: 56px; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 26px; font-weight: 600; letter-spacing: .3em; text-transform: uppercase">
+<sc-if value="{{isMatch}}" hint-placeholder-val="{{ false }}">
+<span id="last-group-help" class="help" role="status" style="display: inline-flex; align-items: center; gap: 6px; color: var(--success); font-weight: 600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg>That matches. Your code is saved.</span>
+</sc-if>
+<sc-if value="{{isPartial}}" hint-placeholder-val="{{ true }}">
+<span id="last-group-help" class="help">{{remaining}} more character to go. Letters O and I count as 0 and 1.</span>
+</sc-if>
+<sc-if value="{{isWrong}}" hint-placeholder-val="{{ false }}">
+<span id="last-group-help" class="help-error" role="alert"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg>That doesn’t match line 5. Check what you wrote.</span>
+</sc-if>
+</div>
+</section>
+<section aria-label="Your store" style="display: flex; flex-direction: column; gap: 8px">
+<span class="section-label">Your store</span>
+<ul class="card" style="overflow: hidden">
+<li class="row" style="min-height: 48px"><span class="row-main"><span class="row-sub">Store</span><span style="font-size: 14.5px; font-weight: 600">Tindahan ni Aling Rosa</span></span></li>
+<li class="row" style="min-height: 48px"><span class="row-main"><span class="row-sub">Default credit limit</span><span class="mono" style="font-size: 14.5px; font-weight: 600">₱1,000.00</span></span></li>
+<li class="row" style="min-height: 48px"><span class="row-main"><span class="row-sub">Backups</span><span style="font-size: 14.5px; font-weight: 600">Encrypted on this phone, then saved</span></span><span class="tag tag-success"><span class="pip"></span>On</span></li>
+</ul>
+</section>
+<sc-if value="{{isMatch}}" hint-placeholder-val="{{ false }}">
+<a href="Empty.dc.html" class="btn btn-primary btn-lg btn-block" style="margin-top: auto">Open my store</a>
+</sc-if>
+<sc-if value="{{notMatch}}" hint-placeholder-val="{{ true }}">
+<button type="button" class="btn btn-lg btn-block" disabled style="margin-top: auto">Open my store</button>
+</sc-if>
+</main>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"step":{"editor":"enum","options":["name","code","confirm"],"default":"code"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const order = ['name', 'code', 'confirm'];
+    const step = st.step || this.props.step || 'code';
+    const idx = order.indexOf(step);
+    const code = ['7KQ2M', 'XD9PA', 'R4TWE', 'H6NBZ', '3FJC8'];
+    const norm = (s) => s.toUpperCase().replace(/O/g, '0').replace(/[IL]/g, '1').replace(/[^0-9A-Z]/g, '');
+    const typed = st.typed ?? '3FJC';
+    const t = norm(typed);
+    const target = code[4];
+    const isMatch = t === target;
+    const isPartial = !isMatch && t.length < 5 && target.startsWith(t);
+    const labels = ['Store', 'Recovery code', 'Confirm'];
+    return {
+      theme: this.props.theme ?? 'light',
+      isName: step === 'name', notName: step !== 'name',
+      isCode: step === 'code', isConfirm: step === 'confirm',
+      stepNum: idx + 1,
+      stepList: labels.map((label, i) => ({
+        label,
+        cls: i < idx ? 'is-done' : (i === idx ? 'is-current' : ''),
+        cur: i === idx ? 'step' : undefined
+      })),
+      back: () => this.setState({ step: order[Math.max(0, idx - 1)] }),
+      toCode: () => this.setState({ step: 'code' }),
+      toConfirm: () => this.setState({ step: 'confirm' }),
+      groups: code.map((text, i) => ({ n: i + 1, text })),
+      copyLabel: st.copied ? 'Copied' : 'Copy code',
+      copy: () => this.setState({ copied: true }),
+      wrote: !!st.wrote, notWrote: !st.wrote,
+      wroteChecked: st.wrote ? 'true' : 'false',
+      toggleWrote: () => this.setState({ wrote: !st.wrote }),
+      typed,
+      onType: (e) => this.setState({ typed: e.target.value.slice(0, 5) }),
+      isMatch, notMatch: !isMatch,
+      isPartial,
+      isWrong: !isMatch && !isPartial,
+      remaining: Math.max(0, 5 - t.length),
+      inputCls: isMatch ? '' : (!isPartial ? 'input-error' : '')
+    };
+  }
+}
+</script>
+</body>
+</html>

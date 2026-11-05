@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Atrazo · Open your store</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="atrazo.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.grp{display:flex;align-items:center;gap:12px;padding:6px 12px 6px 16px;border-top:1px solid var(--line-soft)}
+.grp:first-child{border-top:0}
+.grp .input{font-family:'IBM Plex Mono',ui-monospace,monospace;height:44px;font-size:21px;font-weight:600;letter-spacing:.28em;text-transform:uppercase;padding:0 12px}
+.prog{display:flex;align-items:center;gap:12px;min-height:52px;padding:10px 14px;border-top:1px solid var(--line-soft)}
+.prog:first-child{border-top:0}
+.dot{flex:none;display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%}
+.dot.done{background:var(--success-tint);color:var(--success)}
+.dot.wait{border:2px solid var(--line-strong)}
+</style>
+</helmet>
+<div class="app" data-theme="{{theme}}">
+
+<header class="bar" style="padding-left: 4px">
+<a href="SignIn.dc.html" class="icon-btn" aria-label="Back to welcome" style="color: #FFFFFF"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a>
+<div class="bar-title">
+<h1>Open your store</h1>
+<span class="bar-sub">With your recovery code</span>
+</div>
+</header>
+
+<sc-if value="{{isForm}}" hint-placeholder-val="{{ true }}">
+<main class="vscroll" style="display: flex; flex-direction: column; gap: 14px; padding: 18px 16px 16px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 class="disp" style="font-size: 22px; line-height: 1.2">Enter your recovery code</h2>
+<p style="font-size: 14px; line-height: 1.5; color: var(--text-2)">The 25 characters you wrote down when you set up the store, one line per box.</p>
+</div>
+
+<sc-if value="{{isError}}" hint-placeholder-val="{{ false }}">
+<div class="banner banner-danger" role="alert">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg>
+<span><strong>That code didn’t match any store.</strong> Check each group — 0 and O, 1 and I are the same.</span>
+</div>
+</sc-if>
+
+<fieldset class="card" style="margin: 0; padding: 6px 0; border: 1px solid var(--line); min-width: 0">
+<legend class="sr">Recovery code, 5 groups</legend>
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="5">
+<div class="grp">
+<label class="mono" for="grp-{{g.n}}" style="width: 14px; font-size: 12.5px; font-weight: 600; color: var(--muted)"><span class="sr">Group </span>{{g.n}}</label>
+<input id="grp-{{g.n}}" class="input tape {{g.cls}}" value="{{g.text}}" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-invalid="{{g.invalid}}">
+</div>
+</sc-for>
+</fieldset>
+
+<div class="field">
+<label class="label" for="phone-name">Name this phone</label>
+<input id="phone-name" class="input" value="Samsung Galaxy A15">
+<span class="help">Shown in Settings so you can sign it out later.</span>
+</div>
+
+<p style="display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; line-height: 1.5; color: var(--muted)">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 2px"><rect x="4" y="10.5" width="16" height="10.5" rx="2"></rect><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"></path></svg>
+<span>Atrazo never sees your code. This phone uses it to find your store and unlock the encrypted records.</span>
+</p>
+
+<button type="button" class="btn btn-primary btn-lg btn-block" onClick="{{open}}" style="margin-top: auto">Open my store</button>
+</main>
+</sc-if>
+
+<sc-if value="{{isRestoring}}" hint-placeholder-val="{{ false }}">
+<main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 16px; padding: 22px 16px 16px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 class="disp" style="font-size: 22px; line-height: 1.2">Opening your store…</h2>
+<p style="font-size: 14px; line-height: 1.5; color: var(--text-2)">Keep Atrazo open. This takes a few seconds on mobile data.</p>
+</div>
+<section class="card" aria-live="polite" style="overflow: hidden">
+<div class="prog"><span class="dot done" aria-hidden="true"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg></span><span style="flex: 1; font-size: 14.5px">Checking code</span><span class="tag tag-success">Done</span></div>
+<div class="prog"><span class="dot done" aria-hidden="true"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg></span><span style="flex: 1; font-size: 14.5px">Unlocking records</span><span class="tag tag-success">Done</span></div>
+<div class="prog" style="flex-direction: column; align-items: stretch; gap: 8px">
+<div style="display: flex; align-items: center; gap: 12px"><span class="spin" aria-hidden="true" style="flex: none; width: 20px; height: 20px; color: var(--info)"></span><span style="flex: 1; font-size: 14.5px; font-weight: 600">Downloading entries</span><span class="mono" style="font-size: 13px; color: var(--muted)">812 of 1,240</span></div>
+<span class="meter is-info" aria-hidden="true" style="height: 6px; border-radius: 3px"><span style="width: 65%"></span></span>
+</div>
+<div class="prog"><span class="dot wait" aria-hidden="true"></span><span style="flex: 1; font-size: 14.5px; color: var(--muted)">Recalculating balances</span></div>
+</section>
+<div class="banner banner-info">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10.5" rx="2"></rect><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"></path></svg>
+<span>Records arrive encrypted and are unlocked only on this phone.</span>
+</div>
+<section aria-hidden="true" style="display: flex; flex-direction: column; gap: 8px">
+<span class="section-label">Getting your dashboard ready</span>
+<div class="card" style="display: flex; flex-direction: column; gap: 12px; padding: 14px">
+<span style="width: 40%; height: 10px; border-radius: 5px; background: var(--surface-3)"></span>
+<span style="width: 62%; height: 22px; border-radius: 6px; background: var(--surface-3)"></span>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding-top: 4px">
+<span style="height: 30px; border-radius: 6px; background: var(--surface-3)"></span><span style="height: 30px; border-radius: 6px; background: var(--surface-3)"></span><span style="height: 30px; border-radius: 6px; background: var(--surface-3)"></span>
+</div>
+<span style="height: 1px; background: var(--line-soft)"></span>
+<div style="display: flex; justify-content: space-between"><span style="width: 45%; height: 12px; border-radius: 6px; background: var(--surface-3)"></span><span style="width: 22%; height: 12px; border-radius: 6px; background: var(--surface-3)"></span></div>
+<div style="display: flex; justify-content: space-between"><span style="width: 38%; height: 12px; border-radius: 6px; background: var(--surface-3)"></span><span style="width: 18%; height: 12px; border-radius: 6px; background: var(--surface-3)"></span></div>
+</div>
+</section>
+<a href="SignIn.dc.html" class="btn btn-ghost btn-block" style="margin-top: auto">Cancel</a>
+</main>
+</sc-if>
+
+<sc-if value="{{isRestored}}" hint-placeholder-val="{{ false }}">
+<main style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 16px 16px 16px">
+<section class="card" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 16px 16px; text-align: center">
+<dc-import name="Lapis" pose="cheer" size="118" hint-size="118px,118px"></dc-import>
+<h2 class="disp" style="font-size: 22px; line-height: 1.2">Andito pa lahat.</h2>
+<p style="font-size: 14px; color: var(--text-2)">Tindahan ni Aling Rosa is open on this phone.</p>
+</section>
+<ol class="card" style="overflow: hidden">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="4">
+<li class="row" style="min-height: 48px; padding: 8px 14px">
+<span class="dot done" aria-hidden="true"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"></path></svg></span>
+<span style="flex: 1; font-size: 14.5px">{{s.label}}</span>
+<span class="mono" style="font-size: 14.5px; font-weight: 700">{{s.value}}</span>
+</li>
+</sc-for>
+</ol>
+<div class="banner banner-info">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2"></rect><path d="M11 18h2"></path></svg>
+<span>Last change Nov 5, 9:42 AM from <strong>Redmi 13C</strong>. Both phones stay in step whenever they connect.</span>
+</div>
+<section class="card" aria-label="This phone" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; color: var(--muted)"><rect x="6" y="2.5" width="12" height="19" rx="2"></rect><path d="M11 18h2"></path></svg>
+<span class="row-main"><span style="font-size: 14.5px; font-weight: 600">Samsung Galaxy A15</span><span class="row-sub">Added to Settings › Phones signed in</span></span>
+<span class="tag tag-success"><span class="pip"></span>This phone</span>
+</section>
+<a href="Main.dc.html" class="btn btn-lg btn-block btn-dark" style="margin-top: auto">Open my listahan</a>
+</main>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"step":{"editor":"enum","options":["enter","error","restoring","restored"],"default":"enter"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  componentWillUnmount() { clearTimeout(this.t); }
+  renderVals() {
+    const st = this.state || {};
+    const step = st.step || this.props.step || 'enter';
+    const isError = step === 'error';
+    const code = isError ? ['7KQ2M', 'XD9PA', 'R4TWF', 'H6NBZ', '3FJC8'] : ['7KQ2M', 'XD9PA', 'R4TWE', 'H6NBZ', '3FJC8'];
+    return {
+      theme: this.props.theme ?? 'light',
+      isForm: step === 'enter' || isError,
+      isError,
+      isRestoring: step === 'restoring',
+      isRestored: step === 'restored',
+      groups: code.map((text, i) => {
+        const bad = isError && i === 2;
+        return { n: i + 1, text, cls: bad ? 'input-error' : '', invalid: bad ? 'true' : 'false' };
+      }),
+      open: () => {
+        this.setState({ step: 'restoring' });
+        clearTimeout(this.t);
+        this.t = setTimeout(() => this.setState({ step: 'restored' }), 1800);
+      },
+      steps: [
+        { label: 'Store unlocked', value: '' },
+        { label: 'Clients', value: '24' },
+        { label: 'Entries downloaded', value: '1,240' },
+        { label: 'Balances recalculated', value: '₱12,450.00' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

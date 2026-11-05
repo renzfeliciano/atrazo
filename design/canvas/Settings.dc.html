@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Atrazo · Settings</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="atrazo.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}main.vscroll > *{flex-shrink:0}</style>
+</helmet>
+<div class="app" data-theme="{{theme}}">
+
+<header class="bar">
+<div class="bar-title">
+<h1>Settings</h1>
+<span class="bar-sub">Store, phones, backup and rules</span>
+</div>
+</header>
+
+<main class="vscroll" style="display: flex; flex-direction: column; gap: 8px; padding: 14px 12px 24px">
+
+<section class="card" aria-label="Store" style="display: flex; align-items: center; gap: 12px; padding: 14px">
+<span class="logo" aria-hidden="true" style="width: 44px; height: 44px; border-radius: 10px"><svg width="32" height="32" viewBox="2 3 60 58"><defs><clipPath id="atzA8"><path clip-rule="evenodd" d="M32 6 L60 58 L4 58 Z M32 26.4 L38.2 38 L25.8 38 Z M22 45 L42 45 L49 58 L15 58 Z"></path></clipPath></defs><g clip-path="url(#atzA8)"><rect width="64" height="64" fill="#1C2024"></rect><path d="M0 0H64V31 Q60 27.5 56 31 Q52 27.5 48 31 Q44 27.5 40 31 Q36 27.5 32 31 Q28 27.5 24 31 Q20 27.5 16 31 Q12 27.5 8 31 Q4 27.5 0 31Z" fill="#F3D9B1"></path><path d="M0 0H64V17H0Z" fill="#1C2024"></path></g></svg></span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<h2 style="font-size: 16px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Tindahan ni Aling Rosa</h2>
+<span style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); min-width: 0">
+<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; color: var(--success)"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+<span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Encrypted · no email on file</span>
+</span>
+</div>
+<button type="button" class="btn btn-secondary btn-sm">Edit</button>
+</section>
+
+<h2 class="section-label" style="margin-top: 10px">Recovery code</h2>
+<ul class="card" style="overflow: hidden">
+<li style="display: flex; flex-direction: column; gap: 10px; padding: 12px 14px">
+<div style="display: flex; align-items: center; gap: 12px">
+<span aria-hidden="true" style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9px; background: var(--brand-tint); color: var(--on-brand-tint)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"></circle><path d="M10.8 12.2 20 3M17 6l3 3M15 8l2 2"></path></svg></span>
+<span class="row-main"><span style="font-size: 15px; font-weight: 600">Recovery code</span><span class="row-sub">Opens your store on a new phone. We can't see it.</span></span>
+<sc-if value="{{codeHidden}}" hint-placeholder-val="{{ true }}"><button type="button" class="btn btn-secondary btn-sm" onClick="{{showCode}}" aria-expanded="false" aria-controls="rc-value">Show</button></sc-if>
+<sc-if value="{{codeShown}}" hint-placeholder-val="{{ false }}"><button type="button" class="btn btn-ghost btn-sm" onClick="{{hideCode}}" aria-expanded="true" aria-controls="rc-value">Hide</button></sc-if>
+</div>
+<sc-if value="{{codeShown}}" hint-placeholder-val="{{ false }}">
+<div id="rc-value" role="status" style="display: flex; flex-direction: column; gap: 6px; padding: 12px; border-radius: var(--r); background: var(--surface-2); border: 1px dashed var(--line-strong)">
+<span class="tape" style="font-size: 17px; font-weight: 600; letter-spacing: .04em; text-align: center; color: var(--text)">7KQ2M-XD9PA-R4TWE-H6NBZ-3FJC8</span>
+<span class="help" style="text-align: center">Write it on paper and keep it away from the store. Anyone with this code can open your store.</span>
+</div>
+</sc-if>
+</li>
+<li><button type="button" class="row" style="width: 100%; border: 0; border-top: 1px solid var(--line-soft); background: transparent; font: inherit; text-align: left; cursor: pointer">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; color: var(--text-2)"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"></path><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"></path><path d="M21 3v5h-5M3 21v-5h5"></path></svg>
+<span class="row-main"><span style="font-size: 15px; font-weight: 500">Make a new recovery code</span><span class="row-sub">The old code stops working on new phones. Phones already open stay open.</span></span>
+<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+</button></li>
+</ul>
+
+<h2 class="section-label" style="margin-top: 10px">Phones with your store</h2>
+<ul class="card" style="overflow: hidden">
+<li class="row">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; color: var(--text-2)"><rect x="6" y="2.5" width="12" height="19" rx="2"></rect><path d="M11 18h2"></path></svg>
+<span class="row-main"><span class="row-title">Samsung Galaxy A15</span><span class="row-sub">Active now · opened Oct 2</span></span>
+<span class="tag tag-success"><span class="pip"></span>This phone</span>
+</li>
+<li class="row">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; color: var(--text-2)"><rect x="6" y="2.5" width="12" height="19" rx="2"></rect><path d="M11 18h2"></path></svg>
+<span class="row-main"><span class="row-title" style="color: {{redmiColor}}">Redmi 13C</span><span class="row-sub">{{redmiSub}}</span></span>
+<sc-if value="{{redmiActive}}" hint-placeholder-val="{{ true }}"><button type="button" class="btn btn-danger btn-sm" onClick="{{signOutRedmi}}">Sign out</button></sc-if>
+<sc-if value="{{redmiRemoved}}" hint-placeholder-val="{{ false }}"><span class="tag tag-success" role="status"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg>Signed out</span></sc-if>
+</li>
+</ul>
+<p class="help" style="padding: 0 4px">Lost or replaced a phone? Sign it out here, then make a new recovery code. Its copy of your records is erased the next time it connects.</p>
+
+<h2 class="section-label" style="margin-top: 10px">Backup</h2>
+<section class="card" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px">
+<span aria-hidden="true" style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9px; background: var(--success-tint); color: var(--success)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H7a5 5 0 1 1 1.6-9.7A6 6 0 0 1 20 11a4 4 0 0 1-2.5 8z"></path><path d="m9 14 2 2 4-4"></path></svg></span>
+<span class="row-main"><span style="font-size: 15px; font-weight: 600">Everything backed up</span><span class="row-sub">Today 9:44 AM · <span class="mono">1,240</span> entries · 0 waiting</span></span>
+<button type="button" class="btn btn-secondary btn-sm">Back up now</button>
+</section>
+
+<h2 class="section-label" style="margin-top: 10px">Credit rules</h2>
+<ul class="card" style="overflow: hidden">
+<li><button type="button" class="row" style="width: 100%; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer">
+<span class="row-main"><span style="font-size: 15px; font-weight: 500">Default credit limit</span><span class="row-sub">For new clients · change per client</span></span>
+<span class="mono" style="font-size: 15px; font-weight: 700">₱1,000.00</span>
+<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+</button></li>
+<li style="border-top: 1px solid var(--line-soft)"><button type="button" class="row" style="width: 100%; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer">
+<span class="row-main"><span style="font-size: 15px; font-weight: 500">Mark as overdue after</span><span class="row-sub">Counted from the first unpaid utang</span></span>
+<span class="mono" style="font-size: 15px; font-weight: 700">30 days</span>
+<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+</button></li>
+<li style="display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--line-soft)">
+<div style="display: flex; align-items: center; justify-content: space-between"><span style="font-size: 15px; font-weight: 500">Reminder message</span><button type="button" class="btn btn-ghost btn-sm" style="margin-right: -8px; color: var(--info)">Edit</button></div>
+<p style="padding: 10px 12px; border-radius: var(--r); background: var(--surface-2); border: 1px solid var(--line-soft); font-size: 13.5px; line-height: 1.55; color: var(--text-2)">Magandang araw po, <span class="tag tag-info">name</span>. Ang balanse ninyo sa Tindahan ni Aling Rosa ay <span class="tag tag-info">balance</span>. Salamat po!</p>
+</li>
+</ul>
+
+<h2 class="section-label" style="margin-top: 10px">Notifications</h2>
+<ul class="card" style="overflow: hidden">
+<sc-for list="{{toggles}}" as="t" hint-placeholder-count="3">
+<li class="row">
+<span class="row-main"><span id="{{t.id}}" style="font-size: 15px; font-weight: 500">{{t.label}}</span><span class="row-sub">{{t.sub}}</span></span>
+<button type="button" role="switch" class="switch" aria-checked="{{t.on}}" aria-labelledby="{{t.id}}" onClick="{{t.flip}}"></button>
+</li>
+</sc-for>
+</ul>
+
+<h2 class="section-label" style="margin-top: 10px">Appearance and language</h2>
+<section class="card" style="display: flex; flex-direction: column; gap: 14px; padding: 14px">
+<div class="field">
+<span class="label" id="theme-l">Theme</span>
+<div class="seg" role="group" aria-labelledby="theme-l">
+<sc-for list="{{themes}}" as="o" hint-placeholder-count="3"><button type="button" aria-pressed="{{o.pressed}}" onClick="{{o.pick}}">{{o.label}}</button></sc-for>
+</div>
+</div>
+<div class="field">
+<span class="label" id="lang-l">Language</span>
+<div class="seg" role="group" aria-labelledby="lang-l">
+<sc-for list="{{langs}}" as="o" hint-placeholder-count="2"><button type="button" aria-pressed="{{o.pressed}}" onClick="{{o.pick}}">{{o.label}}</button></sc-for>
+</div>
+</div>
+</section>
+
+<h2 class="section-label" style="margin-top: 10px">Data</h2>
+<ul class="card" style="overflow: hidden">
+<li><button type="button" class="row" style="width: 100%; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; color: var(--text-2)"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"></path></svg>
+<span class="row-main"><span style="font-size: 15px; font-weight: 500">Download all records</span><span class="row-sub">CSV file for Excel or any spreadsheet</span></span>
+<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+</button></li>
+<li style="border-top: 1px solid var(--line-soft)"><button type="button" class="row" style="width: 100%; border: 0; background: transparent; font: inherit; text-align: left; cursor: pointer">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; color: var(--text-2)"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-3 3.9M6.6 6.6A17 17 0 0 0 2.5 12s3.5 7 9.5 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"></path></svg>
+<span class="row-main"><span style="font-size: 15px; font-weight: 500">Hidden clients</span><span class="row-sub">Their history is kept and can be restored</span></span>
+<span class="tag mono">2</span>
+<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+</button></li>
+</ul>
+
+<h2 class="section-label" style="margin-top: 10px">Legal</h2>
+<ul class="card" style="overflow: hidden">
+<li><a href="Terms.dc.html" class="row"><span class="row-main"><span style="font-size: 15px; font-weight: 500">Terms of Service</span></span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></a></li>
+<li style="border-top: 1px solid var(--line-soft)"><a href="Privacy.dc.html" class="row" style="border-top: 0"><span class="row-main"><span style="font-size: 15px; font-weight: 500">Privacy Policy</span></span><svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg></a></li>
+</ul>
+
+<section class="card" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px; padding: 14px">
+<button type="button" class="btn btn-danger btn-block"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path></svg>Sign out of this phone</button>
+<p class="help" style="text-align: center">This erases this phone's copy of your store. Your backup stays safe. To open the store here again, you'll need your recovery code.</p>
+</section>
+<p class="mono" style="padding: 6px 0 0; text-align: center; font-size: 12px; color: var(--faint)">Atrazo 0.1.0 · build 2026.11.05</p>
+</main>
+
+<dc-import name="Nav" active="settings" hint-size="390px,76px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const appearance = st.appearance || 'system';
+    const lang = st.lang || 'en';
+    const removed = !!st.removed;
+    const sw = st.sw || { overdue: true, over: true, weekly: false };
+    const propTheme = this.props.theme ?? 'light';
+    const toggles = [
+      { key: 'overdue', label: 'Overdue clients', sub: 'Each morning, who passed 30 days' },
+      { key: 'over', label: 'Over the credit limit', sub: 'When an entry goes past a limit' },
+      { key: 'weekly', label: 'Weekly summary', sub: 'Mondays, 7:00 AM' }
+    ].map((t) => ({ ...t, id: 'sw-' + t.key, on: sw[t.key] ? 'true' : 'false', flip: () => this.setState({ sw: { ...sw, [t.key]: !sw[t.key] } }) }));
+    const themes = [['light', 'Light'], ['dark', 'Dark'], ['system', 'System']].map(([id, label]) => ({
+      label, pressed: appearance === id ? 'true' : 'false', pick: () => this.setState({ appearance: id })
+    }));
+    const langs = [['en', 'English'], ['fil', 'Filipino']].map(([id, label]) => ({
+      label, pressed: lang === id ? 'true' : 'false', pick: () => this.setState({ lang: id })
+    }));
+    return {
+      theme: appearance === 'system' ? propTheme : appearance,
+      toggles, themes, langs,
+      redmiActive: !removed, redmiRemoved: removed,
+      redmiColor: removed ? 'var(--muted)' : 'var(--text)',
+      redmiSub: removed ? 'Its copy will be erased when it reconnects' : 'Last online Nov 2, 6:12 PM',
+      signOutRedmi: () => this.setState({ removed: true }),
+      codeShown: !!st.showCode, codeHidden: !st.showCode,
+      showCode: () => this.setState({ showCode: true }),
+      hideCode: () => this.setState({ showCode: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

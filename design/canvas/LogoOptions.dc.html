@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Atrazo · Logo options</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="atrazo.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.opt{display:flex;flex-direction:column;gap:18px;padding:24px;background:#FFFFFF;border:1px solid #DDE1E6;border-radius:16px}
+.opt h2{margin:0;font-size:20px;font-weight:700;font-stretch:115%}
+.opt p{margin:0;font-size:13.5px;line-height:1.5;color:#3A4149}
+.lbl{font-size:12px;font-weight:600;color:#59626D}
+.row{display:flex;align-items:flex-end;gap:14px}
+.tile{display:block;border-radius:22%;box-shadow:0 1px 2px rgba(16,22,28,.12),0 6px 16px rgba(16,22,28,.10)}
+.mini{display:flex;align-items:center;gap:10px;height:56px;padding:0 14px;border-radius:10px;background:#1C2024;color:#fff;background-image:repeating-linear-gradient(180deg,transparent 0 27px,rgba(255,255,255,.05) 27px 28px)}
+.mini b{font-size:15px;font-weight:700;font-stretch:112%}
+.letter{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:#1C2024;color:#FFC72C;font-size:15px;font-weight:800}
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+<defs>
+<!-- A · Pencil-point A: the letter A is a sharpened pencil seen side-on. Yellow paint, scalloped cut as the crossbar, bare wood, then the lead. -->
+<clipPath id="aShape"><path clip-rule="evenodd" d="M32 6 L60 58 L4 58 Z M32 26.4 L38.2 38 L25.8 38 Z M22 45 L42 45 L49 58 L15 58 Z"></path></clipPath>
+<symbol id="markA" viewBox="0 0 64 64">
+<rect width="64" height="64" rx="14" fill="#1C2024"></rect>
+<g clip-path="url(#aShape)">
+<rect x="0" y="0" width="64" height="64" fill="#FFC72C"></rect>
+<path d="M0 0H64V31 Q60 27.5 56 31 Q52 27.5 48 31 Q44 27.5 40 31 Q36 27.5 32 31 Q28 27.5 24 31 Q20 27.5 16 31 Q12 27.5 8 31 Q4 27.5 0 31Z" fill="#F3D9B1"></path>
+<path d="M0 0H64V17H0Z" fill="#59626D"></path>
+<path d="M44 31H64V64H44Z" fill="#F2B705" opacity=".9"></path>
+</g>
+</symbol>
+<symbol id="markAY" viewBox="0 0 64 64">
+<rect width="64" height="64" rx="14" fill="#FFC72C"></rect>
+<g clip-path="url(#aShape)">
+<rect x="0" y="0" width="64" height="64" fill="#1C2024"></rect>
+<path d="M0 0H64V31 Q60 27.5 56 31 Q52 27.5 48 31 Q44 27.5 40 31 Q36 27.5 32 31 Q28 27.5 24 31 Q20 27.5 16 31 Q12 27.5 8 31 Q4 27.5 0 31Z" fill="#F3D9B1"></path>
+<path d="M0 0H64V17H0Z" fill="#1C2024"></path>
+</g>
+</symbol>
+
+<!-- B · Peso A: a heavy A whose crossbar is the peso sign's double stroke, running out past the left leg. -->
+<symbol id="markB" viewBox="0 0 64 64">
+<rect width="64" height="64" rx="14" fill="#FFC72C"></rect>
+<path fill="#1C2024" fill-rule="evenodd" d="M35 7 L56 57 L45.5 57 L35 32 L24.5 57 L14 57 Z"></path>
+<rect x="7" y="31" width="42" height="5" rx="1" fill="#1C2024"></rect>
+<rect x="7" y="40" width="45" height="5" rx="1" fill="#1C2024"></rect>
+<path fill="#FFC72C" d="M35 45 L40 57 L30 57 Z"></path>
+</symbol>
+<symbol id="markBD" viewBox="0 0 64 64">
+<rect width="64" height="64" rx="14" fill="#1C2024"></rect>
+<path fill="#FFC72C" fill-rule="evenodd" d="M35 7 L56 57 L45.5 57 L35 32 L24.5 57 L14 57 Z"></path>
+<rect x="7" y="31" width="42" height="5" rx="1" fill="#FFC72C"></rect>
+<rect x="7" y="40" width="45" height="5" rx="1" fill="#FFC72C"></rect>
+<path fill="#1C2024" d="M35 45 L40 57 L30 57 Z"></path>
+</symbol>
+
+<!-- C · Lapis stub: the mascot reduced to a solid, upright icon: eraser, ferrule, yellow body with a face, point. -->
+<symbol id="markC" viewBox="0 0 64 64">
+<rect width="64" height="64" rx="14" fill="#1C2024"></rect>
+<rect x="21" y="6" width="22" height="10" rx="4" fill="#E88A80"></rect>
+<rect x="21" y="15" width="22" height="7" fill="#AEB6BF"></rect>
+<rect x="21" y="18" width="22" height="1.4" fill="#8A939D"></rect>
+<rect x="21" y="22" width="22" height="21" fill="#FFC72C"></rect>
+<rect x="35.6" y="22" width="7.4" height="21" fill="#F2B705"></rect>
+<path d="M21 43 L32 59 L43 43 Z" fill="#F3D9B1"></path>
+<path d="M28.3 53.6 L32 59 L35.7 53.6 Z" fill="#59626D"></path>
+<ellipse cx="28" cy="31" rx="1.8" ry="2.4" fill="#1C2024"></ellipse>
+<ellipse cx="36" cy="31" rx="1.8" ry="2.4" fill="#1C2024"></ellipse>
+<path d="M28.6 36.2 Q32 38.8 35.4 36.2" fill="none" stroke="#1C2024" stroke-width="1.6" stroke-linecap="round"></path>
+</symbol>
+
+<!-- D · Tally gate: four strokes crossed by a fifth, the way utang is counted in the notebook. -->
+<symbol id="markD" viewBox="0 0 64 64">
+<rect width="64" height="64" rx="14" fill="#1C2024"></rect>
+<g fill="#FFC72C"><rect x="15" y="14" width="5.5" height="36" rx="2.75"></rect><rect x="25" y="14" width="5.5" height="36" rx="2.75"></rect><rect x="35" y="14" width="5.5" height="36" rx="2.75"></rect><rect x="45" y="14" width="5.5" height="36" rx="2.75"></rect></g>
+<path d="M10 45 L55 20" stroke="#1C2024" stroke-width="10" stroke-linecap="round"></path>
+<path d="M10 45 L55 20" stroke="#E88A80" stroke-width="5.5" stroke-linecap="round"></path>
+</symbol>
+</defs>
+</svg>
+
+<div style="width: 1280px; box-sizing: border-box; padding: 40px; display: flex; flex-direction: column; gap: 24px; background: #EDEFF2; font-family: 'Archivo', system-ui, sans-serif; color: #1C2024">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-size: 30px; font-weight: 700; font-stretch: 115%">Atrazo mark: four directions</h1>
+<p style="margin: 0; max-width: 760px; font-size: 15px; line-height: 1.5; color: #3A4149">The old tile was a diagonal pencil, the same glyph as every “edit” button. Each option below is drawn only for Atrazo. Shown as the app icon, at small sizes, and in the app bar.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+<sc-for list="{{opts}}" as="o" hint-placeholder-count="4">
+<section class="opt" aria-labelledby="opt-{{o.key}}">
+<div style="display: flex; align-items: center; gap: 10px"><span class="letter">{{o.key}}</span><h2 id="opt-{{o.key}}">{{o.name}}</h2></div>
+<svg class="tile" width="196" height="196" role="img" aria-label="{{o.name}} app icon"><use href="{{o.main}}"></use></svg>
+<div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl">Home screen, both tiles</span>
+<div class="row"><svg class="tile" width="64" height="64" aria-hidden="true"><use href="{{o.main}}"></use></svg><svg class="tile" width="64" height="64" aria-hidden="true"><use href="{{o.alt}}"></use></svg><svg width="32" height="32" style="border-radius: 7px" aria-hidden="true"><use href="{{o.main}}"></use></svg><svg width="20" height="20" style="border-radius: 4px" aria-hidden="true"><use href="{{o.main}}"></use></svg><svg width="16" height="16" style="border-radius: 3px" aria-hidden="true"><use href="{{o.main}}"></use></svg></div></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><span class="lbl">In the app bar</span>
+<div class="mini"><svg width="36" height="36" style="border-radius: 9px; box-shadow: 0 0 0 1px rgba(255,255,255,.12)" aria-hidden="true"><use href="{{o.bar}}"></use></svg><b>Tindahan ni Aling Rosa</b></div></div>
+<p>{{o.why}}</p>
+</section>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      opts: [
+        { key: 'A', name: 'Pencil-point A', main: '#markA', alt: '#markAY', bar: '#markAY',
+          why: 'Chosen. A bold capital A, the first letter of Atrazo, drawn as a sharpened pencil: graphite lead at the peak, bare wood, then yellow paint forming the legs and crossbar. It reads as A first and pencil second, even at 16 px.' },
+        { key: 'B', name: 'Peso A', main: '#markB', alt: '#markBD', bar: '#markB',
+          why: 'A heavy A whose crossbar is the peso sign’s double stroke. It reads as Atrazo and as money at once, and stays sharp at 16 px. Loses the pencil, so Lapis carries that.' },
+        { key: 'C', name: 'Lapis stub', main: '#markC', alt: '#markC', bar: '#markC',
+          why: 'The mascot itself, upright and solid: pink eraser, metal band, yellow body with a small face, sharpened point. The most friendly and recognisable; the face blurs below 24 px.' },
+        { key: 'D', name: 'Tally gate', main: '#markD', alt: '#markD', bar: '#markD',
+          why: 'Four strokes crossed by a fifth, the way utang has always been counted in the notebook; the crossing stroke is eraser pink. Very simple and distinct, but says “counting” more than “Atrazo”.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

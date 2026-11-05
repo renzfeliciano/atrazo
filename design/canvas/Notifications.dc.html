@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Atrazo · Notifications</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="atrazo.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}main.vscroll > *{flex-shrink:0}</style>
+</helmet>
+<div class="app" data-theme="{{theme}}">
+
+<header class="bar" style="padding-left: 4px">
+<a href="Main.dc.html" class="icon-btn" aria-label="Back to home" style="color: #FFFFFF"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></a>
+<div class="bar-title">
+<h1>Notifications</h1>
+<span class="bar-sub" role="status">{{unreadText}}</span>
+</div>
+<sc-if value="{{hasUnread}}" hint-placeholder-val="{{ true }}">
+<button type="button" class="btn btn-ink btn-sm" onClick="{{markAll}}" style="margin-right: 8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 12 5 5L18 6M12 15l2 2L22 7"></path></svg>Mark all read</button>
+</sc-if>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Show notifications" style="flex: none; background: var(--surface)">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+<button type="button" role="tab" class="tab" aria-selected="{{t.sel}}" onClick="{{t.pick}}">{{t.label}}<span class="n">{{t.n}}</span></button>
+</sc-for>
+</div>
+
+<main class="vscroll" style="display: flex; flex-direction: column; gap: 14px; padding: 14px 12px 24px">
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+<section aria-label="{{g.label}}" style="display: flex; flex-direction: column; gap: 8px">
+<h2 class="section-label">{{g.label}}</h2>
+<ul class="card" style="overflow: hidden">
+<sc-for list="{{g.items}}" as="n" hint-placeholder-count="3">
+<li style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 14px 14px 12px; border-top: 1px solid var(--line-soft); background: {{n.bg}}">
+<span aria-hidden="true" style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 9px; background: {{n.tileBg}}; color: {{n.tileFg}}">
+<sc-if value="{{n.isOver}}" hint-placeholder-val="{{ false }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"></path><path d="M12 9v4M12 17h.01"></path></svg></sc-if>
+<sc-if value="{{n.isOverdue}}" hint-placeholder-val="{{ false }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></sc-if>
+<sc-if value="{{n.isSignin}}" hint-placeholder-val="{{ false }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2"></rect><path d="M11 18h2"></path></svg></sc-if>
+<sc-if value="{{n.isBackup}}" hint-placeholder-val="{{ false }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H7a5 5 0 1 1 1.6-9.7A6 6 0 0 1 20 11a4 4 0 0 1-2.5 8z"></path><path d="m9 14 2 2 4-4"></path></svg></sc-if>
+<sc-if value="{{n.isWeekly}}" hint-placeholder-val="{{ false }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"></path></svg></sc-if>
+</span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<div style="display: flex; align-items: baseline; gap: 8px">
+<span style="flex: 1; min-width: 0; font-size: 14.5px; font-weight: {{n.weight}}">{{n.title}}</span>
+<span class="mono" style="flex: none; font-size: 12px; color: var(--muted)">{{n.time}}</span>
+<sc-if value="{{n.unread}}" hint-placeholder-val="{{ false }}"><span aria-label="Unread" style="flex: none; align-self: center; width: 8px; height: 8px; border-radius: 50%; background: var(--info)"></span></sc-if>
+</div>
+<p style="font-size: 13px; line-height: 1.45; color: var(--text-2)">{{n.body}}</p>
+<sc-if value="{{n.hasAction}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; margin-top: 6px"><a href="{{n.href}}" class="btn btn-secondary btn-sm">{{n.action}}</a></div>
+</sc-if>
+</div>
+</li>
+</sc-for>
+</ul>
+</section>
+</sc-for>
+
+<a href="Settings.dc.html" class="card" style="display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 10px 14px; color: var(--text); text-decoration: none">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; color: var(--muted)"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"></path><circle cx="16" cy="7" r="2"></circle><circle cx="8" cy="17" r="2"></circle></svg>
+<span class="row-main"><span style="font-size: 14.5px; font-weight: 600">Choose which alerts you get</span><span class="row-sub">Only you see these. Atrazo never texts your clients by itself.</span></span>
+<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+</a>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["light","dark"],"default":"light"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const st = this.state || {};
+    const tab = st.tab || 'all';
+    const allRead = !!st.allRead;
+    const tiles = {
+      danger: ['var(--danger-tint)', 'var(--danger)'], info: ['var(--info-tint)', 'var(--info)'],
+      success: ['var(--success-tint)', 'var(--success)'], neutral: ['var(--surface-3)', 'var(--text-2)']
+    };
+    const items = [
+      { g: 'Today', cat: 'alerts', kind: 'over', sev: 'danger', unread: true, time: '9:50 AM', title: 'Mang Jose Reyes is over the limit',
+        body: 'Balance ₱1,850.00 of a ₱1,500.00 limit, ₱350.00 over.', action: 'Open ledger', href: 'Ledger.dc.html' },
+      { g: 'Today', cat: 'account', kind: 'backup', sev: 'success', unread: false, time: '9:44 AM', title: 'Backed up',
+        body: '3 entries from this phone are in your encrypted backup.', action: '', href: '' },
+      { g: 'Today', cat: 'alerts', kind: 'overdue', sev: 'danger', unread: true, time: '8:00 AM', title: 'Kuya Ben Dela Cruz: 64 days unpaid',
+        body: '₱1,450.00 owed. Last bayad was on Sep 2.', action: 'Remind', href: 'sms:' },
+      { g: 'Today', cat: 'alerts', kind: 'weekly', sev: 'neutral', unread: false, time: '7:00 AM', title: 'Your week so far',
+        body: 'Collected ₱2,140 in bayad and gave ₱2,960 in new utang. Total owed is ₱12,450.', action: 'See activity', href: 'Activity.dc.html' },
+      { g: 'Earlier', cat: 'account', kind: 'signin', sev: 'info', unread: true, time: 'Nov 2', title: 'A new phone opened your store',
+        body: 'Redmi 13C opened your store with your recovery code on Nov 2. Not you? Sign it out and make a new code.', action: 'Review phones', href: 'Settings.dc.html' }
+    ];
+    const shown = items.filter((n) => tab === 'all' || n.cat === tab);
+    const groups = ['Today', 'Earlier'].map((label) => ({
+      label,
+      items: shown.filter((n) => n.g === label).map((n) => {
+        const unread = n.unread && !allRead;
+        return {
+          ...n, unread,
+          weight: unread ? '700' : '500',
+          bg: unread ? 'var(--surface)' : 'var(--surface)',
+          tileBg: tiles[n.sev][0], tileFg: tiles[n.sev][1],
+          isOver: n.kind === 'over', isOverdue: n.kind === 'overdue', isSignin: n.kind === 'signin',
+          isBackup: n.kind === 'backup', isWeekly: n.kind === 'weekly',
+          hasAction: !!n.action
+        };
+      })
+    })).filter((g) => g.items.length);
+    const unreadCount = allRead ? 0 : items.filter((n) => n.unread).length;
+    const tabs = [['all', 'All'], ['alerts', 'Alerts'], ['account', 'Store']].map(([id, label]) => ({
+      label, n: items.filter((n) => id === 'all' || n.cat === id).length,
+      sel: tab === id ? 'true' : 'false', pick: () => this.setState({ tab: id })
+    }));
+    return {
+      theme: this.props.theme ?? 'light',
+      groups, tabs,
+      hasUnread: unreadCount > 0,
+      unreadText: unreadCount ? unreadCount + ' unread' : 'All caught up',
+      markAll: () => this.setState({ allRead: true })
+    };
+  }
+}
+</script>
+</body>
+</html>
